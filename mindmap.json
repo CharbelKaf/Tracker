@@ -1,0 +1,159 @@
+{
+  "project_name": "Neemba Tracker",
+  "description": "Comprehensive IT asset management SPA for creating, tracking, and managing IT equipment assignments.",
+  "frontend": {
+    "framework": "React with TypeScript",
+    "architecture": "Single Page Application (SPA)",
+    "styling": {
+      "library": "Tailwind CSS",
+      "features": [
+        "Custom theme (colors, fonts)",
+        "Light & Dark mode support"
+      ]
+    },
+    "state_management": {
+      "method": "React Context API (useReducer, useContext)",
+      "contexts": [
+        "AppContext: Main application data and business logic",
+        "ToastContext: User notifications",
+        "ThemeContext: Light/Dark mode appearance"
+      ]
+    },
+    "routing": {
+      "type": "Client-side, Hash-based",
+      "implementation": "window.location.hash"
+    },
+    "pages_views": [
+      {
+        "name": "Dashboard",
+        "description": "Customizable, role-based overview with stats, pending approvals, and recent activity."
+      },
+      {
+        "name": "Inventory",
+        "description": "Virtualized list of all equipment with advanced filtering, sorting, and bulk actions."
+      },
+      {
+        "name": "Users",
+        "description": "Virtualized list of all users with filtering and bulk actions."
+      },
+      {
+        "name": "Details Screens",
+        "description": "Detailed views for Equipment, Users, Models, and Categories."
+      },
+      {
+        "name": "CRUD Forms",
+        "description": "Forms for creating/editing Equipment, Users, Models, Categories, and Locations."
+      },
+      {
+        "name": "Assignment Wizard",
+        "description": "Multi-step guided process for assigning and returning equipment."
+      },
+      {
+        "name": "Validation Screen",
+        "description": "Interface for the multi-step approval workflow (IT, Manager, User)."
+      },
+      {
+        "name": "Audit",
+        "description": "Feature for performing physical audits of equipment at a specific location using QR code scanning."
+      },
+      {
+        "name": "Reports",
+        "description": "Generation and export of reports (CSV, PDF)."
+      },
+      {
+        "name": "Management",
+        "description": "Central hub for managing Categories, Models, and Locations."
+      }
+    ],
+    "key_components": [
+      "Sidebar & MobileNav",
+      "PageHeader & SelectionHeader",
+      "Modals (Confirmation, ActionSheet, PinManagement)",
+      "SmartSearchInput (Gemini integrated)",
+      "QRScanner (html5-qrcode wrapper)",
+      "PinValidator & FingerprintValidator (WebAuthn)",
+      "Toast notifications"
+    ],
+    "external_libraries": [
+      {
+        "name": "jspdf & jspdf-autotable",
+        "usage": "PDF generation for reports"
+      },
+      {
+        "name": "html5-qrcode",
+        "usage": "Camera-based QR code scanning"
+      }
+    ]
+  },
+  "backend": {
+    "architecture": "Client-side only",
+    "description": "The application operates entirely on the client-side. All state and data are managed within the browser."
+  },
+  "base_de_donnees": {
+    "storage_type": "Client-side State & Browser Storage",
+    "details": "In-memory state managed by React Context, initialized from static data files. Uses localStorage for user preferences like theme and dashboard layout.",
+    "data_models": {
+      "User": {
+        "attributes": ["id", "name", "role", "department", "email", "managerId", "webauthnCredentialId", "pin"],
+        "description": "Represents an employee or administrator in the system."
+      },
+      "Equipment": {
+        "attributes": ["id", "modelId", "assetTag", "status", "siteId", "departmentId", "purchaseDate", "warrantyEndDate", "os", "ram", "storage"],
+        "description": "A physical IT asset."
+      },
+      "Assignment": {
+        "attributes": ["id", "equipmentId", "userId", "managerId", "action", "status", "validation"],
+        "description": "Links Equipment to a User for a specific action (assignment or return)."
+      },
+      "Model": {
+        "attributes": ["id", "name", "brand", "categoryId"],
+        "description": "A specific type of equipment (e.g., 'Dell Latitude 7420')."
+      },
+      "Category": {
+        "attributes": ["id", "name", "icon"],
+        "description": "A general category of equipment (e.g., 'Laptop')."
+      },
+      "Location": {
+        "attributes": ["Country", "Site", "Department"],
+        "description": "Hierarchical structure for equipment location."
+      },
+      "AuditLog & EditHistory": {
+        "description": "Tracks all significant actions and data modifications for accountability."
+      }
+    }
+  },
+  "integration_ia": {
+    "provider": "Google",
+    "api": "Gemini API (@google/genai)",
+    "model": "gemini-2.5-flash",
+    "usages": [
+      {
+        "feature": "Smart Search",
+        "description": "Parses natural language queries (e.g., 'all macbooks in marketing') into structured JSON filters for data grids."
+      },
+      {
+        "feature": "Automated Data Entry",
+        "description": "Uses the googleSearch tool to fetch equipment specifications from the web using a serial number, and to populate model details from a model name."
+      }
+    ]
+  },
+  "autres_modules": {
+    "securite": {
+      "role_based_access_control": "Different UI and capabilities for Admin, Manager, and Employee roles.",
+      "authentication_methods": [
+        "6-digit PIN for action validation.",
+        "Biometric authentication via WebAuthn API for validation."
+      ]
+    },
+    "performance": {
+      "virtualized_lists": "Used in Inventory and Users pages to efficiently render large datasets."
+    },
+    "data_handling": {
+      "bulk_import": "Admins can import Equipment, Users, and Models from CSV files with a validation step.",
+      "export": "Users can export various reports to CSV and PDF formats."
+    },
+    "ci_cd": {
+      "status": "Non spécifié"
+    }
+  }
+}

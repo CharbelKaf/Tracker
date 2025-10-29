@@ -1,0 +1,7 @@
+{
+  "name": "Neemba Tracker",
+  "description": "A web application for creating and managing IT equipment assignment forms, including validation through employee ID and digital signatures.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

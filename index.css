@@ -1,0 +1,375 @@
+/* Base styles for Neemba Tracker */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom animations and utilities are defined in tailwind.config.js (theme.extend.keyframes/animation) */
+/* This file will be processed by PostCSS + Tailwind */
+
+@layer base {
+  :root {
+    /* Primary palette */
+    --color-primary-50: #fff9e0;
+    --color-primary-100: #fff4c2;
+    --color-primary-200: #ffe985;
+    --color-primary-300: #ffde47;
+    --color-primary-400: #ffd324;
+    --color-primary-500: #ffca18;
+    --color-primary-600: #f0be15;
+    --color-primary-700: #d6a812;
+    --color-primary-800: #bb9210;
+    --color-primary-900: #a07d0d;
+
+    /* Status palettes */
+    --color-status-success-500: #22c55e;
+    --color-status-info-500: #3b82f6;
+    --color-status-warning-500: #eab308;
+    --color-status-action-500: #f97316;
+    --color-status-danger-500: #ef4444;
+
+    /* Radii - Enhanced Liquid Glass */
+    --radius-badge: 9999px;
+    --radius-card: 1.25rem;
+    --radius-modal: 1.5rem;
+    --radius-button: 0.875rem;
+    --radius-input: 0.875rem;
+
+    /* Elevations - Liquid Glass shadows */
+    --shadow-elev-1: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-elev-2: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.08);
+    --shadow-elev-3: 0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.10);
+    
+    /* Glass glow effects */
+    --glow-soft: 0 0 20px rgba(255, 255, 255, 0.1);
+    --glow-medium: 0 0 30px rgba(255, 255, 255, 0.15);
+    --glow-primary: 0 0 40px rgba(255, 202, 24, 0.2);
+    --glow-blue: 0 0 40px rgba(59, 130, 246, 0.25);
+
+    /* Secondary palette (cool neutrals) */
+    --color-secondary-50: #f4f7fb;
+    --color-secondary-100: #e8edf5;
+    --color-secondary-200: #d5ddeb;
+    --color-secondary-300: #b1c2d7;
+    --color-secondary-400: #8ba4c2;
+    --color-secondary-500: #6e87a7;
+    --color-secondary-600: #586c89;
+    --color-secondary-700: #47586f;
+    --color-secondary-800: #394657;
+    --color-secondary-900: #27313d;
+    
+    /* Liquid Glass - Translucent surfaces */
+    --glass-light-1: rgba(255, 255, 255, 0.95);
+    --glass-light-2: rgba(255, 255, 255, 0.85);
+    --glass-light-3: rgba(255, 255, 255, 0.75);
+    --glass-light-4: rgba(255, 255, 255, 0.60);
+    
+    --glass-border-light: rgba(255, 255, 255, 0.20);
+    --glass-border-medium: rgba(255, 255, 255, 0.30);
+    
+    /* Animation timings */
+    --ease-fluid: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+    
+    --duration-instant: 100ms;
+    --duration-fast: 200ms;
+    --duration-normal: 300ms;
+    --duration-slow: 500ms;
+  }
+  
+  :root.dark {
+    /* Dark mode glass surfaces */
+    --glass-dark-1: rgba(15, 23, 42, 0.95);
+    --glass-dark-2: rgba(15, 23, 42, 0.85);
+    --glass-dark-3: rgba(30, 41, 59, 0.80);
+    --glass-dark-4: rgba(51, 65, 85, 0.70);
+    
+    --glass-border-light: rgba(255, 255, 255, 0.08);
+    --glass-border-medium: rgba(255, 255, 255, 0.12);
+  }
+
+  @media (min-width: 1024px) {
+    :root {
+      font-size: 80%;
+    }
+  }
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.7;
+    background-color: var(--color-secondary-50);
+    color: #1f2933;
+  }
+
+  body.dark {
+    background-color: #0f1722;
+    color: #e2e8f0;
+  }
+
+  ::selection {
+    background-color: var(--color-primary-200);
+    color: #111827;
+  }
+}
+
+@layer components {
+  /* Enhanced Liquid Glass card */
+  .surface-card {
+    @apply rounded-[var(--radius-card)] shadow-[var(--shadow-elev-1)] transition-all ease-[var(--ease-fluid)] bg-white/90 dark:bg-[#121928]/90 backdrop-blur-[20px] border border-white/60 dark:border-white/[0.08];
+    position: relative;
+    overflow: hidden;
+    transition-duration: var(--duration-normal);
+  }
+  
+  /* Top highlight effect */
+  .surface-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3) 50%, transparent);
+    opacity: 0.6;
+  }
+
+  .surface-card:hover {
+    @apply shadow-[var(--shadow-elev-2)] -translate-y-1;
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .surface-card-gradient {
+    background: radial-gradient(circle at top left, rgba(255, 202, 24, 0.12), transparent 45%), radial-gradient(circle at bottom right, rgba(110, 135, 167, 0.14), transparent 50%);
+  }
+  
+  /* Liquid Glass variants */
+  .glass-primary {
+    background: linear-gradient(135deg, var(--glass-light-2), var(--glass-light-3));
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border-light);
+    box-shadow: 
+      var(--shadow-elev-1),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  }
+  
+  .glass-elevated {
+    background: linear-gradient(135deg, var(--glass-light-1), var(--glass-light-2));
+    backdrop-filter: blur(30px) saturate(200%);
+    border: 1px solid var(--glass-border-medium);
+    box-shadow: 
+      var(--shadow-elev-2),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  }
+  
+  /* Shimmer hover effect */
+  .glass-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-shimmer::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      to bottom right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(45deg) translateX(-100%);
+    transition: transform 0.6s var(--ease-fluid);
+    pointer-events: none;
+  }
+  
+  .glass-shimmer:hover::after {
+    transform: rotate(45deg) translateX(100%);
+  }
+  
+  /* Glow effects */
+  .glow-soft {
+    box-shadow: var(--glow-soft);
+  }
+  
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+  
+  .glow-blue {
+    box-shadow: var(--glow-blue);
+  }
+}
+
+/* Liquid Glass animations */
+@keyframes fadeInGlass {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(20px);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes floatGlass {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
+  }
+}
+
+@keyframes shimmerSlide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Page Navigation Transitions */
+@layer utilities {
+  /* Smooth page transitions */
+  .page-transitioning {
+    overflow: hidden;
+  }
+  
+  /* Navigation states */
+  .nav-entering {
+    animation: slideInFromRight 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+  
+  .nav-exiting {
+    animation: slideOutToLeft 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+  
+  .nav-back-entering {
+    animation: slideInFromLeft 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+  
+  .nav-back-exiting {
+    animation: slideOutToRight 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutToLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+/* Swipe gesture feedback */
+.swipe-indicator {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60px;
+  background: linear-gradient(to right, transparent, var(--color-primary-500));
+  border-radius: 0 4px 4px 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.swipe-indicator.active {
+  opacity: 0.8;
+}
+
+/* Navigation stack indicator */
+.nav-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav-breadcrumb::-webkit-scrollbar {
+  display: none;
+}
+
+/* Keyboard navigation hints */
+.keyboard-nav-hint {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-button);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.keyboard-nav-hint.show {
+  opacity: 1;
+  transform: translateY(0);
+}
