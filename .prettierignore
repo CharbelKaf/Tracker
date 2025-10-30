@@ -1,8 +1,0 @@
-# Ignore artifacts:
-dist
-node_modules
-coverage
-*.local
-
-# Ignore all HTML files (to preserve inline styles):
-*.html
