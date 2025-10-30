@@ -37,12 +37,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
             <div className="h-1.5 w-12 rounded-full bg-gradient-to-r from-primary-300 via-primary-400 to-primary-300 dark:from-primary-700 dark:via-primary-600 dark:to-primary-700 shadow-sm"></div>
           </div>
           {(title || title === '') && (
-            <Dialog.Title className="px-6 pt-2 md:pt-4 text-center text-xl font-bold text-white tracking-tight md:text-left">
+            <Dialog.Title className="px-6 pt-2 md:pt-4 text-center text-xl font-bold text-white tracking-tight md:text-left heading-glass">
               {title}
             </Dialog.Title>
           )}
           <Dialog.Description asChild>
-            <div className="px-6 py-5 text-gray-700 dark:text-secondary-100">
+            <div className="px-6 py-5 text-white">
               {children}
             </div>
           </Dialog.Description>

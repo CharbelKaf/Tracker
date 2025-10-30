@@ -20,6 +20,7 @@ interface UserDetailsRouteProps {
   onBack: () => void;
   onEdit: (userId: string) => void;
   onDelete: (userId: string) => void;
+  onManagePassword: (userId: string) => void;
   onManagePin: (userId: string) => void;
   onRegisterFingerprint: (userId: string) => void;
   editHistory: EditHistoryEntry[];
@@ -35,6 +36,7 @@ const UserDetailsRoute: React.FC<UserDetailsRouteProps> = ({
   onBack,
   onEdit,
   onDelete,
+  onManagePassword,
   onManagePin,
   onRegisterFingerprint,
   editHistory
@@ -62,6 +64,7 @@ const UserDetailsRoute: React.FC<UserDetailsRouteProps> = ({
       currentUser={currentUser}
       onEdit={onEdit}
       onDelete={onDelete}
+      onManagePassword={onManagePassword}
       onManagePin={onManagePin}
       onRegisterFingerprint={onRegisterFingerprint}
     />

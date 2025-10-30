@@ -41,7 +41,7 @@ const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, onNaviga
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex justify-center py-4">
-                    <div className="h-1.5 w-12 rounded-full bg-gradient-to-r from-primary-300 via-primary-400 to-primary-300 dark:from-primary-700 dark:via-primary-600 dark:to-primary-700"></div>
+                    <div className="h-1.5 w-12 rounded-full bg-gradient-to-r from-primary-300 via-primary-400 to-primary-300 dark:from-primary-700 dark:via-primary-600 dark:to-primary-700 shadow-sm"></div>
                 </div>
                 <h2 id="more-menu-title" className="text-xl font-bold text-white text-center mb-6 tracking-tight">
                     Plus d'options
@@ -51,10 +51,10 @@ const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, onNaviga
                         <button
                             key={item.hash}
                             onClick={() => { onNavigate(item.hash); onClose(); }}
-                            className="flex flex-col items-center justify-center p-2 rounded-xl min-h-[84px] text-white transition-transform duration-300 hover:scale-105 active:scale-95"
+                            className="flex flex-col items-center justify-center p-2 rounded-xl min-h-[84px] transition-all duration-300 hover:scale-105 active:scale-95"
                         >
-                            <span className="material-symbols-outlined text-3xl text-white mb-2">{item.icon}</span>
-                            <span className="text-xs font-semibold text-center text-white/90">{item.label}</span>
+                            <span className="material-symbols-outlined text-3xl text-white mb-2 drop-shadow-lg">{item.icon}</span>
+                            <span className="text-xs font-semibold text-center text-white drop-shadow-md">{item.label}</span>
                         </button>
                     ))}
                 </div>

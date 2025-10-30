@@ -50,7 +50,7 @@ const Login: React.FC<{ users: User[]; onLoginSuccess: (user: User) => void; }> 
                 u.name.toLowerCase() === lowerCaseIdentifier
             );
 
-            if (user && user.pin === password) {
+            if (user && user.password === password) {
                 if (rememberMe) {
                     localStorage.setItem('rememberedUser', identifier);
                 } else {

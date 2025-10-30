@@ -47,6 +47,7 @@ type Action =
   | { type: 'SAVE_EQUIPMENT'; payload: Partial<Equipment> }
   | { type: 'IMPORT_EQUIPMENT'; payload: Partial<Equipment>[] }
   | { type: 'SAVE_USER'; payload: Partial<User> & { avatarUrl?: string } }
+  | { type: 'SAVE_PASSWORD'; payload: { userId: string; password: string } }
   | { type: 'SAVE_PIN'; payload: { userId: string; pin: string } }
   | { type: 'SAVE_WEBAUTHN_CREDENTIAL'; payload: { userId: string; credentialId: string } }
   | { type: 'SAVE_CATEGORY'; payload: { name: string; description: string; icon: string; id?: string } }
@@ -243,6 +244,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
             ...state,
             users: newUserList,
             editHistory: newEditHistory,
+        };
+    }
+    
+    case 'SAVE_PASSWORD': {
+        return {
+            ...state,
+            users: state.users.map(u => (u.id === action.payload.userId ? { ...u, password: action.payload.password } : u)),
         };
     }
     

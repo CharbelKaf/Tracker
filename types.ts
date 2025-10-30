@@ -144,7 +144,8 @@ export interface User {
   employeeId?: string;
   email?: string;
   managerId?: string;
-  pin?: string;
+  password?: string; // For authentication (login)
+  pin?: string; // For validation (approvals)
   // FIX: Add webauthnCredentialId for fingerprint validation
   webauthnCredentialId?: string;
 }

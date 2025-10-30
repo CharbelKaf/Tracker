@@ -24,6 +24,7 @@ interface UserDetailsProps {
     currentUser: User;
     onEdit: (userId: string) => void;
     onDelete: (userId: string) => void;
+    onManagePassword: (userId: string) => void;
     onManagePin: (userId: string) => void;
     onRegisterFingerprint: (userId: string) => void;
 }
@@ -60,7 +61,7 @@ const ChangeItem: React.FC<{ change: ChangeDetail; allUsers: User[] }> = ({ chan
     );
 };
 
-const UserDetails: React.FC<UserDetailsProps> = ({ user, assignments, equipment, models, categories, manager, allUsers, editHistory, onBack, currentUser, onEdit, onDelete, onManagePin, onRegisterFingerprint }) => {
+const UserDetails: React.FC<UserDetailsProps> = ({ user, assignments, equipment, models, categories, manager, allUsers, editHistory, onBack, currentUser, onEdit, onDelete, onManagePassword, onManagePin, onRegisterFingerprint }) => {
     const [activeTab, setActiveTab] = useState<'details' | 'equipment' | 'history'>('details');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -252,7 +253,19 @@ const UserDetails: React.FC<UserDetailsProps> = ({ user, assignments, equipment,
                                         <span className="material-symbols-outlined text-secondary-500 dark:text-secondary-300">password</span>
                                         <div className="flex flex-col">
                                             <span className="font-semibold text-gray-900 dark:text-gray-100">Mot de passe</span>
-                                            <span className="text-sm text-secondary-600 dark:text-secondary-300">{user.pin ? "Un mot de passe a été défini." : "Aucun mot de passe défini."}</span>
+                                            <span className="text-sm text-secondary-600 dark:text-secondary-300">{user.password ? "Un mot de passe a été défini." : "Aucun mot de passe défini."}</span>
+                                        </div>
+                                    </div>
+                                    <Button onClick={() => onManagePassword(user.id)}>
+                                        {user.password ? "Modifier" : "Créer"}
+                                    </Button>
+                                </div>
+                                <div className="flex items-center justify-between rounded-2xl border border-secondary-100/70 dark:border-secondary-800/60 bg-white/90 dark:bg-secondary-900/40 p-4">
+                                    <div className="flex items-center gap-4">
+                                        <span className="material-symbols-outlined text-secondary-500 dark:text-secondary-300">pin</span>
+                                        <div className="flex flex-col">
+                                            <span className="font-semibold text-gray-900 dark:text-gray-100">Code PIN</span>
+                                            <span className="text-sm text-secondary-600 dark:text-secondary-300">{user.pin ? "Un code PIN a été défini." : "Aucun code PIN défini."}</span>
                                         </div>
                                     </div>
                                     <Button onClick={() => onManagePin(user.id)}>

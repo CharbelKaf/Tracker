@@ -192,6 +192,7 @@ export const ValidationModal: React.FC<{
 }> = ({ isOpen, onClose, onConfirm, assignment, equipment, userToValidate, actorLabel, instructions }) => {
     const [validationMethod, setValidationMethod] = useState<'fingerprint' | 'pin' | null>(null);
     const [isValidated, setIsValidated] = useState(false);
+    const [isFingerprintAvailable, setIsFingerprintAvailable] = useState(false);
 
     useEffect(() => {
         if (!isOpen) {
@@ -199,6 +200,35 @@ export const ValidationModal: React.FC<{
             setIsValidated(false);
         }
     }, [isOpen]);
+
+    // Vérifier la disponibilité de l'empreinte digitale
+    useEffect(() => {
+        const checkFingerprintAvailability = async () => {
+            if (!isOpen) return;
+            
+            // Vérifier si l'utilisateur a une empreinte enregistrée
+            if (!userToValidate.webauthnCredentialId) {
+                setIsFingerprintAvailable(false);
+                return;
+            }
+
+            // Vérifier le support WebAuthn
+            if (!window.isSecureContext || !('PublicKeyCredential' in window)) {
+                setIsFingerprintAvailable(false);
+                return;
+            }
+
+            try {
+                const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                setIsFingerprintAvailable(available);
+            } catch (err) {
+                console.error('Fingerprint availability check failed:', err);
+                setIsFingerprintAvailable(false);
+            }
+        };
+
+        checkFingerprintAvailability();
+    }, [isOpen, userToValidate.webauthnCredentialId]);
 
     useEffect(() => {
         if (!isOpen || validationMethod) return;
@@ -255,9 +285,31 @@ export const ValidationModal: React.FC<{
                 <div className="flex items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 shrink-0 size-10"><span className="material-symbols-outlined text-2xl">pin</span></div>
                 <p className="text-gray-900 dark:text-gray-100 text-base font-semibold leading-normal flex-1 truncate">Valider par PIN</p>
               </button>
-              <button type="button" onClick={() => handleValidationMethodSelect('fingerprint')} className={`w-full flex items-center gap-4 rounded-xl border-2 p-3 text-left transition-colors ${validationMethod === 'fingerprint' ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10' : 'border-gray-300 bg-white hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500'}`}>
-                <div className="flex items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 shrink-0 size-10"><span className="material-symbols-outlined text-2xl">fingerprint</span></div>
-                <p className="text-gray-900 dark:text-gray-100 text-base font-semibold leading-normal flex-1 truncate">Valider par Empreinte</p>
+              <button 
+                type="button" 
+                onClick={() => handleValidationMethodSelect('fingerprint')} 
+                disabled={!isFingerprintAvailable}
+                className={`w-full flex items-center gap-4 rounded-xl border-2 p-3 text-left transition-colors ${
+                  !isFingerprintAvailable 
+                    ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50 dark:border-gray-700 dark:bg-gray-900' 
+                    : validationMethod === 'fingerprint' 
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10' 
+                      : 'border-gray-300 bg-white hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500'
+                }`}
+              >
+                <div className="flex items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 shrink-0 size-10">
+                  <span className="material-symbols-outlined text-2xl">fingerprint</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-gray-900 dark:text-gray-100 text-base font-semibold leading-normal truncate">
+                    Valider par Empreinte
+                  </p>
+                  {!isFingerprintAvailable && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {!userToValidate.webauthnCredentialId ? 'Non enregistrée' : 'Non disponible'}
+                    </p>
+                  )}
+                </div>
               </button>
             </div>
           </div>
@@ -466,11 +518,11 @@ export const PinManagementModal: React.FC<{
         }
       >
         <div className="pt-0">
-          <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">Définissez un code PIN à 6 chiffres pour {userName}.</p>
+          <p className="text-white text-glass-enhanced text-sm mb-4">Définissez un code PIN à 6 chiffres pour {userName}.</p>
 
                     <div className={newFieldClasses}>
                         <div className="flex items-center justify-between mb-3">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="new-pin-0">Nouveau PIN</label>
+                            <label className="text-sm font-semibold text-white text-glass-enhanced" htmlFor="new-pin-0">Nouveau PIN</label>
                             {isNewComplete && !hasError && !showSuccess && (
                                 <span className="text-xs text-primary-600 font-semibold">Complet</span>
                             )}
@@ -503,7 +555,7 @@ export const PinManagementModal: React.FC<{
 
                     <div className={confirmFieldClasses}>
                         <div className="flex items-center justify-between mb-3">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="confirm-pin-0">Confirmer le PIN</label>
+                            <label className="text-sm font-semibold text-white text-glass-enhanced" htmlFor="confirm-pin-0">Confirmer le PIN</label>
                             {showSuccess && (
                                 <span className="text-xs text-green-600 font-semibold flex items-center gap-1">
                                     <span className="material-symbols-outlined text-base">verified</span>
@@ -541,13 +593,14 @@ export const PinManagementModal: React.FC<{
                     </div>
 
                     {hasError && (
-                        <p className="text-red-600 dark:text-red-400 text-sm mt-2 text-center">{statusMessage}</p>
+                        <p className="text-red-300 text-glass-enhanced text-sm mt-2 text-center">{statusMessage}</p>
                     )}
                     {!hasError && !showSuccess && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Utilisez uniquement des chiffres. Évitez les suites trop évidentes comme 123456.</p>
-                    )}
+                        <p className="text-xs text-white/80 text-center mt-2 text-glass-subtle font-medium">
+            Utilisez uniquement des chiffres. Évitez les suites trop évidentes comme 123456.
+          </p>          )}
                     {showSuccess && (
-                        <p className="text-green-600 dark:text-green-400 text-sm mt-2 text-center font-semibold">Les deux codes PIN correspondent.</p>
+                        <p className="text-green-300 text-glass-enhanced text-sm mt-2 text-center font-semibold">Les deux codes PIN correspondent.</p>
                     )}
         </div>
       </Modal>
@@ -637,6 +690,156 @@ export const LocationEditModal: React.FC<{
           )}
           <div>
             <Input label="Nom" id="location-name" type="text" value={name} onChange={e => setName(e.target.value)} required />
+          </div>
+        </form>
+      </Modal>
+    );
+};
+
+export const PasswordManagementModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (password: string) => void;
+    userName: string;
+    existingPassword?: string;
+}> = ({ isOpen, onClose, onSave, userName, existingPassword }) => {
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const passwordInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (!isOpen) {
+            setPassword('');
+            setConfirmPassword('');
+            setError('');
+            setShowPassword(false);
+            setShowConfirmPassword(false);
+        } else {
+            setTimeout(() => {
+                passwordInputRef.current?.focus();
+            }, 120);
+        }
+    }, [isOpen]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (password.length < 6) {
+            setError('Le mot de passe doit contenir au moins 6 caractères.');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError('Les mots de passe ne correspondent pas.');
+            return;
+        }
+
+        onSave(password);
+        onClose();
+    };
+
+    const passwordsMatch = password === confirmPassword && password.length >= 6 && confirmPassword.length >= 6;
+    const shouldShowMismatch = confirmPassword.length >= 6 && password.length >= 6 && !passwordsMatch;
+
+    return (
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={existingPassword ? "Modifier le mot de passe" : "Créer un mot de passe"}
+        size="sm"
+        footer={
+          <div className="grid grid-cols-2 gap-4">
+            <Button variant="secondary" onClick={onClose}>Annuler</Button>
+            <Button type="submit" form="password-form" disabled={!passwordsMatch}>
+              Enregistrer
+            </Button>
+          </div>
+        }
+      >
+        <form id="password-form" onSubmit={handleSubmit} className="space-y-5">
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-sm border border-blue-200 dark:border-blue-800">
+            <p className="text-blue-900 dark:text-blue-100 font-semibold mb-1 text-glass-enhanced">
+              {existingPassword ? `Modifier le mot de passe pour ${userName}` : `Définir un mot de passe pour ${userName}`}
+            </p>
+            <p className="text-blue-700 dark:text-blue-300 text-xs text-glass-subtle">
+              Le mot de passe est utilisé pour l'authentification lors de la connexion.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="new-password" className="block text-sm font-semibold text-white text-glass-enhanced mb-2">
+              Nouveau mot de passe
+            </label>
+            <div className="relative">
+              <input
+                ref={passwordInputRef}
+                id="new-password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
+                className="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 pr-12 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                placeholder="Entrez le mot de passe"
+                minLength={6}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              >
+                <span className="material-symbols-outlined text-xl">{showPassword ? 'visibility_off' : 'visibility'}</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="confirm-password" className="block text-sm font-semibold text-white text-glass-enhanced mb-2">
+              Confirmer le mot de passe
+            </label>
+            <div className="relative">
+              <input
+                id="confirm-password"
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setError('');
+                }}
+                className={`w-full h-11 rounded-lg border ${shouldShowMismatch ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-800 px-4 pr-12 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-1 focus:ring-primary-500`}
+                placeholder="Confirmez le mot de passe"
+                minLength={6}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              >
+                <span className="material-symbols-outlined text-xl">{showConfirmPassword ? 'visibility_off' : 'visibility'}</span>
+              </button>
+            </div>
+            {shouldShowMismatch && (
+              <p className="mt-1.5 text-sm text-red-300 text-glass-enhanced">Les mots de passe ne correspondent pas.</p>
+            )}
+          </div>
+
+          {error && <p className="text-red-300 text-glass-enhanced text-sm mt-2">{error}</p>}
+
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-xs text-yellow-800 dark:text-yellow-300">
+            <p className="font-medium mb-1">Recommandations :</p>
+            <ul className="list-disc list-inside space-y-0.5">
+              <li>Minimum 6 caractères</li>
+              <li>Utilisez une combinaison de lettres, chiffres et symboles</li>
+              <li>Ne réutilisez pas un mot de passe existant</li>
+            </ul>
           </div>
         </form>
       </Modal>

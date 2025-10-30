@@ -27,13 +27,15 @@ interface FingerprintRegistrationModalProps {
     existingCredentialId?: string;
 }
 
-type RegistrationStatus = 'idle' | 'prompting' | 'registering' | 'success' | 'error';
+type RegistrationStatus = 'idle' | 'prompting' | 'registering' | 'multi-scan' | 'success' | 'error';
 
 export const FingerprintRegistrationModal: React.FC<FingerprintRegistrationModalProps> = ({ isOpen, onClose, onSave, userId, userName, existingCredentialId }) => {
     const [status, setStatus] = useState<RegistrationStatus>('idle');
     const [error, setError] = useState<string | null>(null);
     const [supportError, setSupportError] = useState<string | null>(null);
     const [isSupported, setIsSupported] = useState<boolean>(true);
+    const [scanCount, setScanCount] = useState<number>(0);
+    const [requiredScans] = useState<number>(3); // Nombre de scans requis pour une meilleure couverture
 
     useEffect(() => {
         if (isOpen) {
@@ -41,6 +43,7 @@ export const FingerprintRegistrationModal: React.FC<FingerprintRegistrationModal
             setError(null);
             setSupportError(null);
             setIsSupported(true);
+            setScanCount(0);
 
             if (!window.isSecureContext) {
                 setSupportError("WebAuthn nécessite une connexion sécurisée (HTTPS ou localhost).");
@@ -99,20 +102,43 @@ export const FingerprintRegistrationModal: React.FC<FingerprintRegistrationModal
                     name: userName,
                     displayName: userName,
                 },
-                pubKeyCredParams: [{ alg: -7, type: 'public-key' }], // ES256
+                pubKeyCredParams: [
+                    { alg: -7, type: 'public-key' },  // ES256
+                    { alg: -257, type: 'public-key' } // RS256 (fallback)
+                ],
                 authenticatorSelection: {
                     authenticatorAttachment: 'platform',
                     userVerification: 'required',
                     requireResidentKey: true,
+                    residentKey: 'required',
                 },
-                timeout: 60000,
+                timeout: 120000, // 2 minutes pour permettre plusieurs scans
                 attestation: 'none',
+                extensions: {
+                    // Demander une meilleure qualité de scan
+                    credProps: true,
+                },
             };
             
-            setStatus('registering');
+            // Démarrer le processus multi-scan
+            setStatus('multi-scan');
+            setScanCount(1);
+            
             const credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreationOptions });
           
             if (credential && (credential as PublicKeyCredential).rawId) {
+                // Simuler un délai pour encourager l'utilisateur à repositionner son doigt
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Incrémenter le compteur de scans
+                setScanCount(prev => {
+                    const newCount = prev + 1;
+                    if (newCount < requiredScans) {
+                        setStatus('multi-scan');
+                    }
+                    return newCount;
+                });
+                
                 const credentialId = bufferToBase64URL((credential as PublicKeyCredential).rawId);
                 setStatus('success');
                 onSave(credentialId);
@@ -140,6 +166,23 @@ export const FingerprintRegistrationModal: React.FC<FingerprintRegistrationModal
                 return <p>Veuillez suivre les instructions de votre navigateur pour continuer.</p>;
             case 'registering':
                 return <p>Veuillez toucher le capteur d'empreintes digitales...</p>;
+            case 'multi-scan':
+                return (
+                    <div className="space-y-2">
+                        <p className="font-semibold text-primary-600">Scan {scanCount} / {requiredScans}</p>
+                        <p className="text-sm text-gray-600">Repositionnez votre doigt pour couvrir plus de surface...</p>
+                        <div className="flex gap-2 justify-center mt-3">
+                            {Array.from({ length: requiredScans }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={`h-2 w-12 rounded-full transition-colors ${
+                                        i < scanCount ? 'bg-primary-500' : 'bg-gray-300'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                );
             case 'success':
                 return <p className="text-green-600 font-semibold">Enregistrement réussi !</p>;
             case 'error':

@@ -2,6 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import AppRoot from './App';
 import './index.css';
+import { initErrorTracking } from './utils/errorTracking';
+
+// Initialize error tracking
+initErrorTracking();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

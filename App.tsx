@@ -7,6 +7,7 @@ import { UserRole, EquipmentStatus, AssignmentStatus, FormAction, type User, typ
 import { ToastProvider, useToast } from './contexts/ToastContext';
 import { AppProvider, useAppContext } from './contexts/AppContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
 import MobileNav from './components/MobileNav';
 import Dashboard from './components/Dashboard';
@@ -25,7 +26,7 @@ import { AuditOverview as AuditOverviewComponent } from './components/AuditOverv
 import Profile from './components/Profile';
 import MoreMenuSheet from './components/MoreMenuSheet';
 import ImportEquipmentForm from './components/ImportEquipmentForm';
-import { PinManagementModal, FingerprintRegistrationModal } from './components/Modals';
+import { PasswordManagementModal, PinManagementModal, FingerprintRegistrationModal } from './components/Modals';
 import SettingsSheet from './components/SettingsSheet';
 import ImportUsersForm from './components/ImportUsersForm';
 import ImportModelsForm from './components/ImportModelsForm';
@@ -61,6 +62,7 @@ const AppContent: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
     const [isMoreMenuOpen, setMoreMenuOpen] = useState(false);
     const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
+    const [passwordManagementInfo, setPasswordManagementInfo] = useState<{ userId: string; existingPassword?: string } | null>(null);
     const [pinManagementInfo, setPinManagementInfo] = useState<{ userId: string; existingPin?: string } | null>(null);
     const [fingerprintRegistrationInfo, setFingerprintRegistrationInfo] = useState<{ userId: string } | null>(null);
     
@@ -485,6 +487,7 @@ const AppContent: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     dispatch({ type: 'DELETE_USER', payload: id });
                                     window.location.hash = '#/users';
                                 }}
+                                onManagePassword={(userId) => setPasswordManagementInfo({ userId, existingPassword: state.users.find((u) => u.id === userId)?.password })}
                                 onManagePin={(userId) => setPinManagementInfo({ userId, existingPin: state.users.find((u) => u.id === userId)?.pin })}
                                 onRegisterFingerprint={(userId) => setFingerprintRegistrationInfo({ userId })}
                             />
@@ -691,7 +694,7 @@ const AppContent: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             )
                         }
                     />
-                    <Route path="/profile" element={<Profile currentUser={currentUser} onBack={() => window.history.back()} onEdit={(id) => window.location.hash = `#/users/${id}/edit`} onLogout={onLogout} onManagePin={(userId) => setPinManagementInfo({userId, existingPin: currentUser.pin})} />} />
+                    <Route path="/profile" element={<Profile currentUser={currentUser} onBack={() => window.history.back()} onEdit={(id) => window.location.hash = `#/users/${id}/edit`} onLogout={onLogout} onManagePassword={(userId) => setPasswordManagementInfo({userId, existingPassword: currentUser.password})} onManagePin={(userId) => setPinManagementInfo({userId, existingPin: currentUser.pin})} />} />
                     <Route path="/settings/about" element={<SettingsAboutPage />} />
                     <Route path="/settings/notifications" element={<SettingsNotificationsPage />} />
                     <Route path="/settings/data" element={<SettingsDataPage />} />
@@ -703,6 +706,7 @@ const AppContent: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
             {!isFormPage && <MobileNav activeHash={activeHash} showFullNav={showFullNav} role={currentUser.role} onMoreClick={() => setMoreMenuOpen(true)} pendingApprovalsCount={pendingApprovalsCount} />}
             <MoreMenuSheet isOpen={isMoreMenuOpen} onClose={() => setMoreMenuOpen(false)} onNavigate={(hash) => window.location.hash = hash} role={currentUser.role} />
              <SettingsSheet isOpen={isSettingsSheetOpen} onClose={() => setIsSettingsSheetOpen(false)} currentUser={currentUser} onLogout={onLogout} />
+            <PasswordManagementModal isOpen={!!passwordManagementInfo} onClose={() => setPasswordManagementInfo(null)} onSave={(password) => { if(passwordManagementInfo) { dispatch({type: 'SAVE_PASSWORD', payload: { userId: passwordManagementInfo.userId, password }}); setPasswordManagementInfo(null); }}} userName={state.users.find(u => u.id === passwordManagementInfo?.userId)?.name || ''} existingPassword={passwordManagementInfo?.existingPassword} />
             <PinManagementModal isOpen={!!pinManagementInfo} onClose={() => setPinManagementInfo(null)} onSave={(pin) => { if(pinManagementInfo) { dispatch({type: 'SAVE_PIN', payload: { userId: pinManagementInfo.userId, pin }}); setPinManagementInfo(null); }}} userName={state.users.find(u => u.id === pinManagementInfo?.userId)?.name || ''} existingPin={pinManagementInfo?.existingPin} />
             <FingerprintRegistrationModal
                 isOpen={!!fingerprintRegistrationInfo}
@@ -741,20 +745,22 @@ const App: React.FC = () => {
 };
 
 const AppRoot: React.FC = () => (
-  <ThemeProvider>
-    <ToastProvider>
-      <AppProvider>
-        <HashRouter
-            future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true,
-            }}
-        >
-            <App />
-        </HashRouter>
-      </AppProvider>
-    </ToastProvider>
-  </ThemeProvider>
+  <ErrorBoundary>
+    <ThemeProvider>
+      <ToastProvider>
+        <AppProvider>
+          <HashRouter
+              future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+              }}
+          >
+              <App />
+          </HashRouter>
+        </AppProvider>
+      </ToastProvider>
+    </ThemeProvider>
+  </ErrorBoundary>
 );
 
 export default AppRoot;

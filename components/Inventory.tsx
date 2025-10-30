@@ -5,6 +5,7 @@ import { EquipmentStatus, FormAction, UserRole } from '../types';
 import { InventorySkeleton } from './skeletons';
 import { GoogleGenAI, Type } from "@google/genai";
 import { useToast } from '../contexts/ToastContext';
+import { useDebounce } from '../hooks/useDebounce';
 import PageHeader, { SelectionHeader, ListItemCard, FloatingActionButton, PageHeaderActions } from './PageHeader';
 import { BulkUpdateModal, ConfirmationModal } from './Modals';
 import QRScanner from './QRScanner';
@@ -57,6 +58,8 @@ const Highlight: React.FC<{text: string, highlight: string}> = ({ text, highligh
 
 const Inventory: React.FC<InventoryProps> = ({ equipment, models, categories, assignments, users, onAdd, onImport, canAdd, onEdit, onDelete, selectedIds, onSelectedIdsChange, onBulkDelete, onBulkUpdateStatus, onBulkUpdateLocation, isLoading, currentUser }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    // Debounced search term to avoid filtering on every keystroke
+    const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [locationFilter, setLocationFilter] = useState<string>('all');
@@ -231,8 +234,8 @@ const Inventory: React.FC<InventoryProps> = ({ equipment, models, categories, as
         const matchesType = typeFilter === 'all' || item.category?.id === typeFilter;
         const matchesLocation = locationFilter === 'all' || item.location === locationFilter;
         
-        const lowerCaseTerm = searchTerm.toLowerCase();
-        const matchesSearchTerm = searchTerm === '' ||
+        const lowerCaseTerm = debouncedSearchTerm.toLowerCase();
+        const matchesSearchTerm = debouncedSearchTerm === '' ||
             (item.model && item.model.name.toLowerCase().includes(lowerCaseTerm)) ||
             item.assetTag.toLowerCase().includes(lowerCaseTerm) ||
             (item.name && item.name.toLowerCase().includes(lowerCaseTerm));
@@ -250,7 +253,7 @@ const Inventory: React.FC<InventoryProps> = ({ equipment, models, categories, as
         const matchesWarranty = !warrantyFilter || (item.warrantyEndDate && new Date(item.warrantyEndDate).getFullYear() === currentYear);
 
         return matchesStatus && matchesType && matchesLocation && matchesSearchTerm && matchesAssignedTo && matchesWarranty;
-    }), [equipmentWithDetails, searchTerm, statusFilter, typeFilter, locationFilter, assignedToFilter, warrantyFilter, assignedUserMap, users]);
+    }), [equipmentWithDetails, debouncedSearchTerm, statusFilter, typeFilter, locationFilter, assignedToFilter, warrantyFilter, assignedUserMap, users]);
     
     const { startIndex, visibleItems } = useMemo(() => {
         const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN_COUNT);

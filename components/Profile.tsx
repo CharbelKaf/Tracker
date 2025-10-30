@@ -9,6 +9,7 @@ interface ProfileProps {
     onBack: () => void;
     onEdit: (userId: string) => void;
     onLogout: () => void;
+    onManagePassword: (userId: string) => void;
     onManagePin: (userId: string) => void;
 }
 
@@ -27,8 +28,8 @@ const SecurityItem: React.FC<{ icon: string; title: string; description: string;
     </div>
 );
 
-const Profile: React.FC<ProfileProps> = ({ currentUser, onBack, onEdit, onLogout, onManagePin }) => {
-    const hasPin = !!currentUser.pin;
+const Profile: React.FC<ProfileProps> = ({ currentUser, onBack, onEdit, onLogout, onManagePassword, onManagePin }) => {
+    const hasPassword = !!currentUser.password;
 
     return (
         <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
@@ -68,9 +69,9 @@ const Profile: React.FC<ProfileProps> = ({ currentUser, onBack, onEdit, onLogout
                         <SecurityItem 
                             icon="password"
                             title="Mot de passe"
-                            description={hasPin ? "Votre mot de passe est défini." : "Configurez un mot de passe pour votre compte."}
-                            buttonLabel={hasPin ? "Modifier" : "Créer"}
-                            onClick={() => onManagePin(currentUser.id)}
+                            description={hasPassword ? "Votre mot de passe est défini." : "Configurez un mot de passe pour votre compte."}
+                            buttonLabel={hasPassword ? "Modifier" : "Créer"}
+                            onClick={() => onManagePassword(currentUser.id)}
                         />
                     </div>
                 </div>

@@ -59,10 +59,18 @@ const FingerprintValidator: React.FC<FingerprintValidatorProps> = ({ onValidated
 
       setStatus('idle');
       setError(null);
+      
+      // Déclencher automatiquement la validation si tout est prêt
+      if (userCredentialId) {
+        // Petit délai pour permettre à l'UI de se charger
+        setTimeout(() => {
+          handleValidation();
+        }, 300);
+      }
     };
 
     checkSupport();
-  }, [onValidated]);
+  }, [onValidated, userCredentialId]);
 
   const handleValidation = async () => {
     if (status !== 'idle' || !userCredentialId) return;
@@ -182,17 +190,40 @@ const FingerprintValidator: React.FC<FingerprintValidatorProps> = ({ onValidated
 
   return (
     <div className="mt-4">
-      <h2 className="text-lg font-bold mb-4 text-gray-800">ID par empreinte digitale</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">ID par empreinte digitale</h2>
+        {status === 'scanning' && (
+          <div className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400">
+            <div className="animate-pulse h-2 w-2 rounded-full bg-primary-600"></div>
+            <span>En cours...</span>
+          </div>
+        )}
+      </div>
       <button
         onClick={handleValidation}
-        disabled={!userCredentialId || status === 'unsupported' || status === 'scanning'}
+        disabled={!userCredentialId || status === 'unsupported' || status === 'scanning' || status === 'success'}
         className={getButtonClasses()}
         aria-live="polite"
       >
         {renderContent()}
       </button>
       {error && status !== 'success' && status !== 'scanning' && (
-        <p className="text-red-600 text-sm mt-2 text-center">{error}</p>
+        <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-red-600 dark:text-red-400 text-sm text-center">{error}</p>
+          <button
+            onClick={handleValidation}
+            className="mt-2 w-full text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
+          >
+            Réessayer
+          </button>
+        </div>
+      )}
+      {status === 'success' && (
+        <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <p className="text-green-600 dark:text-green-400 text-sm text-center font-medium">
+            ✓ Empreinte validée avec succès
+          </p>
+        </div>
       )}
     </div>
   );

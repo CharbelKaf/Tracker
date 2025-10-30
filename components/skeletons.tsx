@@ -1,7 +1,84 @@
 import React from 'react';
 
+/**
+ * Base skeleton component with shimmer animation
+ */
 const SkeletonBox: React.FC<{className?: string}> = ({ className }) => (
-    <div className={`rounded-md animate-pulse bg-gradient-to-r from-secondary-100 via-secondary-50 to-secondary-100 dark:from-secondary-800 dark:via-secondary-700 dark:to-secondary-800 ${className}`} />
+    <div className={`rounded-md animate-pulse bg-gradient-to-r from-secondary-100 via-secondary-50 to-secondary-100 dark:from-secondary-800 dark:via-secondary-700 dark:to-secondary-800 ${className}`} 
+         style={{
+           backgroundSize: '200% 100%',
+           animation: 'shimmer 2s infinite',
+         }}
+    />
+);
+
+/**
+ * Reusable skeleton variants
+ */
+export const SkeletonLine: React.FC<{ width?: string }> = ({ width = 'w-full' }) => (
+    <SkeletonBox className={`h-4 ${width}`} />
+);
+
+export const SkeletonCircle: React.FC<{ size?: string }> = ({ size = 'size-12' }) => (
+    <SkeletonBox className={`${size} rounded-full`} />
+);
+
+export const SkeletonButton: React.FC = () => (
+    <SkeletonBox className="h-10 w-24 rounded-lg" />
+);
+
+export const SkeletonCard: React.FC = () => (
+    <div className="surface-card surface-card-gradient rounded-xl p-4 space-y-3">
+        <div className="flex items-center gap-3">
+            <SkeletonCircle size="size-10" />
+            <div className="flex-1 space-y-2">
+                <SkeletonLine width="w-3/4" />
+                <SkeletonLine width="w-1/2" />
+            </div>
+        </div>
+        <SkeletonLine width="w-full" />
+        <SkeletonLine width="w-5/6" />
+    </div>
+);
+
+export const SkeletonTable: React.FC<{ rows?: number }> = ({ rows = 5 }) => (
+    <div className="surface-card overflow-hidden rounded-xl">
+        {/* Header */}
+        <div className="border-b border-secondary-200 dark:border-secondary-700 p-4">
+            <div className="flex items-center gap-4">
+                <SkeletonBox className="h-5 w-32" />
+                <SkeletonBox className="h-5 w-40" />
+                <SkeletonBox className="h-5 w-24" />
+                <SkeletonBox className="h-5 w-28" />
+            </div>
+        </div>
+        {/* Rows */}
+        {[...Array(rows)].map((_, i) => (
+            <div key={i} className="border-b border-secondary-100 dark:border-secondary-800 p-4">
+                <div className="flex items-center gap-4">
+                    <SkeletonBox className="h-4 w-32" />
+                    <SkeletonBox className="h-4 w-40" />
+                    <SkeletonBox className="h-4 w-24" />
+                    <SkeletonBox className="h-4 w-28" />
+                </div>
+            </div>
+        ))}
+    </div>
+);
+
+export const SkeletonList: React.FC<{ items?: number }> = ({ items = 5 }) => (
+    <div className="space-y-2">
+        {[...Array(items)].map((_, i) => (
+            <div key={i} className="surface-card surface-card-gradient rounded-xl p-3 flex items-center gap-3">
+                <SkeletonCircle size="size-10" />
+                <div className="flex-1 space-y-2">
+                    <SkeletonLine width="w-2/3" />
+                    <SkeletonLine width="w-1/2" />
+                </div>
+                <SkeletonBox className="h-6 w-20 rounded-full" />
+            </div>
+        ))}
+    </div>
 );
 
 export const DashboardSkeleton: React.FC = () => (

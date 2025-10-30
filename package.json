@@ -1,17 +1,27 @@
 {
   "name": "neemba-tracker",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "homepage": "https://CharbelKaf.github.io/Tracker",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:run": "vitest run",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
+    "generate-icons": "node scripts/generate-icons.js",
+    "test-pwa": "node scripts/test-pwa.js",
+    "pwa:setup": "npm run generate-icons && npm run test-pwa"
   },
   "dependencies": {
     "@google/genai": "^1.19.0",
@@ -24,20 +34,28 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
     "@types/node": "^22.14.0",
     "@types/react": "^19.0.6",
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/ui": "^1.0.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.17.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.16",
+    "gh-pages": "^6.3.0",
     "globals": "^15.14.0",
+    "happy-dom": "^12.10.3",
     "postcss": "^8.4.49",
     "prettier": "^3.4.2",
+    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.18.2",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vitest": "^1.0.4"
   }
 }
