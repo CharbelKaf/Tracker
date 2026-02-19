@@ -443,23 +443,29 @@ const UsersPage: React.FC<UsersPageProps> = ({ onUserClick, onViewChange }) => {
                 }
                 title={user.name}
                 subtitle={
-                  <div className="flex items-center gap-2 text-body-small text-on-surface-variant mt-0.5">
+                  <div className="flex items-center gap-2 text-body-small text-on-surface-variant mt-0.5 min-w-0">
                     <span className="truncate">{user.email}</span>
-                    <span className="text-outline">•</span>
-                    <span className="truncate">{user.department}</span>
+                  </div>
+                }
+                location={
+                  <div className="flex w-full min-w-0 items-center gap-1.5 text-label-small text-on-surface-variant">
+                    <MaterialIcon name="work" size={14} className="shrink-0" />
+                    <span className="truncate text-body-medium">{user.department || 'N/A'}</span>
                   </div>
                 }
                 meta={
-                  <div className="hidden medium:block w-[220px] text-right">
-                    <p className="text-label-small text-on-surface-variant uppercase tracking-wider mb-0.5">Dernière activité</p>
-                    <div className="flex items-center justify-end gap-1.5 text-body-small text-on-surface-variant">
-                      <MaterialIcon name="schedule" size={12} />
-                      <span>{user.lastLogin || 'Jamais'}</span>
+                  <div className="hidden expanded:flex w-full min-w-0 justify-end">
+                    <div className="w-[220px] text-right">
+                      <p className="text-label-small text-on-surface-variant uppercase tracking-wider mb-0.5">Dernière activité</p>
+                      <div className="flex items-center justify-end gap-1.5 text-body-small text-on-surface-variant">
+                        <MaterialIcon name="schedule" size={12} />
+                        <span className="truncate">{user.lastLogin || 'Jamais'}</span>
+                      </div>
                     </div>
                   </div>
                 }
                 status={
-                  <div className="flex w-[132px] items-center justify-end pr-1">
+                  <div className="flex w-[164px] items-center justify-end pr-1">
                     <StatusBadge status={user.role} size="sm" />
                   </div>
                 }
