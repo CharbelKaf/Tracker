@@ -337,7 +337,7 @@ const LocationsPage = () => {
             onClick={onClick}
             onKeyDown={(e) => handleKeyDown(e, onClick)}
             className={cn(
-                "group flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary relative pr-20 overflow-hidden",
+                "group relative flex min-h-11 items-center justify-between overflow-hidden rounded-xl px-4 py-2.5 pr-[5.75rem] text-sm font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary",
                 isSelected
                     ? 'bg-primary-container text-on-primary-container shadow-elevation-1 border border-primary/30'
                     : 'hover:bg-surface-container text-on-surface-variant hover:text-on-surface'
@@ -350,24 +350,24 @@ const LocationsPage = () => {
                 <span className="truncate">{item}</span>
             </div>
 
-            <div className="absolute right-1.5 inset-y-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-short4">
+            <div className="pointer-events-none absolute right-2 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1 rounded-lg bg-surface/85 p-0.5 opacity-0 backdrop-blur-[1px] transition-all duration-short4 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
                 <Button
                     variant="text"
                     size="sm"
                     onClick={(e) => openEditForm(e, type, item)}
-                    className={cn("!h-9 !w-9 !min-w-0 !p-0 !aspect-square rounded-md border-none shadow-none !inline-flex !items-center !justify-center", isSelected ? "hover:bg-surface/20 text-current" : "hover:bg-outline-variant text-on-surface-variant")}
+                    className={cn("!h-8 !w-8 !min-w-0 !p-0 !aspect-square !rounded-md border-none shadow-none !inline-flex !items-center !justify-center", isSelected ? "hover:bg-surface/20 text-current" : "hover:bg-outline-variant text-on-surface-variant")}
                     title="Renommer"
                 >
-                    <MaterialIcon name="edit" size={14} />
+                    <MaterialIcon name="edit" size={16} />
                 </Button>
                 <Button
                     variant="text"
                     size="sm"
                     onClick={(e) => handleDelete(e, type, item)}
-                    className={cn("!h-9 !w-9 !min-w-0 !p-0 !aspect-square rounded-md border-none shadow-none !inline-flex !items-center !justify-center", isSelected ? "hover:bg-error hover:text-on-error text-current" : "hover:bg-error-container text-on-surface-variant hover:text-error")}
+                    className={cn("!h-8 !w-8 !min-w-0 !p-0 !aspect-square !rounded-md border-none shadow-none !inline-flex !items-center !justify-center", isSelected ? "hover:bg-error hover:text-on-error text-current" : "hover:bg-error-container text-on-surface-variant hover:text-error")}
                     title="Supprimer"
                 >
-                    <MaterialIcon name="delete" size={14} />
+                    <MaterialIcon name="delete" size={16} />
                 </Button>
             </div>
         </div>
