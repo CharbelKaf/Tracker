@@ -57,16 +57,6 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   const resolvedAriaLabel = label ? undefined : placeholder;
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        handleClose();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
     if (isOpen) {
       const currentIndex = options.findIndex((opt) => opt.value === value);
       setHighlightedIndex(currentIndex >= 0 ? currentIndex : 0);
@@ -181,6 +171,16 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         break;
     }
   }, [disabled, isOpen, highlightedIndex, options, handleSelect, handleClose]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        handleClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [handleClose]);
 
   return (
     <div className={cn('relative space-y-1', className)} ref={dropdownRef}>

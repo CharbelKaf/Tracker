@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import MaterialIcon from '../../../components/ui/MaterialIcon';
 import Pagination from '../../../components/ui/Pagination';
 import Button from '../../../components/ui/Button';
@@ -55,7 +55,7 @@ const ApprovalsPage = () => {
         setCurrentPage(1);
     }, [activeView, debouncedSearch]);
 
-    const isUserAllowedToValidate = (approval: Approval) => {
+    const isUserAllowedToValidate = useCallback((approval: Approval) => {
         if (!currentUser) return false;
 
         if (approval.status === 'WAITING_MANAGER_APPROVAL') {
@@ -79,7 +79,7 @@ const ApprovalsPage = () => {
         if (approval.status === 'WaitingUser') return approval.beneficiaryId === currentUser.id;
 
         return false;
-    };
+    }, [canValidateRequest, currentUser, role, users]);
 
     const activeApprovals = useMemo(() => {
         if (!currentUser) return [];
@@ -94,7 +94,7 @@ const ApprovalsPage = () => {
         [...actionable, ...relatedActive].forEach((approval) => merged.set(approval.id, approval));
 
         return Array.from(merged.values());
-    }, [approvals, currentUser, role, users, canValidateRequest]);
+    }, [approvals, currentUser, isUserAllowedToValidate]);
 
     const historyApprovals = useMemo(() => {
         if (!currentUser) return [];

@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  }, [instance, showToast]);
+  }, [showToast]);
 
   // Check auth status (exposed for re-checks after password change)
   const checkAuthStatus = async () => {

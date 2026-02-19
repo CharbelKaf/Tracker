@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MaterialIcon from '../ui/MaterialIcon';
 import Button from '../ui/Button';
 import { cn } from '../../lib/utils';
@@ -10,22 +10,25 @@ interface FacialRecognitionScanProps {
 
 export const FacialRecognitionScan: React.FC<FacialRecognitionScanProps> = ({ onSuccess, onCancel }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    startCamera();
-    return () => stopCamera();
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
   }, []);
 
-  const startCamera = async () => {
+  const startCamera = useCallback(async () => {
     try {
+      stopCamera();
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: 400, height: 400 }
       });
-      setStream(mediaStream);
+      streamRef.current = mediaStream;
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
@@ -34,13 +37,12 @@ export const FacialRecognitionScan: React.FC<FacialRecognitionScanProps> = ({ on
     } catch {
       setError("Accès caméra refusé ou non disponible.");
     }
-  };
+  }, [stopCamera]);
 
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-  };
+  useEffect(() => {
+    startCamera();
+    return () => stopCamera();
+  }, [startCamera, stopCamera]);
 
   useEffect(() => {
     if (isScanning && progress < 100) {
@@ -56,7 +58,7 @@ export const FacialRecognitionScan: React.FC<FacialRecognitionScanProps> = ({ on
       }, 50);
       return () => clearInterval(timer);
     }
-  }, [isScanning, progress]);
+  }, [isScanning, progress, onSuccess]);
 
   return (
     <div className="flex flex-col items-center justify-center space-y-6 animate-in fade-in zoom-in-95 duration-500">

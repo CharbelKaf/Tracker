@@ -25,7 +25,7 @@ export default tseslint.config(
             // Keep only core hook safety to avoid blocking delivery with
             // React Compiler-oriented lint rules on this legacy codebase.
             'react-hooks/rules-of-hooks': 'error',
-            'react-hooks/exhaustive-deps': 'off',
+            'react-hooks/exhaustive-deps': 'error',
 
             // Gradual typing hardening: re-enable core TS safety rules.
             '@typescript-eslint/no-explicit-any': 'error',

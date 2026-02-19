@@ -96,12 +96,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
         .sort(([, a], [, b]) => b - a)
         .slice(0, 4);
 
-    const chartColors = [
+    const chartColors = useMemo(() => ([
         { hex: 'var(--md-sys-color-primary)', bg: 'bg-primary' },
         { hex: 'var(--md-sys-color-secondary)', bg: 'bg-secondary' },
         { hex: 'var(--md-sys-color-tertiary)', bg: 'bg-tertiary' },
         { hex: 'var(--md-sys-color-error)', bg: 'bg-error' }
-    ];
+    ]), []);
 
     const chartData = useMemo(() => {
         let accumulatedPercent = 0;
@@ -111,7 +111,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
             accumulatedPercent += percent;
             return { catName, count, percent, offset, color: chartColors[idx % chartColors.length] };
         });
-    }, [sortedCategories, totalCount]);
+    }, [sortedCategories, totalCount, chartColors]);
 
     const warrantyMetrics = useMemo(() => {
         const activeFleet = equipment.filter(e => e.operationalStatus !== 'Retiré');

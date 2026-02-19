@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import MaterialIcon from '../../../components/ui/MaterialIcon';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import Card from '../../../components/ui/Card';
@@ -45,15 +45,15 @@ const LocationsPage = () => {
     const [selectedManagerId, setSelectedManagerId] = useState(''); // NEW
 
     // Update selection when dependencies change
-    useMemo(() => {
+    useEffect(() => {
         const sites = locationData.sites[selectedCountry] || [];
         if (!sites.includes(selectedSite)) setSelectedSite(sites[0] || '');
-    }, [selectedCountry, locationData.sites]);
+    }, [selectedCountry, locationData.sites, selectedSite]);
 
-    useMemo(() => {
+    useEffect(() => {
         const services = locationData.services[selectedSite] || [];
         if (!services.includes(selectedService)) setSelectedService(services[0] || '');
-    }, [selectedSite, locationData.services]);
+    }, [selectedSite, locationData.services, selectedService]);
 
     const currentSites = locationData.sites[selectedCountry] || [];
     const currentServices = locationData.services[selectedSite] || [];
@@ -185,7 +185,7 @@ const LocationsPage = () => {
         showToast('Export des emplacements terminé.', 'success');
     }, [equipment, locationData.countries, locationData.services, locationData.sites, serviceManagers, showToast, users]);
 
-    const compactActions = useMemo(() => {
+    const compactActions = (() => {
         const actions = [
             {
                 id: 'export-locations',
@@ -231,7 +231,7 @@ const LocationsPage = () => {
         }
 
         return actions;
-    }, [exportLocations, navigate, selectedCountry, selectedSite]);
+    })();
 
     const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -240,7 +240,7 @@ const LocationsPage = () => {
         }
     };
 
-    const resetForm = () => {
+    function resetForm() {
         setModalType(null);
         setTargetType(null);
         setNewName('');
@@ -249,15 +249,15 @@ const LocationsPage = () => {
         setParentId('');
         setEditingName('');
         setSelectedManagerId('');
-    };
+    }
 
-    const openCreateForm = (type: EntityType) => {
+    function openCreateForm(type: EntityType) {
         resetForm();
         setModalType('create');
         setTargetType(type);
         if (type === 'site') setParentId(selectedCountry);
         if (type === 'service') setParentId(selectedSite);
-    };
+    }
 
     const openEditForm = (e: React.MouseEvent, type: EntityType, name: string) => {
         e.stopPropagation();

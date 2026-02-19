@@ -42,7 +42,7 @@ export const SelectFilter: React.FC<SelectFilterProps> = ({
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [handleClose]);
 
   // Reset highlighted index when opening
   useEffect(() => {
@@ -50,7 +50,7 @@ export const SelectFilter: React.FC<SelectFilterProps> = ({
       const currentIndex = options.findIndex(opt => opt.value === value);
       setHighlightedIndex(currentIndex >= 0 ? currentIndex : 0);
     }
-  }, [isOpen]);
+  }, [isOpen, options, value]);
 
   // Scroll highlighted option into view
   useEffect(() => {

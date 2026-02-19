@@ -80,9 +80,9 @@ const Modal: React.FC<ModalProps> = ({
         }
     };
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         onClose();
-    };
+    }, [onClose]);
 
     const restoreBodyOverflow = useCallback(() => {
         document.body.style.overflow = previousBodyOverflowRef.current;
@@ -155,7 +155,7 @@ const Modal: React.FC<ModalProps> = ({
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [visible, closing, onClose, getFocusableElements]);
+    }, [visible, closing, handleClose, getFocusableElements]);
 
     if (!visible) return null;
 
