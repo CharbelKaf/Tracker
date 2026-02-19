@@ -34,16 +34,6 @@ export const SelectFilter: React.FC<SelectFilterProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        handleClose();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [handleClose]);
-
   // Reset highlighted index when opening
   useEffect(() => {
     if (isOpen) {
@@ -63,6 +53,16 @@ export const SelectFilter: React.FC<SelectFilterProps> = ({
     if (!isOpen || closing) return;
     setClosing(true);
   }, [isOpen, closing]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        handleClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [handleClose]);
 
   const handleAnimationEnd = useCallback(() => {
     if (closing) {
