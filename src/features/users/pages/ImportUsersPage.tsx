@@ -12,10 +12,21 @@ interface ImportUsersPageProps {
     onSave: () => void;
 }
 
+interface ParsedUserRow {
+    _id: number;
+    _status: 'valid' | 'error';
+    _error: string;
+    name?: string;
+    email?: string;
+    role?: string;
+    department?: string;
+    [key: string]: string | number | undefined;
+}
+
 const ImportUsersPage: React.FC<ImportUsersPageProps> = ({ onCancel, onSave }) => {
     const { showToast } = useToast();
     const [file, setFile] = useState<File | null>(null);
-    const [parsedData, setParsedData] = useState<any[]>([]);
+    const [parsedData, setParsedData] = useState<ParsedUserRow[]>([]);
     const [previewMode, setPreviewMode] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -46,9 +57,11 @@ const ImportUsersPage: React.FC<ImportUsersPageProps> = ({ onCancel, onSave }) =
 
             const data = lines.slice(1).map((line, index) => {
                 const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-                const row: any = { _id: index };
-                let hasError = false;
-                let errorMsg = '';
+                const row: ParsedUserRow = {
+                    _id: index,
+                    _status: 'valid',
+                    _error: ''
+                };
 
                 headers.forEach((header, i) => {
                     const key = header.toLowerCase();
@@ -60,14 +73,14 @@ const ImportUsersPage: React.FC<ImportUsersPageProps> = ({ onCancel, onSave }) =
                 });
 
                 if (!row.name || !row.email) {
-                    hasError = true;
-                    errorMsg = 'Nom et Email requis';
+                    row._status = 'error';
+                    row._error = 'Nom et Email requis';
                 } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
-                    hasError = true;
-                    errorMsg = 'Format Email invalide';
+                    row._status = 'error';
+                    row._error = 'Format Email invalide';
                 }
 
-                return { ...row, _status: hasError ? 'error' : 'valid', _error: errorMsg };
+                return row;
             });
 
             setParsedData(data);

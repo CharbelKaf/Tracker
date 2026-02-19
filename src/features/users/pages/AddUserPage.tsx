@@ -8,7 +8,6 @@ import InputField from '../../../components/ui/InputField';
 import SelectField from '../../../components/ui/SelectField';
 import { GLOSSARY } from '../../../constants/glossary';
 import { FullScreenFormLayout } from '../../../components/layout/FullScreenFormLayout';
-import { cn } from '../../../lib/utils';
 
 type FormChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string } };
 
@@ -96,13 +95,6 @@ const AddUserPage: React.FC<AddUserPageProps> = ({ userId, onCancel, onSave }) =
             });
         }
     };
-
-    const potentialManagers = useMemo(() => {
-        return users.filter(u => u.role !== 'User' && u.id !== userId).map(u => ({
-            value: u.id,
-            label: `${u.name} (${u.role})`
-        }));
-    }, [users, userId]);
 
     // Calcul du nom du manager pour l'affichage (car le champ est désactivé)
     const assignedManagerName = useMemo(() => {

@@ -612,7 +612,7 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onVie
                                                             MicrosoftEmail: user?.email || '',
                                                             FirstName: user?.name.split(' ')[0] || '',
                                                             LastName: user?.name.split(' ').slice(1).join(' ') || '',
-                                                            Role: user?.role as any,
+                                                            Role: user.role,
                                                             Title: user?.name
                                                         }).then(() => {
                                                             showToast("Invitation envoyée.", "success");
