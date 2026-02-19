@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import MaterialIcon from '../ui/MaterialIcon';
 import { cn } from '../../lib/utils';
 import { validateAdminPIN, logSecurityAction } from '../../lib/security';
@@ -34,7 +34,6 @@ const SecurityGate: React.FC<SecurityGateProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [method, setMethod] = useState<ValidationMethod>(null);
   const [isValidated, setIsValidated] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
 
   // States pour PIN
   const [pin, setPin] = useState(['', '', '', '', '', '']);
@@ -53,8 +52,7 @@ const SecurityGate: React.FC<SecurityGateProps> = ({
     }
   };
 
-  const handleFinalVerify = (usedMethod: string, pinValue?: string) => {
-    setIsVerifying(true);
+  const handleFinalVerify = (usedMethod: Exclude<ValidationMethod, null>, pinValue?: string) => {
 
     // Simulation délai sécurité
     setTimeout(() => {
@@ -66,7 +64,8 @@ const SecurityGate: React.FC<SecurityGateProps> = ({
       if (success) {
         setIsValidated(true);
         setMethod(null);
-        logSecurityAction(title, currentUser?.id || 'unknown', entityId, usedMethod.toUpperCase() as any, 'SUCCESS');
+        const validationMethod = usedMethod === 'pin' ? 'PIN' : 'PIN_SIGNATURE';
+        logSecurityAction(title, currentUser?.id || 'unknown', entityId, validationMethod, 'SUCCESS');
 
         // Délai pour montrer l'animation de succès avant de fermer
         setTimeout(() => {
@@ -81,7 +80,6 @@ const SecurityGate: React.FC<SecurityGateProps> = ({
         showToast(`Code incorrect. Tentative ${newAttempts}/3`, "error");
         if (newAttempts >= 3) handleClose();
       }
-      setIsVerifying(false);
     }, 800);
   };
 

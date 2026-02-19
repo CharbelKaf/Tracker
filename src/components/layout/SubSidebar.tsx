@@ -62,7 +62,9 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
                   "flex-shrink-0 p-2 rounded-full transition-colors duration-short4",
                   isActive ? "bg-primary text-on-primary" : "bg-surface-container text-on-surface-variant group-hover:text-primary"
                 )}>
-                  {React.cloneElement(item.icon as React.ReactElement<any>, { size: 18 })}
+                  {React.isValidElement<{ size?: number }>(item.icon)
+                    ? React.cloneElement(item.icon, { size: 18 })
+                    : item.icon}
                 </div>
 
                 {/* Text Content */}

@@ -29,8 +29,8 @@ export const renderCategoryIcon = (category: Category | undefined, size = 24) =>
     if (!category) return <MaterialIcon name="package_2" size={size} />;
     const iconName = category.iconName || 'Package';
     const iconNode = CATEGORY_ICONS[iconName];
-    if (iconNode && React.isValidElement(iconNode)) {
-        return React.cloneElement(iconNode as React.ReactElement<any>, { size });
+    if (iconNode && React.isValidElement<{ size?: number }>(iconNode)) {
+        return React.cloneElement(iconNode, { size });
     }
     return <MaterialIcon name="package_2" size={size} />;
 };

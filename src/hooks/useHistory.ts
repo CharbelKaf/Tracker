@@ -1,11 +1,10 @@
-import { useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { useAccessControl } from './useAccessControl';
-import { HistoryEvent, HistoryFilter, EventType } from '../types';
+import { HistoryEvent, HistoryFilter } from '../types';
 
 export const useHistory = () => {
   const { events, users, logEvent: contextLogEvent } = useData(); // events: HistoryEvent[]
-  const { user: currentUser, permissions } = useAccessControl();
+  const { user: currentUser } = useAccessControl();
   
   /**
    * Filtrer l'historique selon le rôle
@@ -79,11 +78,8 @@ export const useHistory = () => {
     
     // Admin voit tout de son pays (si géo-scoped)
     if (role === 'Admin' && currentUser.managedCountries) {
-      filtered = filtered.filter(event => {
-        // Logic à implémenter selon la géo-localisation
-        // Pour l'instant, on laisse passer tout, une implémentation plus fine nécessiterait de croiser les localisations
-        return true; 
-      });
+      // Logic à implémenter selon la géo-localisation
+      // Pour l'instant, on laisse passer tout, une implémentation plus fine nécessiterait de croiser les localisations
     }
     
     // SuperAdmin voit tout (pas de filtrage)

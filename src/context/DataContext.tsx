@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { User, Equipment, Approval, HistoryEvent, Category, Model, AppSettings, ApprovalStatus } from '../types';
-import { mockAllUsersExtended, mockAllEquipment, mockLocationCountries, mockLocationSites, mockLocationServices, mockPendingApprovals, mockApprovalHistory, mockHistoryEvents, mockCategories, mockModels, CATEGORY_ICONS } from '../data/mockData';
+import { mockAllUsersExtended, mockAllEquipment, mockLocationCountries, mockPendingApprovals, mockApprovalHistory, mockHistoryEvents, mockCategories, mockModels, CATEGORY_ICONS } from '../data/mockData';
 import { useAuth } from './AuthContext';
 import { applyMd3Theme } from '../lib/md3Theme';
 import {
@@ -36,7 +36,7 @@ interface DataContextType {
     updateUser: (id: string, updates: Partial<User>) => BusinessRuleDecision;
     deleteUser: (id: string) => BusinessRuleDecision;
     addEquipment: (item: Equipment) => void;
-    updateEquipment: (id: string, updates: Partial<Equipment>, logMetadata?: any) => void;
+    updateEquipment: (id: string, updates: Partial<Equipment>, logMetadata?: Record<string, unknown>) => void;
     deleteEquipment: (id: string) => boolean;
     updateApproval: (id: string, status: ApprovalStatus) => BusinessRuleDecision;
     addApproval: (approval: Omit<Approval, 'id'>) => void;
@@ -101,6 +101,19 @@ const getPersistedValue = (currentKey: string, legacyKey: string): string | null
 
     return null;
 };
+
+const extractPersistedIds = (items: unknown[]): Set<string> => {
+    const ids = items
+        .map((item) => {
+            if (typeof item !== 'object' || item === null || !('id' in item)) return undefined;
+            const rawId = (item as { id?: unknown }).id;
+            return typeof rawId === 'string' ? rawId : undefined;
+        })
+        .filter((id): id is string => typeof id === 'string');
+
+    return new Set(ids);
+};
+
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { currentUser } = useAuth();
 
@@ -109,7 +122,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const saved = getPersistedValue(STORAGE_KEYS.settings.current, STORAGE_KEYS.settings.legacy);
             return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
-        } catch (e) {
+        } catch {
             return DEFAULT_SETTINGS;
         }
     });
@@ -122,7 +135,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const parsed = JSON.parse(saved);
                 if (Array.isArray(parsed) && parsed.length > 0) {
                     const merged = [...parsed];
-                    const ids = new Set(parsed.map((item: any) => item?.id).filter((id: any) => typeof id === 'string'));
+                    const ids = extractPersistedIds(parsed);
                     mockAllUsersExtended.forEach(seedUser => {
                         if (!ids.has(seedUser.id)) {
                             merged.push(seedUser);
@@ -132,7 +145,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
             }
             return mockAllUsersExtended;
-        } catch (e) {
+        } catch {
             return mockAllUsersExtended;
         }
     });
@@ -144,7 +157,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const parsed = JSON.parse(saved);
                 if (Array.isArray(parsed) && parsed.length > 0) {
                     const merged = [...parsed];
-                    const ids = new Set(parsed.map((item: any) => item?.id).filter((id: any) => typeof id === 'string'));
+                    const ids = extractPersistedIds(parsed);
                     mockAllEquipment.forEach(seedEquipment => {
                         if (!ids.has(seedEquipment.id)) {
                             merged.push(seedEquipment);
@@ -154,7 +167,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
             }
             return mockAllEquipment;
-        } catch (e) {
+        } catch {
             return mockAllEquipment;
         }
     });
@@ -166,12 +179,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (!saved) return mockCategories;
 
             const parsed = JSON.parse(saved);
+            if (!Array.isArray(parsed)) return mockCategories;
             // Re-inflate icons as React components
-            return parsed.map((cat: any) => ({
-                ...cat,
-                icon: CATEGORY_ICONS[cat.iconName || 'Laptop'] || CATEGORY_ICONS['Laptop']
-            }));
-        } catch (e) {
+            return parsed.map((cat) => {
+                const categoryData = (typeof cat === 'object' && cat !== null
+                    ? cat
+                    : {}) as Partial<Category> & { iconName?: string };
+
+                return {
+                    ...categoryData,
+                    icon: CATEGORY_ICONS[categoryData.iconName || 'Laptop'] || CATEGORY_ICONS['Laptop']
+                } as Category;
+            });
+        } catch {
             return mockCategories;
         }
     });
@@ -181,7 +201,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const saved = getPersistedValue(STORAGE_KEYS.models.current, STORAGE_KEYS.models.legacy);
             return saved ? JSON.parse(saved) : mockModels;
-        } catch (e) {
+        } catch {
             return mockModels;
         }
     });
@@ -194,7 +214,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const saved = getPersistedValue(STORAGE_KEYS.events.current, STORAGE_KEYS.events.legacy);
             return saved ? JSON.parse(saved) : mockHistoryEvents;
-        } catch (e) {
+        } catch {
             return mockHistoryEvents;
         }
     });
@@ -228,7 +248,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 'Marketing Europe': '3',
                 'Commercial': '3'
             };
-        } catch (e) {
+        } catch {
             return {};
         }
     });
@@ -680,7 +700,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (oldApproval) {
-            let eventType: any = 'UPDATE';
+            let eventType: HistoryEvent['type'] = 'UPDATE';
             if (status === 'WAITING_IT_PROCESSING') eventType = 'APPROVAL_MANAGER';
             else if (status === 'Approved') eventType = 'APPROVAL_ADMIN';
             else if (status === 'Rejected') eventType = 'APPROVAL_REJECT';

@@ -1,5 +1,5 @@
 
-import { AppUser, UserRole } from '../types';
+import { AppUser } from '../types';
 
 // MOCK DATABASE (Simulating SharePoint List "AppUsers")
 let mockAppUsers: AppUser[] = [
@@ -94,6 +94,7 @@ export const authService = {
         const user = mockAppUsers.find(u => u.id === userId);
 
         if (!user) throw new Error("User not found");
+        if (newPass.length < 8) throw new Error("New password too short");
 
         // Check temp pass
         if (user.TemporaryPassword !== tempPass) {

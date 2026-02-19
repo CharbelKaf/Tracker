@@ -1,5 +1,5 @@
 import React from 'react';
-import { HistoryEvent, EventType } from '../../types';
+import { HistoryEvent } from '../../types';
 import MaterialIcon from './MaterialIcon';
 import { UserAvatar } from './UserAvatar';
 import { cn } from '../../lib/utils';

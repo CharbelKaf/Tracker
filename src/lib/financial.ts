@@ -2,8 +2,6 @@
  * Utility functions for Financial Calculations with Inheritance Support
  */
 
-import { FinancialData } from "../types";
-
 // Taux de change fixes pour la démo (Base : 1 EUR)
 const EXCHANGE_RATES: Record<string, number> = {
   'EUR': 1,

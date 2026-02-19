@@ -31,7 +31,7 @@ export const FacialRecognitionScan: React.FC<FacialRecognitionScanProps> = ({ on
       }
       setIsScanning(true);
       setError(null);
-    } catch (err) {
+    } catch {
       setError("Accès caméra refusé ou non disponible.");
     }
   };

@@ -66,7 +66,6 @@ const SegmentedButton: React.FC<SegmentedButtonProps> = ({
             {options.map((option, index) => {
                 const isSelected = selectedValues.includes(option.value);
                 const isFirst = index === 0;
-                const isLast = index === options.length - 1;
 
                 return (
                     <button

@@ -334,11 +334,11 @@ export interface HistoryEvent {
   // Détails
   description: string;  // Description humaine
   metadata?: {          // Données techniques
-    changes?: Record<string, { from: any; to: any }>; // Changements trackés
+    changes?: Record<string, { from: unknown; to: unknown }>; // Changements trackés
     reason?: string;    // Raison (pour rejets, etc.)
     ipAddress?: string; // IP (pour sécurité)
     location?: string;  // Localisation géographique
-    [key: string]: any;
+    [key: string]: unknown;
   };
 
   // Flags
