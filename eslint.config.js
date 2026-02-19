@@ -27,9 +27,13 @@ export default tseslint.config(
             'react-hooks/rules-of-hooks': 'error',
             'react-hooks/exhaustive-deps': 'off',
 
-            // Gradual typing hardening: keep app shippable first.
-            '@typescript-eslint/no-explicit-any': 'off',
-            '@typescript-eslint/no-unused-vars': 'off',
+            // Gradual typing hardening: re-enable core TS safety rules.
+            '@typescript-eslint/no-explicit-any': 'error',
+            '@typescript-eslint/no-unused-vars': ['error', {
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                caughtErrorsIgnorePattern: '^_',
+            }],
             '@typescript-eslint/no-unused-expressions': 'off',
             'no-useless-assignment': 'off',
             'no-unused-vars': 'off',
