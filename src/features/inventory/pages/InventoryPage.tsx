@@ -83,7 +83,11 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ onViewChange, onEquipment
     }, [accessibleEquipment, debouncedSearch, statusFilter]);
 
     useEffect(() => {
-        setSelectedEquipmentIds((prev) => prev.filter((id) => filteredEquipment.some((item) => item.id === id)));
+        setSelectedEquipmentIds((prev) => {
+            const filteredIds = new Set(filteredEquipment.map((item) => item.id));
+            const next = prev.filter((id) => filteredIds.has(id));
+            return next.length === prev.length ? prev : next;
+        });
     }, [filteredEquipment]);
 
     useEffect(() => {
