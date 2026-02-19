@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import MaterialIcon from '../../../components/ui/MaterialIcon';
-import { Equipment, User } from '../../../types';
+import { ApprovalStatus, AssignmentStatus, Equipment, User } from '../../../types';
 import { useData } from '../../../context/DataContext';
 import { useToast } from '../../../context/ToastContext';
 import Pagination from '../../../components/ui/Pagination';
@@ -110,12 +110,6 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
         if (step < 4) {
             setStep(step + 1);
         } else if (selectedEquipment && selectedUser) {
-
-            // Build snapshots
-            const equipmentSnapshot = { ...selectedEquipment };
-            const userSnapshot = { ...selectedUser };
-            const adminSnapshot = { ...adminUser };
-
             // LOGIQUE DE WORKFLOW
             if (approvalId) {
                 const approval = approvals.find(a => a.id === approvalId);
@@ -178,8 +172,8 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
                     showToast("Matériel affecté. En attente de confirmation utilisateur.", 'success');
                 }
             } else {
-                let finalAssignmentStatus: any = 'PENDING_DELIVERY';
-                let finalApprovalStatus: any = 'PENDING_DELIVERY';
+                let finalAssignmentStatus: AssignmentStatus = 'PENDING_DELIVERY';
+                let finalApprovalStatus: ApprovalStatus = 'PENDING_DELIVERY';
                 const finalMainStatus = isImmediateHandover ? 'Attribué' : 'En attente';
 
                 if (isImmediateHandover) {

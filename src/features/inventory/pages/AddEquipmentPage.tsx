@@ -13,6 +13,7 @@ import Badge from '../../../components/ui/Badge';
 import { cn } from '../../../lib/utils';
 import { GLOSSARY } from '../../../constants/glossary';
 import { APP_CONFIG } from '../../../config';
+import { Equipment } from '../../../types';
 
 interface AddEquipmentPageProps {
     equipmentId?: string; // Optional for Edit Mode
@@ -145,7 +146,9 @@ const AddEquipmentPage: React.FC<AddEquipmentPageProps> = ({ equipmentId, onCanc
         return formData.country ? (locationData.sites[formData.country] || []) : [];
     }, [formData.country, locationData.sites]);
 
-    const handleChange = (e: any) => {
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) => {
         const { name, value } = e.target;
         setFormData(prev => {
             const newData = { ...prev, [name]: value };
@@ -191,7 +194,7 @@ const AddEquipmentPage: React.FC<AddEquipmentPageProps> = ({ equipmentId, onCanc
             department: formData.department,
             warrantyEnd: formData.warrantyEnd,
             notes: formData.notes,
-            operationalStatus: formData.operationalStatus as any,
+            operationalStatus: formData.operationalStatus as Equipment['operationalStatus'],
             image: selectedModelData?.image || 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&h=100&fit=crop',
             financial: {
                 purchasePrice: parseFloat(formData.purchasePrice) || 0,

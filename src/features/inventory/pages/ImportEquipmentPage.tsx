@@ -12,10 +12,22 @@ interface ImportEquipmentPageProps {
     onSave: () => void;
 }
 
+interface ParsedEquipmentRow {
+    _id: number;
+    _status: 'valid' | 'error';
+    _error: string;
+    name?: string;
+    assetId?: string;
+    type?: string;
+    model?: string;
+    status?: string;
+    [key: string]: string | number | undefined;
+}
+
 const ImportEquipmentPage: React.FC<ImportEquipmentPageProps> = ({ onCancel, onSave }) => {
     const { showToast } = useToast();
     const [file, setFile] = useState<File | null>(null);
-    const [parsedData, setParsedData] = useState<any[]>([]);
+    const [parsedData, setParsedData] = useState<ParsedEquipmentRow[]>([]);
     const [previewMode, setPreviewMode] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -46,9 +58,11 @@ const ImportEquipmentPage: React.FC<ImportEquipmentPageProps> = ({ onCancel, onS
 
             const data = lines.slice(1).map((line, index) => {
                 const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-                const row: any = { _id: index };
-                let hasError = false;
-                let errorMsg = '';
+                const row: ParsedEquipmentRow = {
+                    _id: index,
+                    _status: 'valid',
+                    _error: ''
+                };
 
                 headers.forEach((header, i) => {
                     const key = header.toLowerCase();
@@ -61,11 +75,11 @@ const ImportEquipmentPage: React.FC<ImportEquipmentPageProps> = ({ onCancel, onS
                 });
 
                 if (!row.name || !row.assetId || !row.type) {
-                    hasError = true;
-                    errorMsg = 'Champs obligatoires manquants';
+                    row._status = 'error';
+                    row._error = 'Champs obligatoires manquants';
                 }
 
-                return { ...row, _status: hasError ? 'error' : 'valid', _error: errorMsg };
+                return row;
             });
 
             setParsedData(data);

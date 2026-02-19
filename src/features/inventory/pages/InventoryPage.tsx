@@ -31,7 +31,7 @@ interface InventoryPageProps {
     initialStatus?: string | null;
 }
 
-const InventoryPage: React.FC<InventoryPageProps> = ({ onViewChange, onEquipmentClick, onUserClick, initialStatus }) => {
+const InventoryPage: React.FC<InventoryPageProps> = ({ onViewChange, onEquipmentClick, initialStatus }) => {
     const { equipment, users, deleteEquipment } = useData();
     const { filterEquipment, permissions } = useAccessControl();
     const { showToast } = useToast();
