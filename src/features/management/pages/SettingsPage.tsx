@@ -21,10 +21,12 @@ interface SettingsPageProps {
     onLogout: () => void;
 }
 
+type SettingsSection = 'general' | 'finance' | 'account' | 'help';
+
 const SettingsPage: React.FC<SettingsPageProps> = ({ onLogout }) => {
     const { showToast } = useToast();
     const { settings, updateSettings } = useData();
-    const [activeSection, setActiveSection] = useState<'general' | 'finance' | 'account' | 'help'>('general');
+    const [activeSection, setActiveSection] = useState<SettingsSection>('general');
     const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
     const isCompactOrMedium = useMediaQuery('(max-width: 839px)');
 
@@ -44,8 +46,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onLogout }) => {
         showToast('Configuration sauvegardée.', 'success');
     };
 
-    const handleVisualChange = (field: 'theme' | 'accentColor', value: string) => {
-        updateSettings({ [field]: value });
+    const handleVisualChange = <K extends 'theme' | 'accentColor'>(field: K, value: AppSettings[K]) => {
+        updateSettings({ [field]: value } as Pick<AppSettings, K>);
     };
 
     // --- SIMULATION ---
@@ -67,7 +69,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onLogout }) => {
     }, [financeForm]);
 
     // --- SECTIONS ---
-    const sections = [
+    const sections: Array<{ id: SettingsSection; label: string; icon: string }> = [
         { id: 'general', label: isCompactOrMedium ? 'Affichage' : 'Affichage', icon: 'palette' },
         { id: 'finance', label: isCompactOrMedium ? 'Finances' : 'Finances & Paramètres', icon: 'account_balance' },
         { id: 'account', label: isCompactOrMedium ? 'Compte' : 'Compte & Sécurité', icon: 'manage_accounts' },
@@ -75,6 +77,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onLogout }) => {
     ];
 
     const colors: AppSettings['accentColor'][] = ['yellow', 'blue', 'purple', 'emerald', 'orange'];
+    const themeOptions: Array<{ id: AppSettings['theme']; label: string; icon: string }> = [
+        { id: 'light', label: 'Clair', icon: 'light_mode' },
+        { id: 'dark', label: 'Sombre', icon: 'dark_mode' },
+        { id: 'system', label: 'Système', icon: 'desktop_windows' }
+    ];
     const canSaveFinance = activeSection === 'finance';
 
     return (
@@ -122,7 +129,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onLogout }) => {
                                     key={section.id}
                                     type="button"
                                     variant={activeSection === section.id ? 'tonal' : 'text'}
-                                    onClick={() => setActiveSection(section.id as any)}
+                                    onClick={() => setActiveSection(section.id)}
                                     className={cn(
                                         isCompactOrMedium
                                             ? "h-11 !w-auto shrink-0 !rounded-full !px-4 !py-2 !text-label-medium !font-medium whitespace-nowrap !justify-center"
@@ -151,16 +158,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onLogout }) => {
                                     <div className="p-6 bg-surface rounded-lg border border-outline-variant shadow-elevation-1">
                                         <h3 className="text-title-medium font-semibold mb-4">Thème</h3>
                                         <div className="grid grid-cols-3 gap-4">
-                                            {[
-                                                { id: 'light', label: 'Clair', icon: 'light_mode' },
-                                                { id: 'dark', label: 'Sombre', icon: 'dark_mode' },
-                                                { id: 'system', label: 'Système', icon: 'desktop_windows' }
-                                            ].map((theme) => (
+                                            {themeOptions.map((theme) => (
                                                 <Button
                                                     key={theme.id}
                                                     type="button"
                                                     variant="outlined"
-                                                    onClick={() => handleVisualChange('theme', theme.id as any)}
+                                                    onClick={() => handleVisualChange('theme', theme.id)}
                                                     className={cn(
                                                         "h-auto !rounded-lg !border-2 !p-4 !flex-col !items-center !justify-center gap-3",
                                                         settings.theme === theme.id

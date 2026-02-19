@@ -12,7 +12,7 @@ interface PhysicalAuditViewProps {
 export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = ({ onViewChange }) => {
     const { showToast } = useToast();
     const [selectedCountry, setSelectedCountry] = useState('France');
-    const [selectedSite, setSelectedSite] = useState('Bureau Paris');
+    const [selectedSite] = useState('Bureau Paris');
 
     const countries = mockAuditCountries;
 

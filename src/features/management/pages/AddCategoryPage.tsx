@@ -234,7 +234,9 @@ const AddCategoryPage: React.FC<AddCategoryPageProps> = ({ isOpen, onClose, cate
                                 )}
                                 title={name}
                             >
-                                {React.cloneElement(component as React.ReactElement<any>, { size: 20 })}
+                                {React.isValidElement<{ size?: number }>(component)
+                                    ? React.cloneElement(component, { size: 20 })
+                                    : component}
                             </Button>
                         ))}
                     </div>

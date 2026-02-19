@@ -24,6 +24,7 @@ import ListActionFab from '../../../components/ui/ListActionFab';
 
 const CATEGORIES_PER_PAGE = 9;
 const MODELS_PER_PAGE = 10;
+type ManagementTab = 'categories' | 'models';
 type CategorySortValue = 'name-asc' | 'name-desc' | 'depreciation-asc' | 'depreciation-desc';
 type CategoryMethodFilter = '' | 'linear' | 'degressive';
 
@@ -53,7 +54,7 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ onCategoryClick, onMode
     const { showToast } = useToast();
     const { requestConfirmation } = useConfirmation();
 
-    const [activeTab, setActiveTab] = useState<'categories' | 'models'>('categories');
+    const [activeTab, setActiveTab] = useState<ManagementTab>('categories');
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [categorySort, setCategorySort] = useState<CategorySortValue>('name-asc');
@@ -244,8 +245,6 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ onCategoryClick, onMode
         () => filteredModels.filter((model) => selectedModelSet.has(model.id)),
         [filteredModels, selectedModelSet],
     );
-
-    const selectedCount = activeTab === 'categories' ? selectedCategoryIds.length : selectedModelIds.length;
 
     const allVisibleCategoriesSelected = pageCategoryIds.length > 0 && pageCategoryIds.every((id) => selectedCategorySet.has(id));
     const someVisibleCategoriesSelected = pageCategoryIds.some((id) => selectedCategorySet.has(id));
@@ -512,6 +511,13 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ onCategoryClick, onMode
             badge: models.length
         }
     ];
+
+    const handleTabChange = (id: string) => {
+        if (id === 'categories' || id === 'models') {
+            setActiveTab(id);
+        }
+    };
+
     const compactActions = (() => {
         const commonActions = [
             {
@@ -681,7 +687,7 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ onCategoryClick, onMode
                 <PageTabs
                     items={tabs}
                     activeId={activeTab}
-                    onChange={(id) => setActiveTab(id as any)}
+                    onChange={handleTabChange}
                 />
             </div>
 

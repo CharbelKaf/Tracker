@@ -9,12 +9,14 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { APP_CONFIG } from '../../../config';
 
+type CsvExportRow = Record<string, string | number | null | undefined>;
+
 const ReportsPage = () => {
     const { showToast } = useToast();
 
     const handleExportCSV = (reportId: string) => {
         // Logique simplifiée pour générer un CSV basé sur les données mockées
-        let dataToExport: any[] = [];
+        let dataToExport: CsvExportRow[] = [];
         let filename = 'export.csv';
 
         if (reportId === '1') { // Inventaire Complet
@@ -127,7 +129,7 @@ const ReportsPage = () => {
             });
 
             // Pied de page (numéros de page)
-            const pageCount = (doc as any).internal.getNumberOfPages();
+            const pageCount = (doc.internal as { getNumberOfPages: () => number }).getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
                 doc.setFontSize(8);

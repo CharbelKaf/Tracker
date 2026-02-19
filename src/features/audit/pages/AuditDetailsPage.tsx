@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import MaterialIcon from '../../../components/ui/MaterialIcon';
-import Badge from '../../../components/ui/Badge';
 import Button from '../../../components/ui/Button';
 import { useData } from '../../../context/DataContext';
 import { useDebounce } from '../../../hooks/useDebounce';

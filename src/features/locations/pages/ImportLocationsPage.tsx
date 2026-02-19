@@ -11,10 +11,20 @@ interface ImportLocationsPageProps {
     onSave: () => void;
 }
 
+interface ParsedLocationRow {
+    _id: number;
+    name?: string;
+    type?: string;
+    parent?: string;
+    _status: 'valid' | 'error';
+    _error: string;
+    [key: string]: string | number | undefined;
+}
+
 const ImportLocationsPage: React.FC<ImportLocationsPageProps> = ({ onCancel, onSave }) => {
     const { showToast } = useToast();
     const [file, setFile] = useState<File | null>(null);
-    const [parsedData, setParsedData] = useState<any[]>([]);
+    const [parsedData, setParsedData] = useState<ParsedLocationRow[]>([]);
     const [previewMode, setPreviewMode] = useState(false);
 
     const processFile = (uploadedFile: File) => {
@@ -34,7 +44,14 @@ const ImportLocationsPage: React.FC<ImportLocationsPageProps> = ({ onCancel, onS
 
             const data = lines.slice(1).map((line, idx) => {
                 const vals = line.split(',');
-                const row: any = { _id: idx, name: vals[0]?.trim(), type: vals[1]?.trim(), parent: vals[2]?.trim() };
+                const row: ParsedLocationRow = {
+                    _id: idx,
+                    name: vals[0]?.trim(),
+                    type: vals[1]?.trim(),
+                    parent: vals[2]?.trim(),
+                    _status: 'error',
+                    _error: ''
+                };
 
                 const isValidType = ['country', 'site', 'service'].includes(row.type?.toLowerCase());
 

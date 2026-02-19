@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import MaterialIcon from '../../../components/ui/MaterialIcon';
 import { useData } from '../../../context/DataContext';
 import { mockCategories, mockModels, renderCategoryIcon } from '../../../data/mockData';
 import Badge from '../../../components/ui/Badge';

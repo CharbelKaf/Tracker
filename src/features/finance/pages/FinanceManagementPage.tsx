@@ -35,6 +35,7 @@ const MOCK_EXPENSES = [
 ];
 
 type FinanceExpense = (typeof MOCK_EXPENSES)[number];
+type FinanceView = 'overview' | 'expenses' | 'budget';
 
 // Structure Budget Historique
 const MOCK_BUDGET_HISTORY = [
@@ -87,7 +88,7 @@ const classifyBudgetLine = (category: string, amount: number): 'CAPEX' | 'OPEX' 
 const FinanceManagementPage = () => {
     const { equipment, settings } = useData();
     const { showToast } = useToast();
-    const [activeView, setActiveView] = useState<'overview' | 'expenses' | 'budget'>('overview');
+    const [activeView, setActiveView] = useState<FinanceView>('overview');
     const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
     const [isAddBudgetModalOpen, setIsAddBudgetModalOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<FinanceExpense | null>(null);
@@ -156,6 +157,12 @@ const FinanceManagementPage = () => {
         { id: 'expenses', label: isCompact ? 'Journal' : 'Journal Dépenses', icon: <MaterialIcon name="receipt_long" size={20} /> },
         { id: 'budget', label: isCompact ? 'Pilotage' : 'Pilotage Budget', icon: <MaterialIcon name="calculate" size={20} /> }
     ];
+
+    const handleTabChange = (id: string) => {
+        if (id === 'overview' || id === 'expenses' || id === 'budget') {
+            setActiveView(id);
+        }
+    };
 
     return (
         <div className="flex flex-col h-full bg-surface-background">
@@ -269,7 +276,7 @@ const FinanceManagementPage = () => {
                     />
                 </div>
 
-                <PageTabs items={tabs} activeId={activeView} onChange={(id) => setActiveView(id as any)} />
+                <PageTabs items={tabs} activeId={activeView} onChange={handleTabChange} />
             </div>
 
             {/* Main Content Area */}

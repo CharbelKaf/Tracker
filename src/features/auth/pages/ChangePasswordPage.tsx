@@ -39,8 +39,9 @@ const ChangePasswordPage: React.FC = () => {
             // Re-verify auth status to clear the 'mustChangePassword' flag
             await checkAuthStatus();
 
-        } catch (error: any) {
-            showToast(error.message || "Erreur lors du changement de mot de passe", "error");
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Erreur lors du changement de mot de passe";
+            showToast(message, "error");
             setIsLoading(false);
         }
     };

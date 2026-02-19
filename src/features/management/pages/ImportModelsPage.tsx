@@ -10,10 +10,20 @@ interface ImportModelsPageProps {
     onSave: () => void;
 }
 
+interface ParsedModelRow {
+    _id: number;
+    name?: string;
+    category?: string;
+    brand?: string;
+    _status: 'valid' | 'error';
+    _error: string;
+    [key: string]: string | number | undefined;
+}
+
 const ImportModelsPage: React.FC<ImportModelsPageProps> = ({ onCancel, onSave }) => {
     const { showToast } = useToast();
     const [file, setFile] = useState<File | null>(null);
-    const [parsedData, setParsedData] = useState<any[]>([]);
+    const [parsedData, setParsedData] = useState<ParsedModelRow[]>([]);
     const [previewMode, setPreviewMode] = useState(false);
 
     const processFile = (uploadedFile: File) => {
@@ -33,7 +43,14 @@ const ImportModelsPage: React.FC<ImportModelsPageProps> = ({ onCancel, onSave })
 
             const data = lines.slice(1).map((line, idx) => {
                 const vals = line.split(',');
-                const row: any = { _id: idx, name: vals[0]?.trim(), category: vals[1]?.trim(), brand: vals[2]?.trim() };
+                const row: ParsedModelRow = {
+                    _id: idx,
+                    name: vals[0]?.trim(),
+                    category: vals[1]?.trim(),
+                    brand: vals[2]?.trim(),
+                    _status: 'error',
+                    _error: ''
+                };
 
                 row._status = (row.name && row.category) ? 'valid' : 'error';
                 row._error = row._status === 'error' ? 'Nom et Catégorie requis' : '';
