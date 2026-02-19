@@ -45,11 +45,16 @@ interface UserUpdateContext {
     updates: Partial<User>;
     hasActiveApprovals: boolean;
     hasPendingManagerValidations: boolean;
+    actorRole?: UserRole;
 }
 
 interface UserDeleteContext {
     hasAssignedEquipment: boolean;
     hasActiveApprovals: boolean;
+    actorRole?: UserRole;
+    targetRole?: UserRole;
+    isSelfDelete?: boolean;
+    activeSuperAdminCount?: number;
 }
 
 interface ReturnWorkflowContext {
@@ -453,7 +458,22 @@ export const canUpdateUserByBusinessRule = ({
     updates,
     hasActiveApprovals,
     hasPendingManagerValidations,
+    actorRole,
 }: UserUpdateContext): BusinessRuleDecision => {
+    if (user.role === 'SuperAdmin' && actorRole !== 'SuperAdmin') {
+        return {
+            allowed: false,
+            reason: 'Seul un SuperAdmin peut modifier un compte SuperAdmin.',
+        };
+    }
+
+    if (updates.role === 'SuperAdmin' && actorRole !== 'SuperAdmin') {
+        return {
+            allowed: false,
+            reason: 'Seul un SuperAdmin peut attribuer le rôle SuperAdmin.',
+        };
+    }
+
     const wantsDeactivate = updates.status === 'inactive' && user.status !== 'inactive';
     if (wantsDeactivate && hasActiveApprovals) {
         return {
@@ -473,10 +493,89 @@ export const canUpdateUserByBusinessRule = ({
     return { allowed: true };
 };
 
+export const canDeleteUserByRoleRule = ({
+    actorRole,
+    targetRole,
+    isSelfDelete = false,
+    activeSuperAdminCount = 0,
+}: {
+    actorRole?: UserRole;
+    targetRole?: UserRole;
+    isSelfDelete?: boolean;
+    activeSuperAdminCount?: number;
+}): BusinessRuleDecision => {
+    if (!actorRole) {
+        return {
+            allowed: false,
+            reason: 'Suppression impossible: rôle de session introuvable.',
+        };
+    }
+
+    if (!targetRole) {
+        return {
+            allowed: false,
+            reason: 'Suppression impossible: rôle de la cible introuvable.',
+        };
+    }
+
+    if (isSelfDelete) {
+        return {
+            allowed: false,
+            reason: 'Suppression impossible: vous ne pouvez pas supprimer votre propre compte.',
+        };
+    }
+
+    if (actorRole !== 'SuperAdmin' && actorRole !== 'Admin') {
+        return {
+            allowed: false,
+            reason: 'Suppression impossible: permissions insuffisantes.',
+        };
+    }
+
+    if (targetRole === 'SuperAdmin') {
+        if (actorRole !== 'SuperAdmin') {
+            return {
+                allowed: false,
+                reason: 'Seul un SuperAdmin peut supprimer un compte SuperAdmin.',
+            };
+        }
+
+        if (activeSuperAdminCount <= 1) {
+            return {
+                allowed: false,
+                reason: 'Suppression impossible: au moins un SuperAdmin actif doit rester.',
+            };
+        }
+    }
+
+    if (targetRole === 'Admin' && actorRole === 'Admin') {
+        return {
+            allowed: false,
+            reason: 'Un Admin ne peut pas supprimer un autre compte Admin.',
+        };
+    }
+
+    return { allowed: true };
+};
+
 export const canDeleteUserByBusinessRule = ({
     hasAssignedEquipment,
     hasActiveApprovals,
+    actorRole,
+    targetRole,
+    isSelfDelete,
+    activeSuperAdminCount,
 }: UserDeleteContext): BusinessRuleDecision => {
+    const roleDecision = canDeleteUserByRoleRule({
+        actorRole,
+        targetRole,
+        isSelfDelete,
+        activeSuperAdminCount,
+    });
+    if (!roleDecision.allowed) {
+        return roleDecision;
+    }
+
     if (hasAssignedEquipment) {
         return {
             allowed: false,

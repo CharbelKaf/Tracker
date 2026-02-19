@@ -16,6 +16,7 @@ import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { cn } from '../../../lib/utils';
 import MovementTimeline, { MovementTimelineItem } from '../../../components/ui/MovementTimeline';
 import {
+    canDeleteUserByRoleRule,
     getHistoryEventIcon,
     getStatusLabel,
     isMovementHistoryEventType,
@@ -142,8 +143,18 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onEqu
 
     const isOwnProfile = currentUserAuth?.id === userId;
     const isTeamMember = user.managerId === currentUserAuth?.id;
-    const canEdit = permissions.canManageUsers || isTeamMember || isOwnProfile;
-    const canDelete = permissions.canManageUsers && !isOwnProfile;
+    const activeSuperAdminCount = users.filter(
+        (existingUser) => existingUser.role === 'SuperAdmin' && existingUser.status !== 'inactive',
+    ).length;
+    const isProtectedSuperAdmin = user.role === 'SuperAdmin' && currentUserAuth?.role !== 'SuperAdmin';
+    const roleDeleteDecision = canDeleteUserByRoleRule({
+        actorRole: currentUserAuth?.role,
+        targetRole: user.role,
+        isSelfDelete: isOwnProfile,
+        activeSuperAdminCount,
+    });
+    const canEdit = (permissions.canManageUsers && !isProtectedSuperAdmin) || isTeamMember || isOwnProfile;
+    const canDelete = permissions.canManageUsers && roleDeleteDecision.allowed;
 
     const handleAssignClick = () => {
         navigate(`/wizards/assignment?context=user_details&userId=${encodeURIComponent(user.id)}`);
@@ -160,6 +171,11 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onEqu
     };
 
     const handleDelete = () => {
+        if (!roleDeleteDecision.allowed) {
+            showToast(roleDeleteDecision.reason || `Suppression impossible pour ${user.name}.`, "error");
+            return;
+        }
+
         if (userEquipment.length > 0) {
             showToast(`Impossible de supprimer ${user.name} : des équipements sont encore rattachés à ce compte.`, "error");
             return;

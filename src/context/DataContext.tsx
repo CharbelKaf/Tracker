@@ -32,7 +32,7 @@ interface DataContextType {
     serviceManagers: Record<string, string>; // NOUVEAU: Mapping Service Name -> Manager ID
     settings: AppSettings;
 
-    addUser: (user: User) => void;
+    addUser: (user: User) => BusinessRuleDecision;
     updateUser: (id: string, updates: Partial<User>) => BusinessRuleDecision;
     deleteUser: (id: string) => BusinessRuleDecision;
     addEquipment: (item: Equipment) => void;
@@ -332,7 +332,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Pour l'instant, on laisse l'existant tel quel, la règle s'applique aux nouveaux/modifiés.
     }, []);
 
-    const addUser = useCallback((user: User) => {
+    const addUser = useCallback((user: User): BusinessRuleDecision => {
+        if (user.role === 'SuperAdmin' && currentUser?.role !== 'SuperAdmin') {
+            return {
+                allowed: false,
+                reason: 'Seul un SuperAdmin peut créer un compte SuperAdmin.',
+            };
+        }
+
         const newId = Date.now().toString();
 
         // AUTOMATIC MANAGER ASSIGNMENT
@@ -373,6 +380,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         setUsers(prev => [...prev, finalUser]);
+        return { allowed: true };
     }, [currentUser, logEvent, users, serviceManagers]);
 
     const updateUser = useCallback((id: string, updates: Partial<User>): BusinessRuleDecision => {
@@ -399,6 +407,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             updates: finalUpdates,
             hasActiveApprovals,
             hasPendingManagerValidations,
+            actorRole: currentUser?.role,
         });
         if (!updateDecision.allowed) {
             logEvent({
@@ -466,9 +475,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ACTIVE_APPROVAL_STATUSES.includes(approval.status)
             && (approval.requesterId === id || approval.beneficiaryId === id),
         );
+        const activeSuperAdminCount = users.filter(
+            (existingUser) => existingUser.role === 'SuperAdmin' && existingUser.status !== 'inactive',
+        ).length;
         const deleteDecision = canDeleteUserByBusinessRule({
             hasAssignedEquipment: hasEquipment,
             hasActiveApprovals,
+            actorRole: currentUser?.role,
+            targetRole: userToDelete.role,
+            isSelfDelete: currentUser?.id === id,
+            activeSuperAdminCount,
         });
         if (!deleteDecision.allowed) {
             return deleteDecision;

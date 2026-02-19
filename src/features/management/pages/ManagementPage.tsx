@@ -141,11 +141,19 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ onCategoryClick, onMode
     );
 
     useEffect(() => {
-        setSelectedCategoryIds((prev) => prev.filter((id) => sortedCategories.some((category) => category.id === id)));
+        setSelectedCategoryIds((prev) => {
+            const visibleIds = new Set(sortedCategories.map((category) => category.id));
+            const next = prev.filter((id) => visibleIds.has(id));
+            return next.length === prev.length ? prev : next;
+        });
     }, [sortedCategories]);
 
     useEffect(() => {
-        setSelectedModelIds((prev) => prev.filter((id) => filteredModels.some((model) => model.id === id)));
+        setSelectedModelIds((prev) => {
+            const visibleIds = new Set(filteredModels.map((model) => model.id));
+            const next = prev.filter((id) => visibleIds.has(id));
+            return next.length === prev.length ? prev : next;
+        });
     }, [filteredModels]);
 
     useEffect(() => {

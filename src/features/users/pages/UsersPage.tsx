@@ -20,6 +20,7 @@ import { useToast } from '../../../context/ToastContext';
 import ListActionFab from '../../../components/ui/ListActionFab';
 import { APP_CONFIG } from '../../../config';
 import { useConfirmation } from '../../../context/ConfirmationContext';
+import { canDeleteUserByRoleRule } from '../../../lib/businessRules';
 
 const ITEMS_PER_PAGE = 10;
 const STORAGE_KEY_SEARCH = 'users_search';
@@ -49,6 +50,10 @@ const UsersPage: React.FC<UsersPageProps> = ({ onUserClick, onViewChange }) => {
   const isCompact = useMediaQuery('(max-width: 599px)');
 
   const users = useMemo(() => filterUsers(allUsers), [allUsers, filterUsers]);
+  const activeSuperAdminCount = useMemo(
+    () => allUsers.filter((user) => user.role === 'SuperAdmin' && user.status !== 'inactive').length,
+    [allUsers],
+  );
 
   useEffect(() => {
     sessionStorage.setItem(STORAGE_KEY_SEARCH, searchQuery);
@@ -83,7 +88,11 @@ const UsersPage: React.FC<UsersPageProps> = ({ onUserClick, onViewChange }) => {
   }, [users, debouncedSearch, departmentFilter, roleFilter]);
 
   useEffect(() => {
-    setSelectedUserIds((prev) => prev.filter((id) => filteredUsers.some((item) => item.id === id)));
+    setSelectedUserIds((prev) => {
+      const visibleIds = new Set(filteredUsers.map((item) => item.id));
+      const next = prev.filter((id) => visibleIds.has(id));
+      return next.length === prev.length ? prev : next;
+    });
   }, [filteredUsers]);
 
   useEffect(() => {
@@ -184,6 +193,18 @@ const UsersPage: React.FC<UsersPageProps> = ({ onUserClick, onViewChange }) => {
   };
 
   const handleDeleteOne = (id: string, name: string) => {
+    const targetUser = allUsers.find((user) => user.id === id);
+    const permissionDecision = canDeleteUserByRoleRule({
+      actorRole: currentUser?.role,
+      targetRole: targetUser?.role,
+      isSelfDelete: id === currentUser?.id,
+      activeSuperAdminCount,
+    });
+    if (!permissionDecision.allowed) {
+      showToast(permissionDecision.reason || 'Suppression impossible pour cet utilisateur.', 'info');
+      return;
+    }
+
     requestConfirmation({
       title: 'Supprimer le compte utilisateur',
       message: `Supprimer le compte de "${name}" ?`,
@@ -409,7 +430,13 @@ const UsersPage: React.FC<UsersPageProps> = ({ onUserClick, onViewChange }) => {
         <div className="bg-surface rounded-card shadow-elevation-1 border border-outline-variant overflow-hidden">
           {paginatedUsers.length > 0 ? (
             paginatedUsers.map((user) => {
-              const canDeleteRow = !selectionMode && permissions.canManageUsers && user.id !== currentUser?.id;
+              const roleDeleteDecision = canDeleteUserByRoleRule({
+                actorRole: currentUser?.role,
+                targetRole: user.role,
+                isSelfDelete: user.id === currentUser?.id,
+                activeSuperAdminCount,
+              });
+              const canDeleteRow = !selectionMode && permissions.canManageUsers && roleDeleteDecision.allowed;
               return (
                 <EntityRow
                 key={user.id}

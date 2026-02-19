@@ -8,6 +8,7 @@ import InputField from '../../../components/ui/InputField';
 import SelectField from '../../../components/ui/SelectField';
 import { GLOSSARY } from '../../../constants/glossary';
 import { FullScreenFormLayout } from '../../../components/layout/FullScreenFormLayout';
+import { useAccessControl } from '../../../hooks/useAccessControl';
 
 type FormChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string } };
 
@@ -20,6 +21,7 @@ interface AddUserPageProps {
 const AddUserPage: React.FC<AddUserPageProps> = ({ userId, onCancel, onSave }) => {
     const { showToast } = useToast();
     const { addUser, updateUser, users, locationData, serviceManagers } = useData();
+    const { role: currentRole } = useAccessControl();
 
     const [formData, setFormData] = useState({
         name: '',
@@ -121,6 +123,11 @@ const AddUserPage: React.FC<AddUserPageProps> = ({ userId, onCancel, onSave }) =
             return;
         }
 
+        if (formData.role === 'SuperAdmin' && currentRole !== 'SuperAdmin') {
+            showToast('Seul un SuperAdmin peut attribuer le rôle SuperAdmin.', 'error');
+            return;
+        }
+
         if (isEditMode && userId) {
             const decision = updateUser(userId, {
                 name: formData.name,
@@ -140,7 +147,7 @@ const AddUserPage: React.FC<AddUserPageProps> = ({ userId, onCancel, onSave }) =
             showToast(GLOSSARY.SUCCESS_UPDATE(GLOSSARY.USER), 'success');
         } else {
             // 1. Create App DB User
-            addUser({
+            const decision = addUser({
                 id: Date.now().toString(),
                 name: formData.name,
                 email: formData.email,
@@ -152,6 +159,10 @@ const AddUserPage: React.FC<AddUserPageProps> = ({ userId, onCancel, onSave }) =
                 managerId: formData.managerId,
                 avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(formData.name || 'NewUser')}`
             });
+            if (!decision.allowed) {
+                showToast(decision.reason || 'Création impossible pour cet utilisateur.', 'error');
+                return;
+            }
 
             // 2. Invite to Auth System
             authService.createUser({
@@ -186,7 +197,7 @@ const AddUserPage: React.FC<AddUserPageProps> = ({ userId, onCancel, onSave }) =
         { value: 'User', label: 'Utilisateur standard' },
         { value: 'Manager', label: 'Manager d\'équipe' },
         { value: 'Admin', label: 'Administrateur Pays' },
-        { value: 'SuperAdmin', label: 'Super Administrateur' },
+        ...(currentRole === 'SuperAdmin' ? [{ value: 'SuperAdmin', label: 'Super Administrateur' }] : []),
     ];
 
     const getRoleDescription = (role: UserRole) => {
