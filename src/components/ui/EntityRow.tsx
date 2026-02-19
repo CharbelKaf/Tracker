@@ -134,9 +134,11 @@ export const EntityRow: React.FC<EntityRowProps> = React.memo(({
       {/* Main Content */}
       <div className={cn(
         'flex-1 min-w-0 grid gap-2 expanded:gap-4 items-center',
-        hasLocation ? 'grid-cols-1 expanded:grid-cols-12' : 'grid-cols-1 expanded:grid-cols-2'
+        hasLocation
+          ? 'grid-cols-1 expanded:[grid-template-columns:minmax(0,_2.4fr)_minmax(170px,_1fr)_minmax(220px,_1.4fr)]'
+          : 'grid-cols-1 expanded:[grid-template-columns:minmax(0,_2fr)_minmax(220px,_1fr)]'
       )}>
-        <div className={cn(hasLocation && 'expanded:col-span-5')}>
+        <div className="min-w-0">
           <h3 className={cn(
             isCardVariant ? 'text-title-medium text-on-surface truncate' : 'text-title-small text-on-surface leading-snug line-clamp-2 medium:line-clamp-1 break-words',
             'transition-colors',
@@ -155,15 +157,15 @@ export const EntityRow: React.FC<EntityRowProps> = React.memo(({
         </div>
 
         {location && (
-          <div className="hidden expanded:flex expanded:col-span-3 h-full items-center self-center text-body-medium text-on-surface-variant">
+          <div className="hidden expanded:flex min-w-0 h-full items-center self-center text-body-medium text-on-surface-variant">
             {location}
           </div>
         )}
 
         {meta && (
           <div className={cn(
-            'hidden expanded:flex h-full items-center self-center gap-4 pr-4',
-            hasLocation ? 'expanded:col-span-4' : 'justify-end expanded:justify-start'
+            'hidden expanded:flex min-w-0 h-full items-center self-center gap-4 pr-4',
+            hasLocation ? 'justify-start' : 'justify-end'
           )}>
             {meta}
           </div>

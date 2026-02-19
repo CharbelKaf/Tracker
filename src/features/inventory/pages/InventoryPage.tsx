@@ -465,15 +465,15 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ onViewChange, onEquipment
                                 )}
 
                                 location={
-                                    <div className="flex items-center gap-1 text-label-small text-on-surface-variant truncate">
-                                        <MaterialIcon name="location_on" size={16} />
+                                    <div className="flex w-full min-w-0 items-center gap-1.5 text-label-small text-on-surface-variant">
+                                        <MaterialIcon name="location_on" size={16} className="shrink-0" />
                                         <span className="truncate text-body-medium">{item.site || 'N/A'}</span>
                                     </div>
                                 }
                                 meta={
-                                    <div className="flex min-w-0 items-center self-center">
+                                    <div className="flex w-full min-w-0 items-center self-center">
                                         {item.user ? (
-                                            <div className="flex items-center gap-3 min-w-0">
+                                            <div className="flex w-full min-w-0 items-center gap-3">
                                                 <UserAvatar name={item.user.name || ''} src={item.user.avatar} size="md" />
                                                 <div className="flex flex-col min-w-0">
                                                     <span className="text-body-medium font-medium text-on-surface truncate">{item.user.name}</span>
@@ -481,7 +481,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ onViewChange, onEquipment
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex items-center gap-3 min-w-0 text-on-surface-variant">
+                                            <div className="flex w-full min-w-0 items-center gap-3 text-on-surface-variant">
                                                 <div className="w-10 h-10 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center shrink-0">
                                                     <MaterialIcon name="person_off" size={16} />
                                                 </div>
