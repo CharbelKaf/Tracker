@@ -501,7 +501,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
 
                     {/* RECENT ACTIVITY LIST */}
                     <Card
-                        title="Derniers Mouvements"
+                        title="Derniers événements"
                         onActionClick={() => onViewChange('audit')}
                         actionIcon={<MaterialIcon name="history" size={18} />}
                         className="min-h-[400px]"

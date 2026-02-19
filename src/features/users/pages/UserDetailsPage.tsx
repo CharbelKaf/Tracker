@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import MaterialIcon from '../../../components/ui/MaterialIcon';
 import { ViewType, AppUser } from '../../../types';
 import { useData } from '../../../context/DataContext';
@@ -19,7 +19,7 @@ import {
     canDeleteUserByRoleRule,
     getHistoryEventIcon,
     getStatusLabel,
-    isMovementHistoryEventType,
+    isEquipmentMovementEvent,
 } from '../../../lib/businessRules';
 
 interface UserDetailsPageProps {
@@ -56,84 +56,134 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onEqu
         }
     }, [user, permissions.canManageUsers]);
 
-    if (!user) return <div className="p-page-sm medium:p-page text-center text-on-surface-variant">Utilisateur non trouvé</div>;
-
-    const userEquipment = equipment.filter(e => e.user?.name === user.name || e.user?.id === user.id);
+    const targetUserId = user?.id ?? userId;
+    const targetUserName = user?.name ?? '';
+    const userEquipment = useMemo(
+        () => equipment.filter((item) => item.user?.name === targetUserName || item.user?.id === targetUserId),
+        [equipment, targetUserId, targetUserName],
+    );
     const primaryDevice = userEquipment[0];
-    const displayPhone = user.phone || '+33 6 00 00 00 00';
-    const userEquipmentIds = new Set(userEquipment.map((item) => item.id));
+    const displayPhone = user?.phone || '+33 6 00 00 00 00';
+    const currentEquipmentIds = useMemo(
+        () => new Set(userEquipment.map((item) => item.id)),
+        [userEquipment],
+    );
+    const normalizedUserName = useMemo(() => targetUserName.trim().toLowerCase(), [targetUserName]);
 
-    // Include historically used equipment IDs when beneficiary metadata exists in events.
-    events.forEach((event) => {
-        const beneficiaryId = event.metadata?.beneficiaryId;
-        if (
-            event.targetType === 'EQUIPMENT'
-            && typeof beneficiaryId === 'string'
-            && beneficiaryId === user.id
-            && event.targetId
-        ) {
-            userEquipmentIds.add(event.targetId);
-        }
-    });
+    const userUsageEventItems = useMemo<MovementTimelineItem[]>(() => (
+        events
+            .filter((event) => {
+                if (!isEquipmentMovementEvent(event)) return false;
 
-    const userUsageEventItems: MovementTimelineItem[] = events
-        .filter((event) => {
-            if (event.targetType !== 'EQUIPMENT') return false;
-            if (!isMovementHistoryEventType(event.type) && event.type !== 'UPDATE') return false;
+                const beneficiaryId = typeof event.metadata?.beneficiaryId === 'string'
+                    ? event.metadata.beneficiaryId
+                    : null;
+                const previousUserId = typeof event.metadata?.previousUserId === 'string'
+                    ? event.metadata.previousUserId
+                    : null;
+                const beneficiaryName = typeof event.metadata?.beneficiaryName === 'string'
+                    ? event.metadata.beneficiaryName.trim().toLowerCase()
+                    : null;
+                const previousUserName = typeof event.metadata?.previousUser === 'string'
+                    ? event.metadata.previousUser.trim().toLowerCase()
+                    : null;
 
-            const beneficiaryId = event.metadata?.beneficiaryId;
-            const previousUserId = event.metadata?.previousUserId;
-            const previousUserName = event.metadata?.previousUser;
-            return (
-                userEquipmentIds.has(event.targetId)
-                || (typeof beneficiaryId === 'string' && beneficiaryId === user.id)
-                || (typeof previousUserId === 'string' && previousUserId === user.id)
-                || (typeof previousUserName === 'string' && previousUserName === user.name)
-            );
+                return (
+                    event.actorId === targetUserId
+                    || beneficiaryId === targetUserId
+                    || previousUserId === targetUserId
+                    || beneficiaryName === normalizedUserName
+                    || previousUserName === normalizedUserName
+                    || currentEquipmentIds.has(event.targetId)
+                );
+            })
+            .map((event) => ({
+                id: event.id,
+                timestamp: event.timestamp,
+                title: event.description || 'Mouvement enregistré',
+                actor: event.actorName,
+                meta: event.targetName,
+                icon: getHistoryEventIcon(event.type),
+            }))
+    ), [currentEquipmentIds, events, normalizedUserName, targetUserId]);
+
+    const syntheticUserUsageItems = useMemo<MovementTimelineItem[]>(() => (
+        userEquipment.flatMap((equipmentItem) => {
+            const entries: MovementTimelineItem[] = [];
+            if (equipmentItem.assignedAt) {
+                entries.push({
+                    id: `synthetic-user-assigned-${targetUserId}-${equipmentItem.id}`,
+                    timestamp: equipmentItem.assignedAt,
+                    title: `Attribution de ${equipmentItem.name}`,
+                    actor: equipmentItem.assignedByName || 'Système',
+                    meta: equipmentItem.assetId,
+                    icon: 'assignment_ind',
+                });
+            }
+            if (equipmentItem.confirmedAt) {
+                entries.push({
+                    id: `synthetic-user-confirmed-${targetUserId}-${equipmentItem.id}`,
+                    timestamp: equipmentItem.confirmedAt,
+                    title: `Réception confirmée: ${equipmentItem.name}`,
+                    meta: equipmentItem.assetId,
+                    icon: 'task_alt',
+                });
+            }
+            if (equipmentItem.returnRequestedAt) {
+                entries.push({
+                    id: `synthetic-user-return-requested-${targetUserId}-${equipmentItem.id}`,
+                    timestamp: equipmentItem.returnRequestedAt,
+                    title: `Restitution demandée: ${equipmentItem.name}`,
+                    meta: equipmentItem.assetId,
+                    icon: 'assignment_return',
+                });
+            }
+            if (equipmentItem.returnInspectedAt) {
+                entries.push({
+                    id: `synthetic-user-return-inspected-${targetUserId}-${equipmentItem.id}`,
+                    timestamp: equipmentItem.returnInspectedAt,
+                    title: `Restitution inspectée: ${equipmentItem.name}`,
+                    meta: equipmentItem.assetId,
+                    icon: 'fact_check',
+                });
+            }
+            if (equipmentItem.repairStartDate) {
+                entries.push({
+                    id: `synthetic-user-repair-start-${targetUserId}-${equipmentItem.id}`,
+                    timestamp: equipmentItem.repairStartDate,
+                    title: `Maintenance démarrée: ${equipmentItem.name}`,
+                    meta: equipmentItem.assetId,
+                    icon: 'build',
+                });
+            }
+            if (equipmentItem.repairEndDate) {
+                entries.push({
+                    id: `synthetic-user-repair-end-${targetUserId}-${equipmentItem.id}`,
+                    timestamp: equipmentItem.repairEndDate,
+                    title: `Maintenance terminée: ${equipmentItem.name}`,
+                    meta: equipmentItem.assetId,
+                    icon: 'build_circle',
+                });
+            }
+            return entries;
         })
-        .map((event) => ({
-            id: event.id,
-            timestamp: event.timestamp,
-            title: event.description || 'Mouvement enregistré',
-            actor: event.actorName,
-            meta: event.targetName,
-            icon: getHistoryEventIcon(event.type),
-        }));
+    ), [targetUserId, userEquipment]);
 
-    const syntheticUserUsageItems: MovementTimelineItem[] = userEquipment.flatMap((equipmentItem) => {
-        const entries: MovementTimelineItem[] = [];
-        if (equipmentItem.assignedAt) {
-            entries.push({
-                id: `synthetic-user-assigned-${user.id}-${equipmentItem.id}`,
-                timestamp: equipmentItem.assignedAt,
-                title: `Attribution de ${equipmentItem.name}`,
-                actor: equipmentItem.assignedByName || 'Système',
-                meta: equipmentItem.assetId,
-                icon: 'assignment_ind',
-            });
-        }
-        if (equipmentItem.confirmedAt) {
-            entries.push({
-                id: `synthetic-user-confirmed-${user.id}-${equipmentItem.id}`,
-                timestamp: equipmentItem.confirmedAt,
-                title: `Réception confirmée: ${equipmentItem.name}`,
-                meta: equipmentItem.assetId,
-                icon: 'task_alt',
-            });
-        }
-        return entries;
-    });
+    const userMovementItems = useMemo(() => (
+        [...userUsageEventItems, ...syntheticUserUsageItems]
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+            .filter((entry, index, list) => (
+                list.findIndex(
+                    (candidate) =>
+                        candidate.title === entry.title
+                        && candidate.meta === entry.meta
+                        && new Date(candidate.timestamp).getTime() === new Date(entry.timestamp).getTime(),
+                ) === index
+            ))
+            .slice(0, MAX_USER_MOVEMENT_HISTORY_ITEMS)
+    ), [syntheticUserUsageItems, userUsageEventItems]);
 
-    const userMovementItems = [...userUsageEventItems, ...syntheticUserUsageItems]
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .filter((entry, index, list) => (
-            list.findIndex(
-                (candidate) =>
-                    candidate.title === entry.title
-                    && new Date(candidate.timestamp).getTime() === new Date(entry.timestamp).getTime(),
-            ) === index
-        ))
-        .slice(0, MAX_USER_MOVEMENT_HISTORY_ITEMS);
+    if (!user) return <div className="p-page-sm medium:p-page text-center text-on-surface-variant">Utilisateur non trouvé</div>;
 
     const summaryStats = [
         { label: 'Équipements Assignés', value: userEquipment.length },
@@ -483,9 +533,10 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onEqu
                 onScroll={handleScroll}
                 className="p-page-sm medium:p-page overflow-y-auto flex-1 scroll-smooth"
             >
-                {activeTab === 'overview' && (
-                    <div className="grid grid-cols-1 medium:grid-cols-2 expanded:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-macro">
-                        <div className="medium:col-span-2 expanded:col-span-3 space-y-6">
+                <div className="max-w-7xl mx-auto">
+                    {activeTab === 'overview' && (
+                        <div className="grid grid-cols-1 medium:grid-cols-2 expanded:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-macro">
+                            <div className="expanded:col-span-3 space-y-6">
                             {primaryDevice ? (
                                 <div
                                     role="button"
@@ -623,90 +674,91 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onEqu
                                 items={userMovementItems}
                                 emptyMessage="Aucun mouvement d'équipement enregistré pour cet utilisateur."
                             />
-                        </div>
-
-                        <div className="medium:col-span-2 expanded:col-span-1 space-y-6">
-                            <div className="bg-surface rounded-md p-card shadow-elevation-1 border border-outline-variant">
-                                <h3 className="text-label-small text-on-surface-variant uppercase tracking-widest mb-4">RÉSUMÉ DES ACTIFS</h3>
-                                <div className="space-y-4">
-                                    {summaryStats.map((stat, idx) => (
-                                        <div key={idx} className="flex items-center justify-between border-b border-outline-variant last:border-0 pb-2 last:pb-0">
-                                            <span className="text-body-medium text-on-surface-variant">{stat.label}</span>
-                                            <span className="text-title-large font-bold text-on-surface">{stat.value}</span>
-                                        </div>
-                                    ))}
-                                </div>
                             </div>
 
-                            <div className="bg-surface rounded-md p-card shadow-elevation-1 border border-outline-variant flex flex-col">
-                                <h3 className="text-label-small text-on-surface-variant uppercase tracking-widest mb-4">NOTES MANAGER</h3>
-                                <div className="flex-1 bg-surface-container-low rounded-sm p-4 text-body-medium text-on-surface-variant mb-4 leading-relaxed border border-outline-variant italic">
-                                    {user.managerId ? (
-                                        <>
-                                            <p className="mb-2">Sous la supervision directe.</p>
-                                            <p>"Employé performant, gestion du matériel exemplaire."</p>
-                                        </>
-                                    ) : (
-                                        "Aucune note récente pour cet utilisateur."
-                                    )}
+                            <div className="space-y-6">
+                                <div className="bg-surface rounded-md p-card shadow-elevation-1 border border-outline-variant">
+                                    <h3 className="text-label-small text-on-surface-variant uppercase tracking-widest mb-4">RÉSUMÉ DES ACTIFS</h3>
+                                    <div className="space-y-4">
+                                        {summaryStats.map((stat, idx) => (
+                                            <div key={idx} className="flex items-center justify-between border-b border-outline-variant last:border-0 pb-2 last:pb-0">
+                                                <span className="text-body-medium text-on-surface-variant">{stat.label}</span>
+                                                <span className="text-title-large font-bold text-on-surface">{stat.value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
+
+                                <div className="bg-surface rounded-md p-card shadow-elevation-1 border border-outline-variant flex flex-col">
+                                    <h3 className="text-label-small text-on-surface-variant uppercase tracking-widest mb-4">NOTES MANAGER</h3>
+                                    <div className="flex-1 bg-surface-container-low rounded-sm p-4 text-body-medium text-on-surface-variant mb-4 leading-relaxed border border-outline-variant italic">
+                                        {user.managerId ? (
+                                            <>
+                                                <p className="mb-2">Sous la supervision directe.</p>
+                                                <p>"Employé performant, gestion du matériel exemplaire."</p>
+                                            </>
+                                        ) : (
+                                            "Aucune note récente pour cet utilisateur."
+                                        )}
+                                    </div>
+                                    <Button
+                                        variant="tonal"
+                                        onClick={() => showToast('Fonctionnalité de note bientôt disponible', 'info')}
+                                        className="self-end"
+                                        size="sm"
+                                        icon={<MaterialIcon name="edit_note" size={18} />}
+                                    >
+                                        Éditer
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'equipment' && (
+                        <div className="grid grid-cols-1 medium:grid-cols-2 expanded:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-macro">
+                            {userEquipment.length > 0 ? (
+                                userEquipment.map(item => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => onEquipmentClick && onEquipmentClick(item.id)}
+                                        className="bg-surface rounded-md p-card shadow-elevation-1 border border-transparent hover:border-primary/50 hover:shadow-elevation-2 transition-all duration-short4 cursor-pointer group"
+                                    >
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="p-3 bg-surface-container-low rounded-md group-hover:bg-primary-container transition-colors">
+                                                <MaterialIcon name={getDeviceIcon(item.type)} size={24} className="text-on-surface-variant group-hover:text-primary" />
+                                            </div>
+                                            <Badge variant={item.status === 'Attribué' ? 'info' : 'neutral'}>{getStatusLabel(item.status)}</Badge>
+                                        </div>
+                                        <h4 className="text-title-medium text-on-surface mb-1 group-hover:text-primary transition-colors">{item.name}</h4>
+                                        <p className="text-body-small text-on-surface-variant mb-4">{item.assetId}</p>
+                                        <div className="flex items-center gap-2 text-label-small text-on-surface-variant pt-4 border-t border-outline-variant">
+                                            <MaterialIcon name="schedule" size={12} /> Assigné le {new Date(item.assignedAt || Date.now()).toLocaleDateString('fr-FR')}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-span-full flex flex-col items-center justify-center p-12 text-center bg-surface rounded-md border border-dashed border-outline-variant">
+                                    <MaterialIcon name="info" size={32} className="text-outline mb-3" />
+                                    <p className="text-on-surface-variant">Aucun équipement assigné.</p>
+                                </div>
+                            )}
+                            {permissions.canManageInventory && (
                                 <Button
-                                    variant="tonal"
-                                    onClick={() => showToast('Fonctionnalité de note bientôt disponible', 'info')}
-                                    className="self-end"
-                                    size="sm"
-                                    icon={<MaterialIcon name="edit_note" size={18} />}
+                                    type="button"
+                                    variant="outlined"
+                                    onClick={handleAssignClick}
+                                    className="h-auto min-h-[200px] w-full !rounded-md !border-2 !border-dashed !border-outline-variant !bg-transparent !p-card !text-on-surface-variant !flex-col !items-center !justify-center group hover:!border-primary hover:!bg-primary-container/20 hover:!text-on-surface"
                                 >
-                                    Éditer
+                                    <div className="w-12 h-12 bg-surface-container-low rounded-full flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                                        <MaterialIcon name="add" size={24} />
+                                    </div>
+                                    <span className="text-label-large text-on-surface-variant group-hover:text-on-surface">Assigner un nouvel équipement</span>
                                 </Button>
-                            </div>
+                            )}
                         </div>
-                    </div>
-                )}
-
-                {activeTab === 'equipment' && (
-                    <div className="grid grid-cols-1 medium:grid-cols-2 expanded:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-macro">
-                        {userEquipment.length > 0 ? (
-                            userEquipment.map(item => (
-                                <div
-                                    key={item.id}
-                                    onClick={() => onEquipmentClick && onEquipmentClick(item.id)}
-                                    className="bg-surface rounded-md p-card shadow-elevation-1 border border-transparent hover:border-primary/50 hover:shadow-elevation-2 transition-all duration-short4 cursor-pointer group"
-                                >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-surface-container-low rounded-md group-hover:bg-primary-container transition-colors">
-                                            <MaterialIcon name={getDeviceIcon(item.type)} size={24} className="text-on-surface-variant group-hover:text-primary" />
-                                        </div>
-                                        <Badge variant={item.status === 'Attribué' ? 'info' : 'neutral'}>{getStatusLabel(item.status)}</Badge>
-                                    </div>
-                                    <h4 className="text-title-medium text-on-surface mb-1 group-hover:text-primary transition-colors">{item.name}</h4>
-                                    <p className="text-body-small text-on-surface-variant mb-4">{item.assetId}</p>
-                                    <div className="flex items-center gap-2 text-label-small text-on-surface-variant pt-4 border-t border-outline-variant">
-                                        <MaterialIcon name="schedule" size={12} /> Assigné le {new Date(item.assignedAt || Date.now()).toLocaleDateString('fr-FR')}
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="col-span-full flex flex-col items-center justify-center p-12 text-center bg-surface rounded-md border border-dashed border-outline-variant">
-                                <MaterialIcon name="info" size={32} className="text-outline mb-3" />
-                                <p className="text-on-surface-variant">Aucun équipement assigné.</p>
-                            </div>
-                        )}
-                        {permissions.canManageInventory && (
-                            <Button
-                                type="button"
-                                variant="outlined"
-                                onClick={handleAssignClick}
-                                className="h-auto min-h-[200px] w-full !rounded-md !border-2 !border-dashed !border-outline-variant !bg-transparent !p-card !text-on-surface-variant !flex-col !items-center !justify-center group hover:!border-primary hover:!bg-primary-container/20 hover:!text-on-surface"
-                            >
-                                <div className="w-12 h-12 bg-surface-container-low rounded-full flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-on-primary transition-colors">
-                                    <MaterialIcon name="add" size={24} />
-                                </div>
-                                <span className="text-label-large text-on-surface-variant group-hover:text-on-surface">Assigner un nouvel équipement</span>
-                            </Button>
-                        )}
-                    </div>
-                )}
+                    )}
+                </div>
 
             </div>
             <style dangerouslySetInnerHTML={{

@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import MaterialIcon from '../../../components/ui/MaterialIcon';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { PageHeader } from '../../../components/layout/PageHeader';
@@ -17,6 +17,7 @@ import SelectField from '../../../components/ui/SelectField';
 import SideSheet from '../../../components/ui/SideSheet';
 import Tooltip from '../../../components/ui/Tooltip';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
+import { FinanceExpense } from '../../../types';
 
 // --- MOCK DATA ---
 
@@ -25,54 +26,7 @@ const MOCK_LOCATION_VALUE = [
     { country: 'Sénégal', value: 42000, percent: 28, color: 'var(--md-sys-color-secondary)' },
     { country: 'Togo', value: 25000, percent: 17, color: 'var(--md-sys-color-tertiary)' },
 ];
-
-const MOCK_EXPENSES = [
-    { id: 1, date: '2024-01-15', supplier: 'Dell Technologies', amount: 12500, type: 'Purchase', status: 'Paid', desc: 'Renouvellement Laptops Marketing' },
-    { id: 2, date: '2024-01-20', supplier: 'Microsoft Azure', amount: 450, type: 'Cloud', status: 'Recurring', desc: 'Hosting Mensuel' },
-    { id: 3, date: '2024-02-01', supplier: 'Orange Business', amount: 890, type: 'Service', status: 'Pending', desc: 'Fibre Optique HQ' },
-    { id: 4, date: '2024-02-10', supplier: 'Adobe Creative Cloud', amount: 2400, type: 'License', status: 'Paid', desc: 'Licences Annuelles' },
-    { id: 5, date: '2024-02-15', supplier: 'Amazon Web Services', amount: 1200, type: 'Cloud', status: 'Paid', desc: 'Serveurs Prod' },
-];
-
-type FinanceExpense = (typeof MOCK_EXPENSES)[number];
 type FinanceView = 'overview' | 'expenses' | 'budget';
-
-// Structure Budget Historique
-const MOCK_BUDGET_HISTORY = [
-    {
-        year: 2026,
-        status: 'En cours',
-        totalAllocated: 150000,
-        items: [
-            { category: 'Matériel IT', type: 'Purchase', allocated: 85000, spent: 12500 },
-            { category: 'Licences Logiciel', type: 'License', allocated: 35000, spent: 2400 },
-            { category: 'Cloud Infrastructure', type: 'Cloud', allocated: 20000, spent: 1650 },
-            { category: 'Maintenance & Services', type: 'Service', allocated: 10000, spent: 890 }
-        ]
-    },
-    {
-        year: 2025,
-        status: 'Clôturé',
-        totalAllocated: 142000,
-        items: [
-            { category: 'Matériel IT', type: 'Purchase', allocated: 80000, spent: 79500 },
-            { category: 'Licences Logiciel', type: 'License', allocated: 32000, spent: 31000 },
-            { category: 'Cloud Infrastructure', type: 'Cloud', allocated: 18000, spent: 19500 },
-            { category: 'Maintenance & Services', type: 'Service', allocated: 12000, spent: 11000 }
-        ]
-    },
-    {
-        year: 2024,
-        status: 'Archivé',
-        totalAllocated: 130000,
-        items: [
-            { category: 'Matériel IT', type: 'Purchase', allocated: 75000, spent: 74000 },
-            { category: 'Licences Logiciel', type: 'License', allocated: 30000, spent: 29000 },
-            { category: 'Cloud Infrastructure', type: 'Cloud', allocated: 15000, spent: 14500 },
-            { category: 'Maintenance & Services', type: 'Service', allocated: 10000, spent: 9000 }
-        ]
-    }
-];
 
 // Fonction simple simulant une classification IA
 const classifyBudgetLine = (category: string, amount: number): 'CAPEX' | 'OPEX' => {
@@ -86,7 +40,7 @@ const classifyBudgetLine = (category: string, amount: number): 'CAPEX' | 'OPEX' 
 };
 
 const FinanceManagementPage = () => {
-    const { equipment, settings } = useData();
+    const { equipment, settings, financeExpenses, financeBudgets } = useData();
     const { showToast } = useToast();
     const [activeView, setActiveView] = useState<FinanceView>('overview');
     const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
@@ -95,7 +49,16 @@ const FinanceManagementPage = () => {
     const isCompact = useMediaQuery('(max-width: 599px)');
 
     // Budget State
-    const [selectedYear, setSelectedYear] = useState(2026);
+    const [selectedYear, setSelectedYear] = useState<number>(() => {
+        return financeBudgets[0]?.year || new Date().getFullYear();
+    });
+
+    useEffect(() => {
+        if (financeBudgets.length === 0) return;
+        if (!financeBudgets.some((budget) => budget.year === selectedYear)) {
+            setSelectedYear(financeBudgets[0].year);
+        }
+    }, [financeBudgets, selectedYear]);
 
     // --- ANALYSE FINANCIÃˆRE ---
     const stats = useMemo(() => {
@@ -127,19 +90,53 @@ const FinanceManagementPage = () => {
 
     // Budget Logic
     const currentBudget = useMemo(() => {
-        return MOCK_BUDGET_HISTORY.find(b => b.year === selectedYear) || MOCK_BUDGET_HISTORY[0];
-    }, [selectedYear]);
+        const selected = financeBudgets.find((budget) => budget.year === selectedYear);
+        if (selected) return selected;
+
+        return {
+            year: selectedYear,
+            status: 'En cours',
+            totalAllocated: 0,
+            items: [],
+            updatedAt: new Date().toISOString(),
+        };
+    }, [financeBudgets, selectedYear]);
 
     const budgetStats = useMemo(() => {
         const totalSpent = currentBudget.items.reduce((acc, item) => acc + item.spent, 0);
         const totalAllocated = currentBudget.totalAllocated;
         const remaining = totalAllocated - totalSpent;
-        const percent = (totalSpent / totalAllocated) * 100;
+        const percent = totalAllocated > 0 ? (totalSpent / totalAllocated) * 100 : 0;
         return { totalSpent, totalAllocated, remaining, percent };
     }, [currentBudget]);
 
     const spentPercent = Math.min(Math.max(budgetStats.percent, 0), 100);
     const remainingPercent = Math.max(0, 100 - spentPercent);
+
+    const currentYear = new Date().getFullYear();
+    const q1Expenses = useMemo(() => {
+        return financeExpenses
+            .filter((expense) => {
+                const expenseDate = new Date(expense.date);
+                const month = expenseDate.getMonth();
+                return expenseDate.getFullYear() === currentYear && month >= 0 && month <= 2;
+            })
+            .reduce((acc, expense) => acc + expense.amount, 0);
+    }, [financeExpenses, currentYear]);
+
+    const budgetYearOptions = useMemo(() => {
+        if (financeBudgets.length > 0) {
+            return financeBudgets.map((budget) => ({
+                value: budget.year.toString(),
+                label: `${budget.year} (${budget.status})`,
+            }));
+        }
+
+        return [{
+            value: selectedYear.toString(),
+            label: `${selectedYear} (${currentBudget.status})`,
+        }];
+    }, [financeBudgets, selectedYear, currentBudget.status]);
 
     // DonnÃ©es pour le graphique d'aire (Projection)
     const projectionSteps = [
@@ -195,7 +192,7 @@ const FinanceManagementPage = () => {
                     <div className="space-y-6">
                         <div className="rounded-md border border-outline-variant bg-surface-container-low p-4">
                             <p className="text-label-small uppercase tracking-widest text-on-surface-variant mb-2">Description</p>
-                            <p className="text-body-medium text-on-surface">{selectedExpense.desc}</p>
+                            <p className="text-body-medium text-on-surface">{selectedExpense.description}</p>
                         </div>
 
                         <div className="space-y-3">
@@ -254,10 +251,7 @@ const FinanceManagementPage = () => {
                                             name="finance-year"
                                             value={selectedYear.toString()}
                                             onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                            options={MOCK_BUDGET_HISTORY.map((budget) => ({
-                                                value: budget.year.toString(),
-                                                label: `${budget.year} (${budget.status})`,
-                                            }))}
+                                            options={budgetYearOptions}
                                             placeholder="Choisir un exercice"
                                             className="!space-y-0"
                                         />
@@ -291,9 +285,9 @@ const FinanceManagementPage = () => {
                                         name="finance-year-mobile"
                                         value={selectedYear.toString()}
                                         onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                        options={MOCK_BUDGET_HISTORY.map((budget) => ({
-                                            value: budget.year.toString(),
-                                            label: `${budget.year} · ${budget.status}`,
+                                        options={budgetYearOptions.map((option) => ({
+                                            value: option.value,
+                                            label: option.label.replace(' (', ' · ').replace(')', ''),
                                         }))}
                                         placeholder="Exercice"
                                         className="!space-y-0"
@@ -446,18 +440,18 @@ const FinanceManagementPage = () => {
                                 <div className="grid grid-cols-1 medium:grid-cols-2 expanded:grid-cols-3 gap-6">
                                     <div className="bg-gradient-to-br from-primary to-primary/80 rounded-card p-6 text-on-primary shadow-elevation-3">
                                         <p className="text-label-small uppercase font-bold opacity-70 mb-2">Total Dépenses Q1</p>
-                                        <div className="text-headline-medium font-black mb-1">{formatCurrency(16240, settings.currency, settings.compactNotation)}</div>
+                                        <div className="text-headline-medium font-black mb-1">{formatCurrency(q1Expenses, settings.currency, settings.compactNotation)}</div>
                                         <div className="flex items-center gap-2 text-xs font-medium bg-on-primary/20 w-fit px-2 py-1 rounded-lg">
-                                            <MaterialIcon name="north_east" size={14} /> +12% vs 2023
+                                            <MaterialIcon name="schedule" size={14} /> Exercice {currentYear}
                                         </div>
                                     </div>
                                     <div className="bg-surface rounded-card p-6 border border-outline-variant shadow-elevation-1">
                                         <p className="text-label-small text-on-surface-variant uppercase font-bold mb-2">Budget Restant (Annuel)</p>
-                                        <div className="text-headline-medium font-black text-on-surface mb-1">{formatCurrency(85000, settings.currency, settings.compactNotation)}</div>
+                                        <div className="text-headline-medium font-black text-on-surface mb-1">{formatCurrency(budgetStats.remaining, settings.currency, settings.compactNotation)}</div>
                                         <div className="w-full bg-surface-container h-1.5 rounded-full overflow-hidden mt-3">
-                                            <div className="bg-tertiary h-full w-[65%]" />
+                                            <div className="bg-tertiary h-full" style={{ width: `${spentPercent}%` }} />
                                         </div>
-                                        <p className="text-xs text-on-surface-variant mt-2 text-right">65% consommé</p>
+                                        <p className="text-xs text-on-surface-variant mt-2 text-right">{spentPercent.toFixed(1)}% consommé</p>
                                     </div>
                                     <div
                                         onClick={() => setIsAddExpenseModalOpen(true)}
@@ -487,16 +481,17 @@ const FinanceManagementPage = () => {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-outline-variant">
-                                                {MOCK_EXPENSES.map((exp) => (
+                                                {financeExpenses.map((exp) => (
                                                     <tr key={exp.id} className="hover:bg-surface-container/50 transition-colors group">
                                                         <td className="px-6 py-4 text-on-surface-variant font-mono text-xs">{exp.date}</td>
                                                         <td className="px-6 py-4 font-bold text-on-surface">{exp.supplier}</td>
-                                                        <td className="px-6 py-4 text-on-surface-variant truncate max-w-[200px]">{exp.desc}</td>
+                                                        <td className="px-6 py-4 text-on-surface-variant truncate max-w-[200px]">{exp.description}</td>
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center gap-2">
                                                                 {exp.type === 'Purchase' && <MaterialIcon name="work" size={14} className="text-secondary" />}
                                                                 {exp.type === 'Cloud' && <MaterialIcon name="cloud_upload" size={14} className="text-tertiary" />}
                                                                 {exp.type === 'License' && <MaterialIcon name="vpn_key" size={14} className="text-tertiary" />}
+                                                                {exp.type === 'Maintenance' && <MaterialIcon name="build" size={14} className="text-on-surface-variant" />}
                                                                 {exp.type === 'Service' && <MaterialIcon name="layers" size={14} className="text-on-surface-variant" />}
                                                                 <span className="text-xs font-medium">{exp.type}</span>
                                                             </div>
@@ -637,6 +632,7 @@ const FinanceManagementPage = () => {
                                                                         {item.type === 'Purchase' && <MaterialIcon name="work" size={16} />}
                                                                         {item.type === 'License' && <MaterialIcon name="vpn_key" size={16} />}
                                                                         {item.type === 'Cloud' && <MaterialIcon name="cloud_upload" size={16} />}
+                                                                        {item.type === 'Maintenance' && <MaterialIcon name="build" size={16} />}
                                                                         {item.type === 'Service' && <MaterialIcon name="layers" size={16} />}
                                                                     </div>
                                                                     <span className="font-bold text-on-surface">{item.category}</span>

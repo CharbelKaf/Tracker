@@ -333,6 +333,38 @@ export const getHistoryEventIcon = (eventType: EventType): string =>
 export const isMovementHistoryEventType = (eventType: EventType): boolean =>
     MOVEMENT_HISTORY_EVENT_TYPES.includes(eventType);
 
+const readMetadataString = (value: unknown): string | null =>
+    typeof value === 'string' ? value : null;
+
+export const isMovementUpdateEvent = (event: HistoryEvent): boolean => {
+    if (event.type !== 'UPDATE') return false;
+
+    const fromStatus = readMetadataString(event.metadata?.fromStatus);
+    const toStatus = readMetadataString(event.metadata?.toStatus);
+    if (fromStatus !== null && toStatus !== null && fromStatus !== toStatus) {
+        return true;
+    }
+
+    const fromAssignmentStatus = readMetadataString(event.metadata?.fromAssignmentStatus);
+    const toAssignmentStatus = readMetadataString(event.metadata?.toAssignmentStatus);
+    if (
+        fromAssignmentStatus !== null
+        && toAssignmentStatus !== null
+        && fromAssignmentStatus !== toAssignmentStatus
+    ) {
+        return true;
+    }
+
+    const beneficiaryId = readMetadataString(event.metadata?.beneficiaryId);
+    const previousUserId = readMetadataString(event.metadata?.previousUserId);
+    return beneficiaryId !== null || previousUserId !== null;
+};
+
+export const isEquipmentMovementEvent = (event: HistoryEvent): boolean => {
+    if (event.targetType !== 'EQUIPMENT') return false;
+    return isMovementHistoryEventType(event.type) || isMovementUpdateEvent(event);
+};
+
 export const getHistoryEventSentence = ({
     event,
     perspectiveActorId,

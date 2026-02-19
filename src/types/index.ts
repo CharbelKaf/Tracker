@@ -33,6 +33,49 @@ export interface AppSettings {
   compactNotation: boolean; // New setting for 1K, 1M formatting
 }
 
+// --- FINANCE ---
+export type FinanceExpenseType = 'Purchase' | 'License' | 'Maintenance' | 'Service' | 'Cloud';
+export type FinanceExpenseStatus = 'Paid' | 'Pending' | 'Recurring';
+export type ExtractionConfidence = 'high' | 'medium' | 'low';
+
+export interface FinanceExpense {
+  id: string;
+  date: string;
+  supplier: string;
+  amount: number;
+  type: FinanceExpenseType;
+  status: FinanceExpenseStatus;
+  description: string;
+  invoiceNumber?: string;
+  sourceFileName?: string;
+  importFingerprint?: string;
+  extractionConfidence?: ExtractionConfidence;
+  createdAt: string;
+}
+
+export interface FinanceExpenseInsertResult {
+  ok: boolean;
+  expense?: FinanceExpense;
+  duplicateOf?: FinanceExpense;
+  reason?: string;
+}
+
+export interface FinanceBudgetItem {
+  category: string;
+  type: FinanceExpenseType;
+  allocated: number;
+  spent: number;
+}
+
+export interface FinanceBudget {
+  year: number;
+  status: 'En cours' | 'Clôturé' | 'Archivé';
+  totalAllocated: number;
+  items: FinanceBudgetItem[];
+  updatedAt: string;
+  sourceFileName?: string;
+}
+
 // Entities
 export interface User {
   id: string;

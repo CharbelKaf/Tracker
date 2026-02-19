@@ -27,6 +27,9 @@ export default defineConfig(({ mode }) => {
               if (id.includes('react') || id.includes('scheduler')) return 'vendor-react';
               if (id.includes('html2canvas')) return 'vendor-html2canvas';
               if (id.includes('jspdf')) return 'vendor-jspdf';
+              if (id.includes('xlsx')) return 'vendor-xlsx';
+              if (id.includes('pdfjs-dist')) return 'vendor-pdfjs';
+              if (id.includes('tesseract.js')) return 'vendor-ocr';
               if (id.includes('dompurify') || id.includes('purify')) return 'vendor-dompurify';
               return 'vendor';
             }

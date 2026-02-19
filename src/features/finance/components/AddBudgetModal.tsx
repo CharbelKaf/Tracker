@@ -12,6 +12,8 @@ import { useToast } from '../../../context/ToastContext';
 import { useData } from '../../../context/DataContext';
 import { cn } from '../../../lib/utils';
 import { formatCurrency } from '../../../lib/financial';
+import { FinanceBudget, FinanceExpenseType } from '../../../types';
+import { ExtractedBudgetDraft, extractBudgetDraftFromFile } from '../../../lib/budgetExtraction';
 
 interface AddBudgetModalProps {
     isOpen: boolean;
@@ -33,13 +35,16 @@ const MODE_OPTIONS = [
 
 export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose }) => {
     const { showToast } = useToast();
-    const { settings } = useData();
+    const { settings, financeBudgets, upsertFinanceBudget } = useData();
 
     const [mode, setMode] = useState<AddBudgetMode>('import');
     const [isProcessing, setIsProcessing] = useState(false);
     const [importedFile, setImportedFile] = useState<File | null>(null);
+    const [importMeta, setImportMeta] = useState<Pick<ExtractedBudgetDraft, 'confidence' | 'warnings' | 'source'> | null>(null);
+    const [isLowConfidenceReviewed, setIsLowConfidenceReviewed] = useState(false);
 
     const [year, setYear] = useState(new Date().getFullYear().toString());
+    const requiresLowConfidenceReview = Boolean(importedFile && importMeta?.confidence === 'low');
 
     // Dynamic Rows State
     const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([
@@ -88,10 +93,20 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose 
         return { type, icon, iconBg };
     };
 
+    const getFinanceTypeFromCategory = (category: string): FinanceExpenseType => {
+        const lower = category.toLowerCase();
+        if (lower.includes('licence') || lower.includes('software')) return 'License';
+        if (lower.includes('cloud') || lower.includes('hosting') || lower.includes('infrastructure')) return 'Cloud';
+        if (lower.includes('maintenance') || lower.includes('service')) return 'Service';
+        return 'Purchase';
+    };
+
     const reset = () => {
         setMode('import');
         setIsProcessing(false);
         setImportedFile(null);
+        setImportMeta(null);
+        setIsLowConfidenceReviewed(false);
         setYear(new Date().getFullYear().toString());
         setBudgetLines([
             { id: '1', category: 'MatÃ©riel IT', amount: '' },
@@ -124,29 +139,60 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose 
     };
 
     // --- Import Logic ---
-    const startImportProcess = (file: File) => {
+    const startImportProcess = async (file: File) => {
         setImportedFile(file);
         setIsProcessing(true);
+        setIsLowConfidenceReviewed(false);
 
-        // Simulation extraction IA Excel
-        setTimeout(() => {
+        try {
+            const extracted = await extractBudgetDraftFromFile(file);
             setIsProcessing(false);
-            setMode('manual'); // Switch to review data
+            setMode('manual');
+            setImportMeta({
+                confidence: extracted.confidence,
+                warnings: extracted.warnings,
+                source: extracted.source,
+            });
 
-            setYear('2026');
-            // DonnÃ©es simulÃ©es extraites du fichier Excel
-            setBudgetLines([
-                { id: '101', category: 'MatÃ©riel IT', amount: '85000' },
-                { id: '102', category: 'Licences Logiciel', amount: '35000' },
-                { id: '103', category: 'Cloud Infrastructure', amount: '20000' },
-                { id: '104', category: 'Maintenance & Services', amount: '10000' }
-            ]);
+            setYear(extracted.year);
+            if (extracted.lines.length > 0) {
+                setBudgetLines(extracted.lines.map((line, index) => ({
+                    id: `${Date.now()}_${index}`,
+                    category: line.category,
+                    amount: line.amount,
+                })));
+            } else {
+                setBudgetLines([
+                    { id: '1', category: 'Matériel IT', amount: '' },
+                    { id: '2', category: 'Licences Logiciel', amount: '' },
+                ]);
+            }
 
-            showToast("Budget importÃ© et ventilÃ© avec succÃ¨s !", "success");
-        }, 2000);
+            if (extracted.confidence === 'high') {
+                showToast('Budget importé avec succès.', 'success');
+            } else if (extracted.lines.length > 0) {
+                showToast('Import partiel. Vérifiez les lignes avant validation.', 'warning');
+            } else {
+                showToast('Aucune ligne exploitable détectée. Complétez manuellement.', 'warning');
+            }
+        } catch {
+            setIsProcessing(false);
+            setMode('manual');
+            setImportMeta({
+                confidence: 'low',
+                warnings: ['Erreur de lecture du fichier.'],
+                source: 'manual',
+            });
+            showToast('Impossible de traiter ce fichier.', 'error');
+        }
     };
 
     const handleSubmit = () => {
+        if (requiresLowConfidenceReview && !isLowConfidenceReviewed) {
+            showToast('Confirmez la revue manuelle du budget avant validation.', 'warning');
+            return;
+        }
+
         if (totalBudget <= 0) {
             showToast("Le budget total ne peut pas Ãªtre nul.", "error");
             return;
@@ -157,6 +203,32 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose 
             return;
         }
 
+        const budgetYear = Number(year) || new Date().getFullYear();
+        const existingBudget = financeBudgets.find(budget => budget.year === budgetYear);
+        const existingSpentByCategory = new Map(
+            (existingBudget?.items || []).map(item => [item.category, item.spent]),
+        );
+
+        const normalizedItems: FinanceBudget['items'] = budgetLines.map((line) => {
+            const allocated = Number(line.amount) || 0;
+            const existingSpent = existingSpentByCategory.get(line.category) || 0;
+
+            return {
+                category: line.category,
+                type: getFinanceTypeFromCategory(line.category),
+                allocated,
+                spent: Math.min(existingSpent, allocated),
+            };
+        });
+
+        upsertFinanceBudget({
+            year: budgetYear,
+            status: budgetYear < new Date().getFullYear() ? 'Clôturé' : 'En cours',
+            totalAllocated: normalizedItems.reduce((acc, item) => acc + item.allocated, 0),
+            items: normalizedItems,
+            sourceFileName: importedFile?.name,
+        });
+
         showToast(`Budget ${year} de ${formatCurrency(totalBudget, settings.currency)} enregistrÃ© avec succÃ¨s.`, "success");
         handleClose();
     };
@@ -164,7 +236,13 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose 
     const footer = (
         <>
             <Button variant="outlined" onClick={handleClose}>Annuler</Button>
-            <Button variant="filled" onClick={handleSubmit}>Valider le Budget</Button>
+            <Button
+                variant="filled"
+                onClick={handleSubmit}
+                disabled={requiresLowConfidenceReview && !isLowConfidenceReviewed}
+            >
+                Valider le Budget
+            </Button>
         </>
     );
 
@@ -201,7 +279,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose 
                         <div className="w-full space-y-4">
                             <FileDropzone
                                 onFileSelect={startImportProcess}
-                                accept=".xlsx,.xls,.csv"
+                                accept=".xlsx,.xls,.csv,.txt,.pdf,.jpg,.jpeg,.png,.webp"
                                 label="Importer votre fichier Budget"
                                 subLabel={"L'IA détectera automatiquement les colonnes Catégorie, Montant et Année."}
                                 className="w-full h-72 border-outline-variant hover:border-tertiary hover:bg-tertiary-container/10"
@@ -209,6 +287,8 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose 
                             <div className="flex gap-2 justify-center">
                                 <span className="text-label-small font-bold bg-surface-container text-on-surface-variant px-2 py-1 rounded">.XLSX</span>
                                 <span className="text-label-small font-bold bg-surface-container text-on-surface-variant px-2 py-1 rounded">.CSV</span>
+                                <span className="text-label-small font-bold bg-surface-container text-on-surface-variant px-2 py-1 rounded">.PDF</span>
+                                <span className="text-label-small font-bold bg-surface-container text-on-surface-variant px-2 py-1 rounded">.JPG/.PNG</span>
                             </div>
                         </div>
                     ) : (
@@ -231,7 +311,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose 
                             <div className="w-full bg-surface-container rounded-xl p-4 border border-outline-variant text-left space-y-2">
                                 <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Journal de traitement</p>
                                 <span className="animate-in fade-in slide-in-from-left-4 delay-100 flex items-center gap-2 text-sm text-on-surface-variant"><MaterialIcon name="check" size={12} className="text-tertiary" /> Fichier "{importedFile?.name}" chargÃ©</span>
-                                <span className="animate-in fade-in slide-in-from-left-4 delay-500 flex items-center gap-2 text-sm text-on-surface-variant"><MaterialIcon name="check" size={12} className="text-tertiary" /> DÃ©tection de l'exercice fiscal : 2026</span>
+                                <span className="animate-in fade-in slide-in-from-left-4 delay-500 flex items-center gap-2 text-sm text-on-surface-variant"><MaterialIcon name="check" size={12} className="text-tertiary" /> DÃ©tection de l'exercice fiscal</span>
                                 <span className="animate-in fade-in slide-in-from-left-4 delay-1000 flex items-center gap-2 text-sm text-on-surface-variant"><MaterialIcon name="progress_activity" size={12} className="animate-spin text-primary" /> Extraction des lignes budgÃ©taires...</span>
                             </div>
                         </div>
@@ -248,16 +328,45 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose 
                                 <div>
                                     <p className="text-xs font-bold text-on-tertiary-container uppercase">DonnÃ©es prÃ©-remplies par IA</p>
                                     <p className="text-xs text-tertiary">VÃ©rifiez les montants ci-dessous.</p>
+                                    {importMeta && (
+                                        <p className="text-[11px] text-on-tertiary-container/80 mt-0.5">
+                                            Confiance: {importMeta.confidence === 'high' ? 'elevee' : importMeta.confidence === 'medium' ? 'moyenne' : 'faible'}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <IconButton
                                 icon="close"
                                 variant="standard"
                                 aria-label="Retirer le fichier importé"
-                                onClick={() => setImportedFile(null)}
+                                onClick={() => {
+                                    setImportedFile(null);
+                                    setImportMeta(null);
+                                    setIsLowConfidenceReviewed(false);
+                                }}
                             />
                         </div>
                     )}
+
+                    {importMeta?.warnings?.length ? (
+                        <div className="rounded-xl border border-outline-variant bg-surface-container-low px-3 py-2 text-xs text-on-surface-variant">
+                            {importMeta.warnings[0]}
+                        </div>
+                    ) : null}
+
+                    {requiresLowConfidenceReview ? (
+                        <label className="flex items-start gap-2 rounded-xl border border-outline-variant bg-surface-container-low px-3 py-2 text-xs text-on-surface-variant">
+                            <input
+                                type="checkbox"
+                                className="mt-0.5 h-4 w-4"
+                                checked={isLowConfidenceReviewed}
+                                onChange={(e) => setIsLowConfidenceReviewed(e.target.checked)}
+                            />
+                            <span>
+                                Je confirme avoir verifie manuellement l'annee, les categories et les montants.
+                            </span>
+                        </label>
+                    ) : null}
 
                     <div className="flex items-end gap-4">
                         <div className="w-40">

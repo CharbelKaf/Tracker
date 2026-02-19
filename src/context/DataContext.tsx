@@ -1,6 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import { User, Equipment, Approval, HistoryEvent, Category, Model, AppSettings, ApprovalStatus } from '../types';
+import {
+    User,
+    Equipment,
+    Approval,
+    HistoryEvent,
+    Category,
+    Model,
+    AppSettings,
+    ApprovalStatus,
+    FinanceExpense,
+    FinanceBudget,
+    FinanceExpenseType,
+    FinanceExpenseInsertResult,
+} from '../types';
 import { mockAllUsersExtended, mockAllEquipment, mockLocationCountries, mockPendingApprovals, mockApprovalHistory, mockHistoryEvents, mockCategories, mockModels, CATEGORY_ICONS } from '../data/mockData';
+import { mockFinanceBudgets, mockFinanceExpenses } from '../data/mockFinanceData';
 import { useAuth } from './AuthContext';
 import { applyMd3Theme } from '../lib/md3Theme';
 import {
@@ -31,6 +45,8 @@ interface DataContextType {
     locationData: LocationData;
     serviceManagers: Record<string, string>; // NOUVEAU: Mapping Service Name -> Manager ID
     settings: AppSettings;
+    financeExpenses: FinanceExpense[];
+    financeBudgets: FinanceBudget[];
 
     addUser: (user: User) => BusinessRuleDecision;
     updateUser: (id: string, updates: Partial<User>) => BusinessRuleDecision;
@@ -59,6 +75,8 @@ interface DataContextType {
 
     // Global Settings
     updateSettings: (newSettings: Partial<AppSettings>) => void;
+    addFinanceExpense: (expense: Omit<FinanceExpense, 'id' | 'createdAt'>) => FinanceExpenseInsertResult;
+    upsertFinanceBudget: (budget: Omit<FinanceBudget, 'updatedAt'> & { updatedAt?: string }) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -84,6 +102,8 @@ const STORAGE_KEYS = {
     models: { current: 'tracker_models', legacy: 'neemba_models' },
     events: { current: 'tracker_events', legacy: 'neemba_events' },
     serviceManagers: { current: 'tracker_service_managers', legacy: 'neemba_service_managers' },
+    financeExpenses: { current: 'tracker_finance_expenses', legacy: 'neemba_finance_expenses' },
+    financeBudgets: { current: 'tracker_finance_budgets', legacy: 'neemba_finance_budgets' },
 } as const;
 
 const getPersistedValue = (currentKey: string, legacyKey: string): string | null => {
@@ -112,6 +132,30 @@ const extractPersistedIds = (items: unknown[]): Set<string> => {
         .filter((id): id is string => typeof id === 'string');
 
     return new Set(ids);
+};
+
+const getBudgetCategoryByExpenseType = (type: FinanceExpenseType): string => {
+    if (type === 'Purchase') return 'Matériel IT';
+    if (type === 'License') return 'Licences Logiciel';
+    if (type === 'Cloud') return 'Cloud Infrastructure';
+    return 'Maintenance & Services';
+};
+
+const normalizeValueForFingerprint = (value: string | undefined): string => {
+    return (value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+};
+
+const buildExpenseFingerprint = (expense: Pick<FinanceExpense, 'supplier' | 'invoiceNumber' | 'amount' | 'date'>): string => {
+    const supplier = normalizeValueForFingerprint(expense.supplier);
+    const invoice = normalizeValueForFingerprint(expense.invoiceNumber || '');
+    const amount = Number(expense.amount || 0).toFixed(2);
+    const date = normalizeValueForFingerprint(expense.date || '');
+    return `${supplier}|${invoice}|${amount}|${date}`;
 };
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -219,6 +263,31 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     });
 
+    // --- FINANCE ---
+    const [financeExpenses, setFinanceExpenses] = useState<FinanceExpense[]>(() => {
+        try {
+            const saved = getPersistedValue(STORAGE_KEYS.financeExpenses.current, STORAGE_KEYS.financeExpenses.legacy);
+            if (!saved) return mockFinanceExpenses;
+
+            const parsed = JSON.parse(saved);
+            return Array.isArray(parsed) ? parsed : mockFinanceExpenses;
+        } catch {
+            return mockFinanceExpenses;
+        }
+    });
+
+    const [financeBudgets, setFinanceBudgets] = useState<FinanceBudget[]>(() => {
+        try {
+            const saved = getPersistedValue(STORAGE_KEYS.financeBudgets.current, STORAGE_KEYS.financeBudgets.legacy);
+            if (!saved) return mockFinanceBudgets;
+
+            const parsed = JSON.parse(saved);
+            return Array.isArray(parsed) ? parsed : mockFinanceBudgets;
+        } catch {
+            return mockFinanceBudgets;
+        }
+    });
+
     // --- LOCATIONS MANAGEMENT ---
     const [locationData, setLocationData] = useState<LocationData>(() => {
         return {
@@ -282,6 +351,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem(STORAGE_KEYS.serviceManagers.current, JSON.stringify(serviceManagers));
     }, [serviceManagers]);
 
+    useEffect(() => {
+        localStorage.setItem(STORAGE_KEYS.financeExpenses.current, JSON.stringify(financeExpenses));
+    }, [financeExpenses]);
+
+    useEffect(() => {
+        localStorage.setItem(STORAGE_KEYS.financeBudgets.current, JSON.stringify(financeBudgets));
+    }, [financeBudgets]);
+
     // --- THEME & ACCENT COLOR APPLICATION ---
     useEffect(() => {
         const root = document.documentElement;
@@ -312,10 +389,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => mediaQuery.removeListener(onSystemThemeChange);
     }, [settings.accentColor, settings.theme]);
 
-    const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
-        setSettings(prev => ({ ...prev, ...newSettings }));
-    }, []);
-
     const logEvent = useCallback((eventData: Omit<HistoryEvent, 'id' | 'timestamp'>) => {
         const newEvent: HistoryEvent = {
             ...eventData,
@@ -324,6 +397,184 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         setEvents(prev => [newEvent, ...prev]);
     }, []);
+
+    const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
+        setSettings(prev => ({ ...prev, ...newSettings }));
+    }, []);
+
+    const addFinanceExpense = useCallback((expenseData: Omit<FinanceExpense, 'id' | 'createdAt'>): FinanceExpenseInsertResult => {
+        const now = new Date().toISOString();
+        const computedFingerprint = expenseData.importFingerprint || buildExpenseFingerprint({
+            supplier: expenseData.supplier,
+            invoiceNumber: expenseData.invoiceNumber,
+            amount: expenseData.amount,
+            date: expenseData.date,
+        });
+
+        const duplicateExpense = financeExpenses.find((existing) => {
+            if (existing.importFingerprint && existing.importFingerprint === computedFingerprint) {
+                return true;
+            }
+
+            const sameInvoice = existing.invoiceNumber
+                && expenseData.invoiceNumber
+                && normalizeValueForFingerprint(existing.invoiceNumber) === normalizeValueForFingerprint(expenseData.invoiceNumber);
+            const sameSupplier = normalizeValueForFingerprint(existing.supplier) === normalizeValueForFingerprint(expenseData.supplier);
+            const sameAmount = Number(existing.amount).toFixed(2) === Number(expenseData.amount).toFixed(2);
+            const sameDate = existing.date === expenseData.date;
+
+            if (sameInvoice && sameSupplier && sameAmount) return true;
+            if (existing.sourceFileName && expenseData.sourceFileName && existing.sourceFileName === expenseData.sourceFileName && sameAmount) {
+                return true;
+            }
+
+            return sameSupplier && sameAmount && sameDate;
+        });
+
+        if (duplicateExpense) {
+            logEvent({
+                type: 'UPDATE',
+                actorId: currentUser?.id || 'system',
+                actorName: currentUser?.name || 'Système',
+                actorRole: currentUser?.role || 'Admin',
+                targetType: 'SYSTEM',
+                targetId: duplicateExpense.id,
+                targetName: `Dépense ${duplicateExpense.supplier}`,
+                description: `Tentative d'import dupliqué ignorée (${expenseData.supplier})`,
+                metadata: {
+                    duplicateOf: duplicateExpense.id,
+                    sourceFileName: expenseData.sourceFileName || null,
+                    invoiceNumber: expenseData.invoiceNumber || null,
+                },
+                isSystem: false,
+                isSensitive: false,
+            });
+
+            return {
+                ok: false,
+                duplicateOf: duplicateExpense,
+                reason: 'duplicate',
+            };
+        }
+
+        const createdAt = now;
+        const newExpense: FinanceExpense = {
+            ...expenseData,
+            id: `expense_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            createdAt,
+            importFingerprint: computedFingerprint,
+        };
+
+        const expenseYear = Number(newExpense.date.slice(0, 4)) || new Date().getFullYear();
+        const budgetCategory = getBudgetCategoryByExpenseType(newExpense.type);
+
+        setFinanceExpenses(prev => [newExpense, ...prev]);
+        setFinanceBudgets(prev => {
+            const targetBudget = prev.find(budget => budget.year === expenseYear);
+
+            if (!targetBudget) {
+                const createdBudget: FinanceBudget = {
+                    year: expenseYear,
+                    status: expenseYear < new Date().getFullYear() ? 'Clôturé' : 'En cours',
+                    totalAllocated: newExpense.amount,
+                    items: [{
+                        category: budgetCategory,
+                        type: newExpense.type,
+                        allocated: newExpense.amount,
+                        spent: newExpense.amount,
+                    }],
+                    updatedAt: createdAt,
+                    sourceFileName: newExpense.sourceFileName,
+                };
+
+                return [createdBudget, ...prev].sort((a, b) => b.year - a.year);
+            }
+
+            const hasCategory = targetBudget.items.some((item) => item.category === budgetCategory);
+            const updatedItems = hasCategory
+                ? targetBudget.items.map((item) => item.category === budgetCategory
+                    ? { ...item, spent: item.spent + newExpense.amount }
+                    : item)
+                : [
+                    ...targetBudget.items,
+                    {
+                        category: budgetCategory,
+                        type: newExpense.type,
+                        allocated: newExpense.amount,
+                        spent: newExpense.amount,
+                    },
+                ];
+
+            const updatedBudget: FinanceBudget = {
+                ...targetBudget,
+                items: updatedItems,
+                totalAllocated: hasCategory ? targetBudget.totalAllocated : targetBudget.totalAllocated + newExpense.amount,
+                updatedAt: createdAt,
+            };
+
+            return prev
+                .map((budget) => budget.year === expenseYear ? updatedBudget : budget)
+                .sort((a, b) => b.year - a.year);
+        });
+
+        logEvent({
+            type: 'UPDATE',
+            actorId: currentUser?.id || 'system',
+            actorName: currentUser?.name || 'Système',
+            actorRole: currentUser?.role || 'Admin',
+            targetType: 'SYSTEM',
+            targetId: newExpense.id,
+            targetName: `Dépense ${newExpense.supplier}`,
+            description: `Nouvelle dépense enregistrée (${newExpense.supplier})`,
+            metadata: {
+                amount: newExpense.amount,
+                type: newExpense.type,
+                date: newExpense.date,
+                invoiceNumber: newExpense.invoiceNumber || null,
+            },
+            isSystem: false,
+            isSensitive: false,
+        });
+
+        return {
+            ok: true,
+            expense: newExpense,
+        };
+    }, [currentUser, logEvent, financeExpenses]);
+
+    const upsertFinanceBudget = useCallback((budgetData: Omit<FinanceBudget, 'updatedAt'> & { updatedAt?: string }) => {
+        const updatedBudget: FinanceBudget = {
+            ...budgetData,
+            updatedAt: budgetData.updatedAt || new Date().toISOString(),
+        };
+
+        setFinanceBudgets(prev => {
+            const hasYear = prev.some(budget => budget.year === updatedBudget.year);
+            const next = hasYear
+                ? prev.map(budget => budget.year === updatedBudget.year ? updatedBudget : budget)
+                : [...prev, updatedBudget];
+
+            return next.sort((a, b) => b.year - a.year);
+        });
+
+        logEvent({
+            type: 'UPDATE',
+            actorId: currentUser?.id || 'system',
+            actorName: currentUser?.name || 'Système',
+            actorRole: currentUser?.role || 'Admin',
+            targetType: 'SYSTEM',
+            targetId: `budget_${updatedBudget.year}`,
+            targetName: `Budget ${updatedBudget.year}`,
+            description: `Budget ${updatedBudget.year} enregistré`,
+            metadata: {
+                totalAllocated: updatedBudget.totalAllocated,
+                lineCount: updatedBudget.items.length,
+                sourceFileName: updatedBudget.sourceFileName || null,
+            },
+            isSystem: false,
+            isSensitive: false,
+        });
+    }, [currentUser, logEvent]);
 
     const assignManagerToService = useCallback((serviceName: string, managerId: string) => {
         setServiceManagers(prev => ({ ...prev, [serviceName]: managerId }));
@@ -543,6 +794,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 fromAssignmentStatus: oldItem.assignmentStatus || 'NONE',
                 toAssignmentStatus: nextItem.assignmentStatus || 'NONE',
             };
+            if (nextUserId) {
+                metadata.beneficiaryId = nextUserId;
+                metadata.beneficiaryName = nextUserName;
+            }
+            if (oldUserId && oldUserId !== nextUserId) {
+                metadata.previousUserId = oldUserId;
+                metadata.previousUser = oldItem.user?.name || null;
+            }
 
             if (!oldUserId && nextUserId) {
                 if (nextItem.assignmentStatus === 'CONFIRMED' || nextItem.status === 'Attribué') {
@@ -558,8 +817,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     eventType = 'ASSIGN_PENDING';
                     description = `Attribution initiée pour ${nextUserName}`;
                 }
-                metadata.beneficiaryId = nextUserId;
-                metadata.beneficiaryName = nextUserName;
             } else if (oldUserId && !nextUserId) {
                 eventType = 'RETURN';
                 if (oldItem.assignmentStatus === 'PENDING_RETURN') {
@@ -569,8 +826,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 } else {
                     description = `Retour de l'équipement (${oldItem.user?.name || 'utilisateur'})`;
                 }
-                metadata.previousUserId = oldUserId;
-                metadata.previousUser = oldItem.user?.name || null;
             } else if (oldItem.status !== 'En réparation' && nextItem.status === 'En réparation') {
                 eventType = 'REPAIR_START';
                 description = `Entrée en maintenance`;
@@ -879,6 +1134,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         locationData,
         serviceManagers, // Exposed
         settings,
+        financeExpenses,
+        financeBudgets,
         addUser,
         updateUser,
         deleteUser,
@@ -898,8 +1155,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addModel,
         updateModel,
         deleteModel,
-        updateSettings
-    }), [users, equipment, categories, models, approvals, events, locationData, serviceManagers, settings, addUser, updateUser, deleteUser, addEquipment, updateEquipment, deleteEquipment, updateApproval, addApproval, logEvent, addLocation, renameLocation, deleteLocation, assignManagerToService, addCategory, updateCategory, deleteCategory, addModel, updateModel, deleteModel, updateSettings]);
+        updateSettings,
+        addFinanceExpense,
+        upsertFinanceBudget,
+    }), [users, equipment, categories, models, approvals, events, locationData, serviceManagers, settings, financeExpenses, financeBudgets, addUser, updateUser, deleteUser, addEquipment, updateEquipment, deleteEquipment, updateApproval, addApproval, logEvent, addLocation, renameLocation, deleteLocation, assignManagerToService, addCategory, updateCategory, deleteCategory, addModel, updateModel, deleteModel, updateSettings, addFinanceExpense, upsertFinanceBudget]);
 
     return (
         <DataContext.Provider value={contextValue}>

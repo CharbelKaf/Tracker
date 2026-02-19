@@ -15,8 +15,8 @@ import { cn } from '../../../lib/utils';
 import MovementTimeline, { MovementTimelineItem } from '../../../components/ui/MovementTimeline';
 import {
     getHistoryEventIcon,
+    isEquipmentMovementEvent,
     getStatusLabel,
-    isMovementHistoryEventType,
 } from '../../../lib/businessRules';
 
 interface EquipmentDetailsPageProps {
@@ -55,8 +55,7 @@ const EquipmentDetailsPage: React.FC<EquipmentDetailsPageProps> = ({ equipmentId
 
         const eventItems: MovementTimelineItem[] = events
             .filter((event) => {
-                if (event.targetType !== 'EQUIPMENT' || event.targetId !== item.id) return false;
-                return isMovementHistoryEventType(event.type) || (event.type === 'UPDATE' && Boolean(event.metadata?.toStatus));
+                return isEquipmentMovementEvent(event) && event.targetId === item.id;
             })
             .map((event) => ({
                 id: event.id,
