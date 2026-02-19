@@ -9,6 +9,8 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: CanonicalButtonVariant | LegacyButtonVariant;
   size?: 'sm' | 'md' | 'lg';
   icon?: React.ReactNode;
+  /** Legacy alias kept for backward compatibility */
+  startIcon?: React.ReactNode;
   /** Shows a loading spinner and disables interactions */
   loading?: boolean;
   /** Accessible fallback label when loading and no visible text exists */
@@ -72,12 +74,25 @@ const normalizeIcon = (icon: React.ReactNode): React.ReactNode => {
  * Legacy aliases are mapped for gradual migration.
  */
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'filled', size = 'md', icon, children, className, disabled, loading = false, loadingLabel = 'Chargement', type, ...props }, ref) => {
+  ({
+    variant = 'filled',
+    size = 'md',
+    icon,
+    startIcon,
+    children,
+    className,
+    disabled,
+    loading = false,
+    loadingLabel = 'Chargement',
+    type,
+    ...props
+  }, ref) => {
     const resolvedVariant = resolveVariant(variant);
     const isDisabled = Boolean(disabled || loading);
+    const leadingIcon = icon ?? startIcon;
     const resolvedIcon = loading
       ? <span className="inline-flex h-[18px] w-[18px] rounded-full border-2 border-current border-r-transparent animate-spin" aria-hidden="true" />
-      : normalizeIcon(icon);
+      : normalizeIcon(leadingIcon);
     const hasVisibleLabel = React.Children.count(children) > 0;
 
     const baseStyles = cn(
