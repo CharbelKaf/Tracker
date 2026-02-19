@@ -18,22 +18,17 @@ import { ApprovalRow } from '../components/ApprovalRow';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import ListActionFab from '../../../components/ui/ListActionFab';
 import { cn } from '../../../lib/utils';
+import {
+    canUserActOnApproval,
+    isApprovalActiveStatus,
+    isApprovalHistoryStatus,
+    isLegacyApprovalWorkflow,
+    isModernApprovalWorkflow,
+} from '../../../lib/businessRules';
 
 const ITEMS_PER_PAGE = 10;
-const LEGACY_ACTIVE_STATUSES: Approval['status'][] = ['Pending', 'Processing', 'WaitingManager', 'WaitingUser'];
-const MODERN_ACTIVE_STATUSES: Approval['status'][] = [
-    'WAITING_MANAGER_APPROVAL',
-    'WAITING_IT_PROCESSING',
-    'WAITING_DOTATION_APPROVAL',
-    'PENDING_DELIVERY',
-];
-const ACTIVE_REQUEST_STATUSES: Approval['status'][] = [...LEGACY_ACTIVE_STATUSES, ...MODERN_ACTIVE_STATUSES];
-const HISTORY_STATUSES: Approval['status'][] = ['Approved', 'Rejected', 'Completed', 'Cancelled'];
 
 type ApprovalView = 'active' | 'history';
-
-const isLegacyWorkflow = (status: Approval['status']) => LEGACY_ACTIVE_STATUSES.includes(status);
-const isModernWorkflow = (status: Approval['status']) => MODERN_ACTIVE_STATUSES.includes(status);
 
 const ApprovalsPage = () => {
     const [activeView, setActiveView] = useState<ApprovalView>('active');
@@ -41,7 +36,7 @@ const ApprovalsPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 300);
 
-    const { user: currentUser, role, canValidateRequest } = useAccessControl();
+    const { user: currentUser, role } = useAccessControl();
     const { users, approvals, updateApproval } = useData();
     const { navigate } = useAppNavigation();
     const { showToast } = useToast();
@@ -55,38 +50,23 @@ const ApprovalsPage = () => {
         setCurrentPage(1);
     }, [activeView, debouncedSearch]);
 
-    const isUserAllowedToValidate = useCallback((approval: Approval) => {
-        if (!currentUser) return false;
-
-        if (approval.status === 'WAITING_MANAGER_APPROVAL') {
-            return canValidateRequest(approval, users);
-        }
-
-        if (approval.status === 'WAITING_IT_PROCESSING') {
-            return role === 'Admin' || role === 'SuperAdmin';
-        }
-
-        if (approval.status === 'WAITING_DOTATION_APPROVAL') {
-            return canValidateRequest(approval, users);
-        }
-
-        if (approval.status === 'PENDING_DELIVERY') {
-            return approval.beneficiaryId === currentUser.id;
-        }
-
-        if (approval.status === 'Pending') return role === 'Admin' || role === 'SuperAdmin';
-        if (approval.status === 'WaitingManager') return canValidateRequest(approval, users);
-        if (approval.status === 'WaitingUser') return approval.beneficiaryId === currentUser.id;
-
-        return false;
-    }, [canValidateRequest, currentUser, role, users]);
+    const isUserAllowedToValidate = useCallback(
+        (approval: Approval) =>
+            canUserActOnApproval({
+                approval,
+                actorRole: role,
+                actorId: currentUser?.id,
+                users,
+            }),
+        [currentUser?.id, role, users],
+    );
 
     const activeApprovals = useMemo(() => {
         if (!currentUser) return [];
 
         const actionable = approvals.filter((approval) => isUserAllowedToValidate(approval));
         const relatedActive = approvals.filter((approval) =>
-            ACTIVE_REQUEST_STATUSES.includes(approval.status)
+            isApprovalActiveStatus(approval.status)
             && (approval.requesterId === currentUser.id || approval.beneficiaryId === currentUser.id),
         );
 
@@ -100,13 +80,13 @@ const ApprovalsPage = () => {
         if (!currentUser) return [];
 
         if (role === 'Admin' || role === 'SuperAdmin') {
-            return approvals.filter((approval) => HISTORY_STATUSES.includes(approval.status));
+            return approvals.filter((approval) => isApprovalHistoryStatus(approval.status));
         }
 
         if (role === 'Manager') {
             const teamUserIds = users.filter((user) => user.managerId === currentUser.id).map((user) => user.id);
             return approvals.filter((approval) =>
-                HISTORY_STATUSES.includes(approval.status)
+                isApprovalHistoryStatus(approval.status)
                 && (
                     approval.requesterId === currentUser.id
                     || teamUserIds.includes(approval.requesterId)
@@ -117,7 +97,7 @@ const ApprovalsPage = () => {
         }
 
         return approvals.filter((approval) =>
-            HISTORY_STATUSES.includes(approval.status)
+            isApprovalHistoryStatus(approval.status)
             && (approval.requesterId === currentUser.id || approval.beneficiaryId === currentUser.id),
         );
     }, [approvals, currentUser, role, users]);
@@ -142,8 +122,8 @@ const ApprovalsPage = () => {
     const hasMixedWorkflowFamilies = useMemo(() => {
         if (activeView !== 'active') return false;
 
-        const hasLegacy = filteredList.some((item) => isLegacyWorkflow(item.status));
-        const hasModern = filteredList.some((item) => isModernWorkflow(item.status));
+        const hasLegacy = filteredList.some((item) => isLegacyApprovalWorkflow(item.status));
+        const hasModern = filteredList.some((item) => isModernApprovalWorkflow(item.status));
 
         return hasLegacy && hasModern;
     }, [activeView, filteredList]);
@@ -325,7 +305,7 @@ const ApprovalsPage = () => {
 
     const getWorkflowHint = (approval: Approval) => {
         if (activeView !== 'active' || !hasMixedWorkflowFamilies) return undefined;
-        if (isLegacyWorkflow(approval.status)) return 'Parcours de validation précédent';
+        if (isLegacyApprovalWorkflow(approval.status)) return 'Parcours de validation précédent';
         return undefined;
     };
 

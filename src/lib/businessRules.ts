@@ -1,4 +1,13 @@
-import { Approval, ApprovalStatus, Equipment, User, UserRole } from '../types';
+import {
+    Approval,
+    ApprovalStatus,
+    AssignmentStatus,
+    Equipment,
+    EventType,
+    HistoryEvent,
+    User,
+    UserRole,
+} from '../types';
 
 export interface BusinessRuleDecision {
     allowed: boolean;
@@ -17,6 +26,18 @@ interface EquipmentFromApprovalContext {
     status: ApprovalStatus;
     actorId?: string;
     nowISO: string;
+}
+
+interface ApprovalActionContext {
+    approval: Approval;
+    actorRole?: UserRole;
+    actorId?: string;
+    users: User[];
+}
+
+interface HistorySentenceContext {
+    event: HistoryEvent;
+    perspectiveActorId?: string;
 }
 
 interface UserUpdateContext {
@@ -46,7 +67,7 @@ export type ReturnInspectionCondition =
     | 'Dégradé'
     | 'Hors service';
 
-const APPROVAL_TRANSITIONS: Partial<Record<ApprovalStatus, readonly ApprovalStatus[]>> = {
+export const APPROVAL_TRANSITIONS: Partial<Record<ApprovalStatus, readonly ApprovalStatus[]>> = {
     WAITING_MANAGER_APPROVAL: ['WAITING_IT_PROCESSING', 'Rejected', 'Cancelled'],
     WAITING_IT_PROCESSING: ['WAITING_DOTATION_APPROVAL', 'Rejected', 'Cancelled'],
     WAITING_DOTATION_APPROVAL: ['PENDING_DELIVERY', 'WAITING_IT_PROCESSING', 'Rejected', 'Cancelled'],
@@ -59,15 +80,30 @@ const APPROVAL_TRANSITIONS: Partial<Record<ApprovalStatus, readonly ApprovalStat
     WaitingUser: ['Completed', 'Rejected', 'Cancelled'],
 };
 
-export const ACTIVE_APPROVAL_STATUSES: readonly ApprovalStatus[] = [
+export const LEGACY_APPROVAL_ACTIVE_STATUSES: readonly ApprovalStatus[] = [
     'Pending',
     'Processing',
     'WaitingManager',
     'WaitingUser',
+];
+
+export const MODERN_APPROVAL_ACTIVE_STATUSES: readonly ApprovalStatus[] = [
     'WAITING_MANAGER_APPROVAL',
     'WAITING_IT_PROCESSING',
     'WAITING_DOTATION_APPROVAL',
     'PENDING_DELIVERY',
+];
+
+export const ACTIVE_APPROVAL_STATUSES: readonly ApprovalStatus[] = [
+    ...LEGACY_APPROVAL_ACTIVE_STATUSES,
+    ...MODERN_APPROVAL_ACTIVE_STATUSES,
+];
+
+export const APPROVAL_HISTORY_STATUSES: readonly ApprovalStatus[] = [
+    'Approved',
+    'Rejected',
+    'Completed',
+    'Cancelled',
 ];
 
 export const MANAGER_VALIDATION_PENDING_STATUSES: readonly ApprovalStatus[] = [
@@ -88,6 +124,118 @@ const RETURN_STATUS_BY_CONDITION: Record<ReturnInspectionCondition, Equipment['s
 const MANAGER_GATES: readonly ApprovalStatus[] = ['WAITING_MANAGER_APPROVAL', 'WaitingManager', 'WAITING_DOTATION_APPROVAL'];
 const IT_GATES: readonly ApprovalStatus[] = ['WAITING_IT_PROCESSING', 'Pending', 'Processing'];
 const USER_CONFIRMATION_GATES: readonly ApprovalStatus[] = ['PENDING_DELIVERY', 'WaitingUser'];
+const DISPLAYABLE_PENDING_ASSIGNMENT_STATUSES: readonly AssignmentStatus[] = [
+    'WAITING_MANAGER_APPROVAL',
+    'WAITING_IT_PROCESSING',
+    'WAITING_DOTATION_APPROVAL',
+    'PENDING_DELIVERY',
+    'PENDING_RETURN',
+];
+const STATUS_DISPLAY_LABELS: Record<string, { default: string; short?: string }> = {
+    // Equipment
+    Disponible: { default: 'Disponible' },
+    Attribué: { default: 'Attribué' },
+    Assigné: { default: 'Assigné' },
+    'En attente': { default: 'En attente' },
+    'En réparation': { default: 'En réparation', short: 'En Répar.' },
+    'En maintenance préventive': { default: 'Maintenance préventive' },
+    Retiré: { default: 'Retiré' },
+    Perdu: { default: 'Perdu' },
+    Réformé: { default: 'Réformé' },
+
+    // Approval
+    Pending: { default: 'En attente' },
+    Processing: { default: 'En traitement' },
+    Approved: { default: 'Approuvé' },
+    Rejected: { default: 'Rejeté' },
+    Completed: { default: 'Terminé' },
+    Cancelled: { default: 'Annulé' },
+    Expired: { default: 'Expiré' },
+    WAITING_MANAGER_APPROVAL: { default: 'Validation en cours' },
+    WAITING_IT_PROCESSING: { default: 'Traitement en cours' },
+    WAITING_DOTATION_APPROVAL: { default: 'Validation en cours' },
+    PENDING_DELIVERY: { default: 'En attente' },
+    PENDING_RETURN: { default: 'Retour en cours' },
+    WaitingManager: { default: 'Validation en cours' },
+    WaitingUser: { default: 'En attente' },
+
+    // Roles / misc badges
+    SuperAdmin: { default: 'Super Admin' },
+    Admin: { default: 'Admin' },
+    Manager: { default: 'Manager' },
+    User: { default: 'Utilisateur' },
+    high: { default: 'Urgent' },
+    normal: { default: 'Normal' },
+    low: { default: 'Basse' },
+};
+const HISTORY_EVENT_ICONS: Partial<Record<EventType, string>> = {
+    CREATE: 'add_circle',
+    UPDATE: 'history',
+    DELETE: 'delete',
+    ASSIGN: 'assignment_ind',
+    ASSIGN_PENDING: 'assignment_ind',
+    ASSIGN_MANAGER_WAIT: 'how_to_reg',
+    ASSIGN_MANAGER_OK: 'fact_check',
+    ASSIGN_IT_PROCESSING: 'engineering',
+    ASSIGN_IT_SELECTED: 'devices',
+    ASSIGN_DOTATION_WAIT: 'pending_actions',
+    ASSIGN_DOTATION_OK: 'task_alt',
+    ASSIGN_CONFIRMED: 'task_alt',
+    ASSIGN_DISPUTED: 'report_problem',
+    RETURN: 'assignment_return',
+    REPAIR_START: 'build',
+    REPAIR_END: 'build_circle',
+    APPROVAL_CREATE: 'post_add',
+    APPROVAL_MANAGER: 'how_to_reg',
+    APPROVAL_ADMIN: 'verified',
+    APPROVAL_REJECT: 'cancel',
+    LOGIN: 'login',
+    LOGOUT: 'logout',
+    EXPORT: 'download',
+    VIEW_SENSITIVE: 'visibility',
+};
+const HISTORY_EVENT_ACTIONS: Partial<Record<EventType, string>> = {
+    CREATE: 'ajouté',
+    UPDATE: 'mis à jour',
+    DELETE: 'supprimé',
+    ASSIGN: 'attribué',
+    ASSIGN_PENDING: "initié l'attribution de",
+    ASSIGN_MANAGER_WAIT: 'demandé une validation pour',
+    ASSIGN_MANAGER_OK: 'validé',
+    ASSIGN_IT_PROCESSING: 'lancé le traitement IT pour',
+    ASSIGN_IT_SELECTED: 'sélectionné un actif pour',
+    ASSIGN_DOTATION_WAIT: 'envoyé en validation de dotation',
+    ASSIGN_DOTATION_OK: 'validé la dotation de',
+    ASSIGN_CONFIRMED: 'confirmé la réception de',
+    ASSIGN_DISPUTED: 'signalé un litige sur',
+    RETURN: 'retourné',
+    REPAIR_START: 'passé en réparation',
+    REPAIR_END: 'sorti de réparation',
+    APPROVAL_CREATE: 'créé une demande liée à',
+    APPROVAL_MANAGER: 'validé une demande liée à',
+    APPROVAL_ADMIN: 'traité une demande liée à',
+    APPROVAL_REJECT: 'refusé une demande liée à',
+    LOGIN: 'ouvert une session',
+    LOGOUT: 'fermé une session',
+    EXPORT: 'exporté des données sur',
+    VIEW_SENSITIVE: 'consulté des données sensibles de',
+};
+export const MOVEMENT_HISTORY_EVENT_TYPES: readonly EventType[] = [
+    'CREATE',
+    'ASSIGN',
+    'ASSIGN_PENDING',
+    'ASSIGN_MANAGER_WAIT',
+    'ASSIGN_MANAGER_OK',
+    'ASSIGN_IT_PROCESSING',
+    'ASSIGN_IT_SELECTED',
+    'ASSIGN_DOTATION_WAIT',
+    'ASSIGN_DOTATION_OK',
+    'ASSIGN_CONFIRMED',
+    'ASSIGN_DISPUTED',
+    'RETURN',
+    'REPAIR_START',
+    'REPAIR_END',
+];
 
 const findUserByApprovalRef = (users: User[], id?: string, name?: string) => {
     return users.find((user) => {
@@ -105,6 +253,90 @@ const isManagerOfRequest = (approval: Approval, actorId: string, users: User[]) 
     if (requester?.managerId === actorId) return true;
     if (beneficiary?.managerId === actorId) return true;
     return false;
+};
+
+export const isApprovalActiveStatus = (status: ApprovalStatus): boolean =>
+    ACTIVE_APPROVAL_STATUSES.includes(status);
+
+export const isApprovalHistoryStatus = (status: ApprovalStatus): boolean =>
+    APPROVAL_HISTORY_STATUSES.includes(status);
+
+export const isLegacyApprovalWorkflow = (status: ApprovalStatus): boolean =>
+    LEGACY_APPROVAL_ACTIVE_STATUSES.includes(status);
+
+export const isModernApprovalWorkflow = (status: ApprovalStatus): boolean =>
+    MODERN_APPROVAL_ACTIVE_STATUSES.includes(status);
+
+export const canUserActOnApproval = ({
+    approval,
+    actorRole,
+    actorId,
+    users,
+}: ApprovalActionContext): boolean => {
+    if (!actorRole || !actorId) return false;
+    if (actorRole === 'SuperAdmin') return true;
+
+    if (MANAGER_GATES.includes(approval.status)) {
+        return actorRole === 'Manager' && isManagerOfRequest(approval, actorId, users);
+    }
+
+    if (IT_GATES.includes(approval.status)) {
+        return actorRole === 'Admin';
+    }
+
+    if (USER_CONFIRMATION_GATES.includes(approval.status)) {
+        return approval.beneficiaryId === actorId;
+    }
+
+    return false;
+};
+
+export const getStatusLabel = (
+    status: string,
+    options?: { short?: boolean },
+): string => {
+    const entry = STATUS_DISPLAY_LABELS[status];
+    if (!entry) return status;
+    if (options?.short && entry.short) return entry.short;
+    return entry.default;
+};
+
+export const getDisplayedEquipmentStatus = ({
+    status,
+    assignmentStatus,
+}: {
+    status: Equipment['status'];
+    assignmentStatus?: Equipment['assignmentStatus'];
+}): string => {
+    if (status !== 'En attente') {
+        return status;
+    }
+
+    if (assignmentStatus && DISPLAYABLE_PENDING_ASSIGNMENT_STATUSES.includes(assignmentStatus)) {
+        return assignmentStatus;
+    }
+
+    return status;
+};
+
+export const isOperationalEquipmentStatus = (status: Equipment['status']): boolean =>
+    status === 'Disponible' || status === 'Attribué';
+
+export const getHistoryEventIcon = (eventType: EventType): string =>
+    HISTORY_EVENT_ICONS[eventType] || 'history';
+
+export const isMovementHistoryEventType = (eventType: EventType): boolean =>
+    MOVEMENT_HISTORY_EVENT_TYPES.includes(eventType);
+
+export const getHistoryEventSentence = ({
+    event,
+    perspectiveActorId,
+}: HistorySentenceContext): string => {
+    const action = HISTORY_EVENT_ACTIONS[event.type] || 'agi sur';
+    const target = event.targetName || 'cet élément';
+    const isSelf = Boolean(perspectiveActorId && event.actorId === perspectiveActorId);
+    const subject = isSelf ? 'Vous avez' : `${event.actorName || 'Un utilisateur'} a`;
+    return `${subject} ${action} ${target}.`;
 };
 
 export const canTransitionApprovalStatus = ({

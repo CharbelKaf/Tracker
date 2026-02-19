@@ -5,7 +5,8 @@ import { useState, useEffect, useCallback } from 'react';
 const getHashSegments = () => {
     const hash = window.location.hash;
     const path = hash.replace(/^#/, '') || '/';
-    return path.split('/').filter(Boolean);
+    const [pathname] = path.split('?');
+    return pathname.split('/').filter(Boolean);
 };
 
 export const useRouter = () => {

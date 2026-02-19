@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
+import { getStatusLabel } from '../../lib/businessRules';
 
 type EquipmentStatus = 'Disponible' | 'Attribué' | 'Assigné' | 'En attente' | 'En réparation';
 type ApprovalStatus = 'Pending' | 'Approved' | 'Rejected' | 'Completed' | 'Cancelled';
@@ -80,7 +81,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
         className
       )}
     >
-      {config.label || status}
+      {getStatusLabel(status)}
     </span>
   );
 };

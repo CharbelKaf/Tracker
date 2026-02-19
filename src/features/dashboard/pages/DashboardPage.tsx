@@ -16,6 +16,11 @@ import { useHistory } from '../../../hooks/useHistory';
 import { cn } from '../../../lib/utils';
 import TransactionTicketModal from '../../../components/modals/TransactionTicketModal';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
+import {
+    getHistoryEventIcon,
+    getHistoryEventSentence,
+    isOperationalEquipmentStatus,
+} from '../../../lib/businessRules';
 
 interface DashboardPageProps {
     onViewChange: (view: ViewType) => void;
@@ -117,14 +122,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
         const activeFleet = equipment.filter(e => e.operationalStatus !== 'Retiré');
         const now = new Date();
 
-        const isOperational = (status: string) => status === 'Disponible' || status === 'Attribué';
         const toPercent = (count: number, total: number) => total > 0 ? Math.round((count / total) * 100) : 0;
 
         const underWarranty = activeFleet.filter(e => e.warrantyEnd && new Date(e.warrantyEnd) > now);
         const expiredWarranty = activeFleet.filter(e => e.warrantyEnd && new Date(e.warrantyEnd) <= now);
         const unknownWarranty = activeFleet.filter(e => !e.warrantyEnd);
 
-        const countOperational = (items: typeof equipment) => items.filter(e => isOperational(e.status)).length;
+        const countOperational = (items: typeof equipment) => items.filter(e => isOperationalEquipmentStatus(e.status)).length;
 
         const baseSegments = [
             {
@@ -242,25 +246,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
     const handleStatusClick = (status: string) => {
         if (onNavigate) {
             onNavigate(`/inventory/filter/${encodeURIComponent(status)}`);
-        }
-    };
-
-    const getEventSentence = (event: HistoryEvent, isMe: boolean) => {
-        const target = event.targetName ? <span className="font-medium text-on-surface">{event.targetName}</span> : null;
-        const prefix = isMe ? "Vous avez" : <span className="font-medium text-on-surface">{event.actorName}</span>;
-
-        // Simplified sentences for cleaner UI
-        switch (event.type) {
-            case 'CREATE': return <span>{prefix} ajouté {target}.</span>;
-            case 'UPDATE': return <span>{prefix} mis à jour {target}.</span>;
-            case 'DELETE': return <span>{prefix} supprimé {target}.</span>;
-            case 'ASSIGN': return <span>{prefix} attribué {target}.</span>;
-            case 'ASSIGN_PENDING': return <span>{prefix} initié l'attribution de {target}.</span>;
-            case 'ASSIGN_MANAGER_WAIT': return <span>{prefix} demandé validation pour {target}.</span>;
-            case 'ASSIGN_MANAGER_OK': return <span>{prefix} validé {target}.</span>;
-            case 'ASSIGN_CONFIRMED': return <span>{prefix} reçu {target}.</span>;
-            case 'RETURN': return <span>{prefix} retourné {target}.</span>;
-            default: return <span>{prefix} agi sur {target}.</span>;
         }
     };
 
@@ -442,7 +427,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
                             {recentEvents.length > 0 ? (
                                 recentEvents.map((event) => {
                                     const actor = users.find(u => u.id === event.actorId);
-                                    const isMe = currentUser?.id === event.actorId;
                                     return (
                                         <Button
                                             variant="text"
@@ -453,13 +437,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
                                         >
                                             <div className="relative">
                                                 <UserAvatar name={event.actorName} src={actor?.avatar} size="sm" />
-                                                <div className="absolute -bottom-1 -right-1 bg-surface rounded-full p-0.5">
-                                                    {/* Tiny icon based on event type could go here */}
+                                                <div className="absolute -bottom-1 -right-1 bg-surface rounded-full p-0.5 border border-outline-variant">
+                                                    <MaterialIcon name={getHistoryEventIcon(event.type)} size={12} className="text-primary" />
                                                 </div>
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-body-medium text-on-surface leading-tight">
-                                                    {getEventSentence(event, isMe)}
+                                                    {getHistoryEventSentence({
+                                                        event,
+                                                        perspectiveActorId: currentUser?.id,
+                                                    })}
                                                 </p>
                                                 <p className="text-body-small text-on-surface-variant mt-0.5">
                                                     {formatRelativeTime(event.timestamp)}

@@ -19,6 +19,7 @@ import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { useToast } from '../../../context/ToastContext';
 import ListActionFab from '../../../components/ui/ListActionFab';
 import { useConfirmation } from '../../../context/ConfirmationContext';
+import { getDisplayedEquipmentStatus } from '../../../lib/businessRules';
 
 const ITEMS_PER_PAGE = 10;
 const STORAGE_KEY_SEARCH = 'inventory_search';
@@ -98,24 +99,6 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ onViewChange, onEquipment
             currentPage * ITEMS_PER_PAGE
         );
     }, [filteredEquipment, currentPage]);
-    const getDisplayedStatus = (item: { status: string; assignmentStatus?: string }) => {
-        if (item.status !== 'En attente') {
-            return item.status;
-        }
-
-        if (
-            item.assignmentStatus === 'WAITING_MANAGER_APPROVAL'
-            || item.assignmentStatus === 'WAITING_IT_PROCESSING'
-            || item.assignmentStatus === 'WAITING_DOTATION_APPROVAL'
-            || item.assignmentStatus === 'PENDING_DELIVERY'
-            || item.assignmentStatus === 'PENDING_RETURN'
-        ) {
-            return item.assignmentStatus;
-        }
-
-        return item.status;
-    };
-
     const escapeCsv = (value: unknown): string => {
         const raw = value === null || value === undefined ? '' : String(value);
         const normalized = raw.replace(/\r?\n/g, ' ').trim();
@@ -460,7 +443,13 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ onViewChange, onEquipment
                                 }
                                 status={(
                                     <div className="flex w-[164px] items-center justify-end pr-1">
-                                        <StatusBadge status={getDisplayedStatus(item)} size="sm" />
+                                        <StatusBadge
+                                            status={getDisplayedEquipmentStatus({
+                                                status: item.status,
+                                                assignmentStatus: item.assignmentStatus,
+                                            })}
+                                            size="sm"
+                                        />
                                     </div>
                                 )}
 

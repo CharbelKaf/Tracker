@@ -15,6 +15,11 @@ import { DetailHeader } from '../../../components/layout/DetailHeader';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { cn } from '../../../lib/utils';
 import MovementTimeline, { MovementTimelineItem } from '../../../components/ui/MovementTimeline';
+import {
+    getHistoryEventIcon,
+    getStatusLabel,
+    isMovementHistoryEventType,
+} from '../../../lib/businessRules';
 
 interface UserDetailsPageProps {
     userId: string;
@@ -25,25 +30,9 @@ interface UserDetailsPageProps {
 
 type UserDetailsTab = 'overview' | 'equipment';
 
-const USER_MOVEMENT_ICONS: Record<string, string> = {
-    ASSIGN: 'assignment_ind',
-    ASSIGN_PENDING: 'assignment_ind',
-    ASSIGN_MANAGER_WAIT: 'how_to_reg',
-    ASSIGN_MANAGER_OK: 'fact_check',
-    ASSIGN_IT_PROCESSING: 'engineering',
-    ASSIGN_DOTATION_WAIT: 'pending_actions',
-    ASSIGN_DOTATION_OK: 'task_alt',
-    ASSIGN_CONFIRMED: 'task_alt',
-    ASSIGN_DISPUTED: 'report_problem',
-    RETURN: 'assignment_return',
-    REPAIR_START: 'build',
-    REPAIR_END: 'build_circle',
-    CREATE: 'add_circle',
-    UPDATE: 'history',
-};
 const MAX_USER_MOVEMENT_HISTORY_ITEMS = 200;
 
-const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onViewChange, onEquipmentClick }) => {
+const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onEquipmentClick }) => {
     const { users, equipment, events, deleteUser } = useData();
     const { showToast } = useToast();
     const { permissions, user: currentUserAuth } = useAccessControl();
@@ -72,21 +61,6 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onVie
     const primaryDevice = userEquipment[0];
     const displayPhone = user.phone || '+33 6 00 00 00 00';
     const userEquipmentIds = new Set(userEquipment.map((item) => item.id));
-    const movementTypes = new Set([
-        'ASSIGN',
-        'ASSIGN_PENDING',
-        'ASSIGN_MANAGER_WAIT',
-        'ASSIGN_MANAGER_OK',
-        'ASSIGN_IT_PROCESSING',
-        'ASSIGN_DOTATION_WAIT',
-        'ASSIGN_DOTATION_OK',
-        'ASSIGN_CONFIRMED',
-        'ASSIGN_DISPUTED',
-        'RETURN',
-        'REPAIR_START',
-        'REPAIR_END',
-        'CREATE',
-    ]);
 
     // Include historically used equipment IDs when beneficiary metadata exists in events.
     events.forEach((event) => {
@@ -104,7 +78,7 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onVie
     const userUsageEventItems: MovementTimelineItem[] = events
         .filter((event) => {
             if (event.targetType !== 'EQUIPMENT') return false;
-            if (!movementTypes.has(event.type) && event.type !== 'UPDATE') return false;
+            if (!isMovementHistoryEventType(event.type) && event.type !== 'UPDATE') return false;
 
             const beneficiaryId = event.metadata?.beneficiaryId;
             const previousUserId = event.metadata?.previousUserId;
@@ -122,7 +96,7 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onVie
             title: event.description || 'Mouvement enregistré',
             actor: event.actorName,
             meta: event.targetName,
-            icon: USER_MOVEMENT_ICONS[event.type] || 'history',
+            icon: getHistoryEventIcon(event.type),
         }));
 
     const syntheticUserUsageItems: MovementTimelineItem[] = userEquipment.flatMap((equipmentItem) => {
@@ -172,7 +146,7 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onVie
     const canDelete = permissions.canManageUsers && !isOwnProfile;
 
     const handleAssignClick = () => {
-        if (onViewChange) onViewChange('assignment_wizard');
+        navigate(`/wizards/assignment?context=user_details&userId=${encodeURIComponent(user.id)}`);
     };
 
     const handlePrimaryDeviceClick = () => {
@@ -687,7 +661,7 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onVie
                                         <div className="p-3 bg-surface-container-low rounded-md group-hover:bg-primary-container transition-colors">
                                             <MaterialIcon name={getDeviceIcon(item.type)} size={24} className="text-on-surface-variant group-hover:text-primary" />
                                         </div>
-                                        <Badge variant={item.status === 'Attribué' ? 'info' : 'neutral'}>{item.status}</Badge>
+                                        <Badge variant={item.status === 'Attribué' ? 'info' : 'neutral'}>{getStatusLabel(item.status)}</Badge>
                                     </div>
                                     <h4 className="text-title-medium text-on-surface mb-1 group-hover:text-primary transition-colors">{item.name}</h4>
                                     <p className="text-body-small text-on-surface-variant mb-4">{item.assetId}</p>

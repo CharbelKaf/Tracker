@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import MaterialIcon from '../../../components/ui/MaterialIcon';
 import { ApprovalStatus, AssignmentStatus, Equipment, User } from '../../../types';
 import { useData } from '../../../context/DataContext';
@@ -22,6 +22,8 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 const ITEMS_PER_PAGE = 5;
 
 type ValidationMethod = 'fingerprint' | 'pin' | 'face' | 'signature';
+type WizardContextMode = 'generic' | 'fromEquipment' | 'fromUser';
+type WizardStage = 'equipment' | 'user' | 'validation' | 'summary';
 
 const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => void }> = ({ onCancel, onComplete }) => {
     const { equipment, users, updateEquipment, updateApproval, addApproval, approvals } = useData();
@@ -46,6 +48,7 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
 
     const [approvalId, setApprovalId] = useState<string | null>(null);
     const [suggestedCategory, setSuggestedCategory] = useState<string | null>(null);
+    const [contextMode, setContextMode] = useState<WizardContextMode>('generic');
 
     const [pin, setPin] = useState(['', '', '', '', '', '']);
     const pinRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -53,24 +56,56 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
 
     useEffect(() => {
         const hash = window.location.hash;
-        if (hash.includes('?')) {
-            const queryString = hash.split('?')[1];
-            const urlParams = new URLSearchParams(queryString);
-            const pApprovalId = urlParams.get('approvalId');
-            const pUserId = urlParams.get('userId');
-            const pCategory = urlParams.get('category');
+        const hashQuery = hash.includes('?') ? hash.split('?')[1] : '';
+        const searchQuery = window.location.search.replace(/^\?/, '');
+        const queryString = hashQuery || searchQuery;
+        if (!queryString) return;
 
-            if (pApprovalId) setApprovalId(pApprovalId);
-            if (pUserId) {
-                const foundUser = users.find(u => u.id === pUserId);
-                if (foundUser) setSelectedUser(foundUser);
-            }
-            if (pCategory) {
-                setSuggestedCategory(pCategory);
-                setEquipmentSearch(pCategory);
+        const urlParams = new URLSearchParams(queryString);
+        const pApprovalId = urlParams.get('approvalId');
+        const pUserId = urlParams.get('userId');
+        const pEquipmentId = urlParams.get('equipmentId');
+        const pCategory = urlParams.get('category');
+        const pContext = urlParams.get('context');
+
+        if (pApprovalId) setApprovalId(pApprovalId);
+        if (pCategory) {
+            setSuggestedCategory(pCategory);
+            setEquipmentSearch(pCategory);
+        }
+        if (pUserId) {
+            const foundUser = users.find((u) => u.id === pUserId);
+            if (foundUser) setSelectedUser(foundUser);
+        }
+        if (pEquipmentId) {
+            const foundEquipment = equipment.find((item) => item.id === pEquipmentId);
+            if (foundEquipment?.status === 'Disponible') {
+                setSelectedEquipment(foundEquipment);
             }
         }
-    }, [users]);
+
+        let nextContext: WizardContextMode = 'generic';
+        if (pContext === 'equipment_details' || pEquipmentId) nextContext = 'fromEquipment';
+        else if (pContext === 'user_details' || pUserId) nextContext = 'fromUser';
+        setContextMode(nextContext);
+    }, [equipment, users]);
+
+    const stageSequence = useMemo<WizardStage[]>(() => {
+        if (contextMode === 'fromEquipment' && selectedEquipment) {
+            return ['user', 'validation', 'summary'];
+        }
+        if (contextMode === 'fromUser' && selectedUser) {
+            return ['equipment', 'validation', 'summary'];
+        }
+        return ['equipment', 'user', 'validation', 'summary'];
+    }, [contextMode, selectedEquipment, selectedUser]);
+
+    const currentStage = stageSequence[step - 1];
+    const isLastStep = step === stageSequence.length;
+
+    useEffect(() => {
+        setStep((prev) => Math.min(prev, stageSequence.length));
+    }, [stageSequence.length]);
     useEffect(() => {
         setEquipmentPage(1);
     }, [equipmentSearch]);
@@ -107,8 +142,8 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
     const paginatedUsers = filteredUsers.slice((userPage - 1) * ITEMS_PER_PAGE, userPage * ITEMS_PER_PAGE);
 
     const handleNext = () => {
-        if (step < 4) {
-            setStep(step + 1);
+        if (!isLastStep) {
+            setStep((prev) => Math.min(prev + 1, stageSequence.length));
         } else if (selectedEquipment && selectedUser) {
             // LOGIQUE DE WORKFLOW
             if (approvalId) {
@@ -256,7 +291,7 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
 
         autoAdvanceTimerRef.current = window.setTimeout(() => {
             setIsAutoAdvancing(false);
-            setStep(4);
+            setStep(stageSequence.indexOf('summary') + 1);
         }, 900);
     };
 
@@ -277,20 +312,24 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
 
     const handleEquipmentSelect = (item: Equipment) => {
         setSelectedEquipment(item);
-        setStep(2);
+        setStep((prev) => Math.min(prev + 1, stageSequence.length));
     };
 
     const handleUserSelect = (user: User) => {
         setSelectedUser(user);
-        setStep(3);
+        setStep((prev) => Math.min(prev + 1, stageSequence.length));
     };
 
-    const wizardSteps = [
-        { id: 1, title: 'Équipement' },
-        { id: 2, title: 'Utilisateur' },
-        { id: 3, title: 'Validation' },
-        { id: 4, title: 'Synthèse' },
-    ];
+    const wizardSteps = stageSequence.map((stage, index) => ({
+        id: index + 1,
+        title: stage === 'equipment'
+            ? 'Équipement'
+            : stage === 'user'
+                ? 'Utilisateur'
+                : stage === 'validation'
+                    ? 'Validation'
+                    : 'Synthèse',
+    }));
 
     return (
         <WizardLayout
@@ -298,18 +337,18 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
             currentStep={step}
             steps={wizardSteps}
             onClose={onCancel}
-            onBack={step > 1 ? () => setStep(step - 1) : undefined}
+            onBack={step > 1 ? () => setStep((prev) => Math.max(1, prev - 1)) : undefined}
             actions={
                 <div className="flex gap-3">
-                    {step === 4 && (
-                        <Button onClick={handleNext} disabled={(step === 3 && !isValidated) || (step === 4 && isImmediateHandover && !signatureCaptured)}>
-                            {step === 4 ? (approvalId ? 'Valider l\'affectation' : 'Confirmer') : 'Suivant'}
+                    {currentStage === 'summary' && (
+                        <Button onClick={handleNext} disabled={isImmediateHandover && !signatureCaptured}>
+                            {approvalId ? 'Valider l\'affectation' : 'Confirmer'}
                         </Button>
                     )}
                 </div>
             }
         >
-            {step === 1 && (
+            {currentStage === 'equipment' && (
                 <WizardStep>
                     {suggestedCategory && (
                         <div className="mb-6 p-4 bg-secondary-container border border-outline-variant rounded-md flex items-start gap-3 animate-in slide-in-from-top-2">
@@ -359,7 +398,7 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
                 </WizardStep>
             )}
 
-            {step === 2 && (
+            {currentStage === 'user' && (
                 <WizardStep>
                     <div className="mb-6">
                         <SearchFilterBar
@@ -408,7 +447,7 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
                 </WizardStep>
             )}
 
-                        {step === 3 && (
+                        {currentStage === 'validation' && (
                 <WizardStep>
                     <div className="min-h-[450px] flex flex-col items-center justify-center">
                         <div className="w-full max-w-2xl mb-6 rounded-md border border-outline-variant bg-surface-container-low p-4">
@@ -548,14 +587,14 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
                                         Redirection vers la synthèse...
                                     </div>
                                 ) : (
-                                    <Button onClick={() => setStep(4)}>Continuer</Button>
+                                    <Button onClick={() => setStep(stageSequence.indexOf('summary') + 1)}>Continuer</Button>
                                 )}
                             </div>
                         )}
                     </div>
                 </WizardStep>
             )}
-            {step === 4 && selectedEquipment && selectedUser && (
+            {currentStage === 'summary' && selectedEquipment && selectedUser && (
                 <WizardStep>
                     <div className="max-w-6xl mx-auto grid grid-cols-1 expanded:grid-cols-12 gap-6 animate-in fade-in zoom-in-95 duration-500">
                         <div className="expanded:col-span-7 space-y-4">

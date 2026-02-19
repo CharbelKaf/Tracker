@@ -13,32 +13,21 @@ import { DetailHeader } from '../../../components/layout/DetailHeader';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { cn } from '../../../lib/utils';
 import MovementTimeline, { MovementTimelineItem } from '../../../components/ui/MovementTimeline';
+import {
+    getHistoryEventIcon,
+    getStatusLabel,
+    isMovementHistoryEventType,
+} from '../../../lib/businessRules';
 
 interface EquipmentDetailsPageProps {
     equipmentId: string;
     onBack: () => void;
 }
 
-const MOVEMENT_ICONS: Record<string, string> = {
-    CREATE: 'add_circle',
-    ASSIGN: 'assignment_ind',
-    ASSIGN_PENDING: 'assignment_ind',
-    ASSIGN_MANAGER_WAIT: 'how_to_reg',
-    ASSIGN_MANAGER_OK: 'fact_check',
-    ASSIGN_IT_PROCESSING: 'engineering',
-    ASSIGN_DOTATION_WAIT: 'pending_actions',
-    ASSIGN_DOTATION_OK: 'task_alt',
-    ASSIGN_CONFIRMED: 'task_alt',
-    ASSIGN_DISPUTED: 'report_problem',
-    RETURN: 'assignment_return',
-    REPAIR_START: 'build',
-    REPAIR_END: 'build_circle',
-    UPDATE: 'history',
-};
 const MAX_MOVEMENT_HISTORY_ITEMS = 200;
 
 const EquipmentDetailsPage: React.FC<EquipmentDetailsPageProps> = ({ equipmentId, onBack }) => {
-    const { equipment, events, updateEquipment, deleteEquipment, settings } = useData();
+    const { equipment, users, events, updateEquipment, deleteEquipment, settings } = useData();
     const { showToast } = useToast();
     const { permissions } = useAccessControl();
     const { navigate } = useAppNavigation();
@@ -64,33 +53,17 @@ const EquipmentDetailsPage: React.FC<EquipmentDetailsPageProps> = ({ equipmentId
     const equipmentMovementItems = useMemo<MovementTimelineItem[]>(() => {
         if (!item) return [];
 
-        const movementTypes = new Set([
-            'CREATE',
-            'ASSIGN',
-            'ASSIGN_PENDING',
-            'ASSIGN_MANAGER_WAIT',
-            'ASSIGN_MANAGER_OK',
-            'ASSIGN_IT_PROCESSING',
-            'ASSIGN_DOTATION_WAIT',
-            'ASSIGN_DOTATION_OK',
-            'ASSIGN_CONFIRMED',
-            'ASSIGN_DISPUTED',
-            'RETURN',
-            'REPAIR_START',
-            'REPAIR_END',
-        ]);
-
         const eventItems: MovementTimelineItem[] = events
             .filter((event) => {
                 if (event.targetType !== 'EQUIPMENT' || event.targetId !== item.id) return false;
-                return movementTypes.has(event.type) || (event.type === 'UPDATE' && Boolean(event.metadata?.toStatus));
+                return isMovementHistoryEventType(event.type) || (event.type === 'UPDATE' && Boolean(event.metadata?.toStatus));
             })
             .map((event) => ({
                 id: event.id,
                 timestamp: event.timestamp,
                 title: event.description || 'Mouvement enregistré',
                 actor: event.actorName,
-                icon: MOVEMENT_ICONS[event.type] || 'history',
+                icon: getHistoryEventIcon(event.type),
             }));
 
         const syntheticItems: MovementTimelineItem[] = [];
@@ -153,10 +126,31 @@ const EquipmentDetailsPage: React.FC<EquipmentDetailsPageProps> = ({ equipmentId
 
     if (!item) return <div className="p-page-sm medium:p-page text-center text-on-surface-variant">{GLOSSARY.EQUIPMENT} non trouvé</div>;
 
-    const formatStatus = (status: string) => {
-        if (status === 'En réparation') return 'En Répar.';
-        return status;
+    const resolvedCurrentUser = item.user
+        ? users.find((user) =>
+            (item.user?.id && user.id === item.user.id)
+            || (item.user?.email && user.email === item.user.email)
+            || (item.user?.name && user.name === item.user.name),
+        )
+        : null;
+    const assignmentWizardPath = `/wizards/assignment?context=equipment_details&equipmentId=${encodeURIComponent(item.id)}`;
+    const canOpenAssignmentFromCard = permissions.canManageInventory && item.status === 'Disponible';
+
+    const handleOpenAssignmentWizard = () => {
+        navigate(assignmentWizardPath);
     };
+
+    const handleCurrentUserCardClick = () => {
+        if (resolvedCurrentUser?.id) {
+            navigate(`/users/${resolvedCurrentUser.id}`);
+            return;
+        }
+        if (canOpenAssignmentFromCard) {
+            handleOpenAssignmentWizard();
+        }
+    };
+
+    const formatStatus = (status: string) => getStatusLabel(status, { short: true });
 
     const formatDate = (dateString: string | undefined) => {
         if (!dateString) return 'N/A';
@@ -307,21 +301,45 @@ const EquipmentDetailsPage: React.FC<EquipmentDetailsPageProps> = ({ equipmentId
                                 </div>
                             </div>
 
-                            {item.user && (
-                                <div className="flex items-center gap-2 rounded-md border border-outline-variant bg-surface px-3 py-2 shadow-elevation-1">
-                                    <img
-                                        src={item.user.avatar}
-                                        alt={item.user.name}
-                                        loading="lazy"
-                                        decoding="async"
-                                        className="w-7 h-7 rounded-full bg-surface-container"
-                                    />
-                                    <div className="min-w-0">
-                                        <p className="text-label-small text-on-surface-variant">Utilisateur attribué</p>
-                                        <p className="text-body-small text-on-surface font-medium truncate">{item.user.name}</p>
-                                    </div>
-                                </div>
-                            )}
+                            <button
+                                type="button"
+                                onClick={handleCurrentUserCardClick}
+                                disabled={!resolvedCurrentUser?.id && !canOpenAssignmentFromCard}
+                                className={cn(
+                                    "w-full flex items-center gap-2 rounded-md border border-outline-variant bg-surface px-3 py-2 shadow-elevation-1 text-left transition-colors",
+                                    (resolvedCurrentUser?.id || canOpenAssignmentFromCard)
+                                        ? "cursor-pointer hover:bg-surface-container-low"
+                                        : "cursor-default",
+                                )}
+                            >
+                                {resolvedCurrentUser ? (
+                                    <>
+                                        <img
+                                            src={resolvedCurrentUser.avatar}
+                                            alt={resolvedCurrentUser.name}
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="w-7 h-7 rounded-full bg-surface-container"
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-label-small text-on-surface-variant">Utilisateur attribué</p>
+                                            <p className="text-body-small text-on-surface font-medium truncate">{resolvedCurrentUser.name}</p>
+                                        </div>
+                                        <MaterialIcon name="chevron_right" size={16} className="text-outline-variant shrink-0" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="w-7 h-7 rounded-full bg-surface-container border border-dashed border-outline-variant flex items-center justify-center shrink-0">
+                                            <MaterialIcon name="add" size={14} className="text-primary" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-label-small text-on-surface-variant">Utilisateur actuel</p>
+                                            <p className="text-body-small text-on-surface font-medium truncate">Non attribué</p>
+                                        </div>
+                                        {canOpenAssignmentFromCard && <MaterialIcon name="chevron_right" size={16} className="text-outline-variant shrink-0" />}
+                                    </>
+                                )}
+                            </button>
 
                             {permissions.canManageInventory && (
                                 <div className="flex flex-wrap gap-2">
@@ -329,7 +347,7 @@ const EquipmentDetailsPage: React.FC<EquipmentDetailsPageProps> = ({ equipmentId
                                         <Button
                                             variant="filled"
                                             icon={<MaterialIcon name="person_add" size={18} />}
-                                            onClick={() => navigate('/wizards/assignment')}
+                                            onClick={handleOpenAssignmentWizard}
                                             className="!h-10 !rounded-md"
                                         >
                                             {GLOSSARY.ASSIGN}
@@ -452,7 +470,7 @@ const EquipmentDetailsPage: React.FC<EquipmentDetailsPageProps> = ({ equipmentId
                                                 <Button
                                                     variant="filled"
                                                     icon={<MaterialIcon name="person_add" size={18} />}
-                                                    onClick={() => navigate('/wizards/assignment')}
+                                                    onClick={handleOpenAssignmentWizard}
                                                     className="flex-1"
                                                 >
                                                     {GLOSSARY.ASSIGN}
@@ -749,28 +767,47 @@ const EquipmentDetailsPage: React.FC<EquipmentDetailsPageProps> = ({ equipmentId
                             {/* Current User Card */}
                             <div className="bg-surface rounded-md shadow-elevation-1 border border-outline-variant p-card">
                                 <h3 className="text-label-small text-on-surface-variant uppercase tracking-widest mb-4">UTILISATEUR ACTUEL</h3>
-                                {item.user ? (
-                                    <div className="flex items-center gap-4">
-                                        <img
-                                            src={item.user.avatar}
-                                            alt={item.user.name}
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="w-14 h-14 rounded-full bg-surface-container"
-                                        />
-                                        <div>
-                                            <div className="font-bold text-on-surface text-title-medium">{item.user.name}</div>
-                                            <div className="text-body-small text-on-surface-variant flex items-center gap-1">
-                                                <MaterialIcon name="mail" size={12} /> Envoyer un message
+                                <button
+                                    type="button"
+                                    onClick={handleCurrentUserCardClick}
+                                    disabled={!resolvedCurrentUser?.id && !canOpenAssignmentFromCard}
+                                    className={cn(
+                                        "w-full rounded-md border p-4 text-left transition-all duration-short4",
+                                        (resolvedCurrentUser?.id || canOpenAssignmentFromCard)
+                                            ? "cursor-pointer border-outline-variant bg-surface hover:bg-surface-container-low hover:border-primary/40"
+                                            : "cursor-default border-dashed border-outline-variant bg-surface-container-low",
+                                    )}
+                                >
+                                    {resolvedCurrentUser ? (
+                                        <div className="flex items-center gap-4">
+                                            <img
+                                                src={resolvedCurrentUser.avatar}
+                                                alt={resolvedCurrentUser.name}
+                                                loading="lazy"
+                                                decoding="async"
+                                                className="w-14 h-14 rounded-full bg-surface-container"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-bold text-on-surface text-title-medium truncate">{resolvedCurrentUser.name}</div>
+                                                <div className="text-body-small text-on-surface-variant flex items-center gap-1">
+                                                    <MaterialIcon name="open_in_new" size={12} /> Ouvrir la fiche utilisateur
+                                                </div>
                                             </div>
+                                            <MaterialIcon name="chevron_right" size={18} className="text-outline-variant shrink-0" />
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-6 bg-surface-container-low rounded-md border border-dashed border-outline-variant">
-                                        <MaterialIcon name="person" size={24} className="mx-auto text-on-surface-variant mb-2" />
-                                        <p className="text-body-small text-on-surface-variant">Non attribué</p>
-                                    </div>
-                                )}
+                                    ) : (
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-surface border border-dashed border-outline-variant flex items-center justify-center shrink-0">
+                                                <MaterialIcon name="add" size={18} className="text-primary" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-body-medium font-semibold text-on-surface">Non attribué</p>
+                                                <p className="text-label-small text-on-surface-variant">Cliquer pour lancer l’attribution</p>
+                                            </div>
+                                            {canOpenAssignmentFromCard && <MaterialIcon name="chevron_right" size={18} className="text-outline-variant shrink-0" />}
+                                        </div>
+                                    )}
+                                </button>
                             </div>
 
                             {/* Documents */}
