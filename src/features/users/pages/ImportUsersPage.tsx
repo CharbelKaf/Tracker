@@ -1,0 +1,184 @@
+import React, { useState, useMemo } from 'react';
+import MaterialIcon from '../../../components/ui/MaterialIcon';
+import { useToast } from '../../../context/ToastContext';
+import { cn } from '../../../lib/utils';
+import Button from '../../../components/ui/Button';
+import Badge from '../../../components/ui/Badge';
+import { FullScreenFormLayout } from '../../../components/layout/FullScreenFormLayout';
+import { FileDropzone } from '../../../components/ui/FileDropzone';
+
+interface ImportUsersPageProps {
+    onCancel: () => void;
+    onSave: () => void;
+}
+
+const ImportUsersPage: React.FC<ImportUsersPageProps> = ({ onCancel, onSave }) => {
+    const { showToast } = useToast();
+    const [file, setFile] = useState<File | null>(null);
+    const [parsedData, setParsedData] = useState<any[]>([]);
+    const [previewMode, setPreviewMode] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const validateAndSetFile = (uploadedFile: File) => {
+        if (uploadedFile.type === 'text/csv' || uploadedFile.name.endsWith('.csv')) {
+            setFile(uploadedFile);
+            parseFile(uploadedFile);
+        } else {
+            showToast('Veuillez télécharger un fichier CSV valide.', 'error');
+        }
+    };
+
+    const parseFile = (fileToParse: File) => {
+        setIsProcessing(true);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target?.result as string;
+            if (!text) return;
+
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            if (lines.length < 2) {
+                showToast("Le fichier semble vide.", "error");
+                setIsProcessing(false);
+                return;
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+
+            const data = lines.slice(1).map((line, index) => {
+                const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                const row: any = { _id: index };
+                let hasError = false;
+                let errorMsg = '';
+
+                headers.forEach((header, i) => {
+                    const key = header.toLowerCase();
+                    if (key.includes('nom') || key.includes('name')) row.name = values[i];
+                    else if (key.includes('mail')) row.email = values[i];
+                    else if (key.includes('role')) row.role = values[i];
+                    else if (key.includes('depart') || key.includes('service')) row.department = values[i];
+                    else row[key] = values[i];
+                });
+
+                if (!row.name || !row.email) {
+                    hasError = true;
+                    errorMsg = 'Nom et Email requis';
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
+                    hasError = true;
+                    errorMsg = 'Format Email invalide';
+                }
+
+                return { ...row, _status: hasError ? 'error' : 'valid', _error: errorMsg };
+            });
+
+            setParsedData(data);
+            setPreviewMode(true);
+            setIsProcessing(false);
+        };
+        reader.readAsText(fileToParse);
+    };
+
+    const stats = useMemo(() => {
+        return {
+            total: parsedData.length,
+            valid: parsedData.filter(d => d._status === 'valid').length,
+            invalid: parsedData.filter(d => d._status === 'error').length
+        };
+    }, [parsedData]);
+
+    const handleImport = () => {
+        if (!file || stats.valid === 0) return;
+        setTimeout(() => {
+            showToast(`${stats.valid} utilisateurs importés avec succès.`, 'success');
+            onSave();
+        }, 1000);
+    };
+
+    const reset = () => {
+        setFile(null);
+        setParsedData([]);
+        setPreviewMode(false);
+    };
+
+    return (
+        <FullScreenFormLayout
+            title="Importer des utilisateurs"
+            onCancel={onCancel}
+            onSave={handleImport}
+            saveLabel={isProcessing ? "Analyse..." : `Importer ${stats.valid > 0 ? `(${stats.valid})` : ''}`}
+            isSaving={!previewMode || stats.valid === 0}
+        >
+            {!previewMode ? (
+                <div className="bg-surface rounded-card p-page shadow-elevation-1 border border-outline-variant animate-in fade-in zoom-in-95 duration-300">
+                    <h3 className="text-sm font-bold text-on-surface mb-4">Étape 1: Télécharger le fichier CSV</h3>
+                    <p className="text-sm text-on-surface-variant mb-6">
+                        Colonnes attendues : <span className="font-mono bg-surface-container px-1 rounded">Name</span>, <span className="font-mono bg-surface-container px-1 rounded">Email</span>, <span className="font-mono bg-surface-container px-1 rounded">Role</span>, <span className="font-mono bg-surface-container px-1 rounded">Department</span>.
+                    </p>
+
+                    <div className="mb-8">
+                        <Button variant="outlined" onClick={() => { }} icon={<MaterialIcon name="download" size={18} />}>
+                            Télécharger le modèle
+                        </Button>
+                    </div>
+
+                    <FileDropzone
+                        onFileSelect={validateAndSetFile}
+                        accept=".csv"
+                        isProcessing={isProcessing}
+                    />
+                </div>
+            ) : (
+                <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+                    <div className="bg-surface p-4 rounded-xl border border-outline-variant shadow-elevation-1 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center text-secondary">
+                                <MaterialIcon name="description" size={20} />
+                            </div>
+                            <div>
+                                <p className="font-bold text-on-surface text-sm">{file?.name}</p>
+                                <div className="flex items-center gap-3 text-xs mt-0.5">
+                                    <span className="text-on-surface-variant">{stats.total} lignes</span>
+                                    <span className="text-tertiary font-bold">{stats.valid} valides</span>
+                                    {stats.invalid > 0 && <span className="text-error font-bold">{stats.invalid} erreurs</span>}
+                                </div>
+                            </div>
+                        </div>
+                        <Button variant="outlined" size="sm" onClick={reset} className="text-error">Changer</Button>
+                    </div>
+
+                    <div className="bg-surface rounded-xl shadow-elevation-1 border border-outline-variant overflow-hidden">
+                        <div className="overflow-x-auto max-h-[400px]">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-surface-container text-on-surface-variant font-bold uppercase text-xs sticky top-0 z-10">
+                                    <tr>
+                                        <th className="px-4 py-3">Statut</th>
+                                        <th className="px-4 py-3">Nom</th>
+                                        <th className="px-4 py-3">Email</th>
+                                        <th className="px-4 py-3">Rôle</th>
+                                        <th className="px-4 py-3">Département</th>
+                                        <th className="px-4 py-3">Info</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-outline-variant">
+                                    {parsedData.map((row) => (
+                                        <tr key={row._id} className={cn("hover:bg-surface-container transition-colors", row._status === 'error' && "bg-error-container/50")}>
+                                            <td className="px-4 py-3">
+                                                {row._status === 'valid' ? <Badge variant="success">OK</Badge> : <Badge variant="danger">Erreur</Badge>}
+                                            </td>
+                                            <td className="px-4 py-3 font-bold text-on-surface">{row.name || '-'}</td>
+                                            <td className="px-4 py-3 text-on-surface-variant">{row.email || '-'}</td>
+                                            <td className="px-4 py-3">{row.role || 'User'}</td>
+                                            <td className="px-4 py-3 text-on-surface-variant">{row.department || '-'}</td>
+                                            <td className="px-4 py-3 text-xs text-error font-bold">{row._error}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </FullScreenFormLayout>
+    );
+};
+
+export default ImportUsersPage;

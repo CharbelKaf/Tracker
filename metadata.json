@@ -1,0 +1,7 @@
+{
+  "name": "Tracker",
+  "description": "A responsive, aesthetic login page for an IT asset management platform featuring a split-screen design.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

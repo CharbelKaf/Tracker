@@ -1,0 +1,10 @@
+id,category,severity,status,file_or_scope,rule,gap,action
+MD3-001,Color/Tokens,P0,Closed,src/**,No legacy tokens,Legacy tokens were used in production screens,Replaced legacy classes and added guardrails
+MD3-002,Theming,P0,Closed,src/context/DataContext.tsx,Dynamic MD3 role generation,Only partial primary role overrides existed,Implemented generated MD3 roles from seed accent
+MD3-003,Theming,P1,Open,index.html + tailwind runtime,Single source of styling truth,Runtime Tailwind config path still coexists with build tooling,Plan migration to build-time utility generation
+MD3-004,Components,P0,Closed,src/components/ui/Button.tsx,API consistency,Inconsistent outlined naming (`outline` vs `outlined`),Added alias and standardized usage
+MD3-005,Guardrails,P0,Closed,package.json + scripts/,Prevent regression,No automated policy checks for legacy MD3 drift,Added md3 compliance script and lint integration
+MD3-006,Color literals,P1,Open,src/features/auth/pages/LoginPage.tsx,No hardcoded UI colors,Brand logo hex values remain,Keep allowlisted brand colors only
+MD3-007,Components/Pages,P1,Closed,src/features/** + app surfaces,Primitive coverage,Native controls were used in application screens,Migrated app surfaces to DS primitives and centralized upload controls
+MD3-008,Accessibility,P1,In Progress,all interactive screens,WCAG AA complete,Coverage is not yet exhaustively validated,Automation pass recorded (docs/md3-a11y-automation-results-2026-02-16.md) and manual browser sign-off pending in docs/md3-a11y-execution-2026-02-16.md
+MD3-009,Guardrails,P0,Closed,scripts/check-md3-compliance.mjs,Enforce DS boundary,Native controls could reappear outside DS layer,Added CI guard to block native controls outside src/components/ui/**

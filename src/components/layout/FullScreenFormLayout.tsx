@@ -1,0 +1,65 @@
+import React from 'react';
+import MaterialIcon from '../ui/MaterialIcon';
+import Button from '../ui/Button';
+import { FullScreenLayout } from './FullScreenLayout';
+
+interface FullScreenFormLayoutProps {
+  title: string;
+  onCancel: () => void;
+  onSave: () => void;
+  children: React.ReactNode;
+  actions?: React.ReactNode;
+  saveLabel?: string;
+  isSaving?: boolean;
+  submitButtonLocation?: 'header' | 'footer';
+}
+
+export const FullScreenFormLayout: React.FC<FullScreenFormLayoutProps> = ({
+  title,
+  onCancel,
+  onSave,
+  children,
+  actions,
+  saveLabel = 'Enregistrer',
+  isSaving = false,
+  submitButtonLocation = 'footer',
+}) => {
+
+  const SaveButton = ({ className, variant = 'filled' }: { className?: string, variant?: 'filled' | 'text' | 'tonal' }) => (
+    <Button
+      variant={variant}
+      onClick={onSave}
+      icon={submitButtonLocation === 'footer' ? <MaterialIcon name="save" size={18} /> : <MaterialIcon name="check" size={18} />}
+      disabled={isSaving}
+      className={className}
+    >
+      {saveLabel}
+    </Button>
+  );
+
+  const defaultFooterActions = (
+    <>
+      <Button variant="outlined" onClick={onCancel} disabled={isSaving}>
+        Annuler
+      </Button>
+      {submitButtonLocation === 'footer' && <SaveButton />}
+    </>
+  );
+
+  const headerActions = submitButtonLocation === 'header' ? (
+    <SaveButton variant="filled" className="h-9 px-4 text-label-medium" /> // Compact button for header
+  ) : null;
+
+  return (
+    <FullScreenLayout
+      title={title}
+      onClose={onCancel}
+      headerActions={headerActions}
+      footerActions={actions || defaultFooterActions}
+    >
+      <div className="space-y-6">
+        {children}
+      </div>
+    </FullScreenLayout>
+  );
+};

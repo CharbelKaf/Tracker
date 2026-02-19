@@ -1,0 +1,95 @@
+import React, { useState, useRef } from 'react';
+import MaterialIcon from './MaterialIcon';
+import { cn } from '../../lib/utils';
+
+interface FileDropzoneProps {
+  onFileSelect: (file: File) => void;
+  accept?: string;
+  label?: string;
+  subLabel?: string;
+  isProcessing?: boolean;
+  className?: string;
+}
+
+export const FileDropzone: React.FC<FileDropzoneProps> = ({
+  onFileSelect,
+  accept = ".csv,.xlsx,.pdf,.jpg,.png",
+  label = "Glisser-déposer votre fichier",
+  subLabel = "ou cliquez pour parcourir",
+  isProcessing = false,
+  className
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      onFileSelect(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      onFileSelect(e.target.files[0]);
+    }
+  };
+
+  return (
+    <div
+      className={cn(
+        "border-2 border-dashed rounded-md p-8 medium:p-12 flex flex-col items-center justify-center text-center transition-all duration-short4 ease-emphasized cursor-pointer group relative overflow-hidden",
+        isDragging ? "border-primary bg-primary-container/20 scale-[1.01]" : "border-outline-variant hover:border-primary/50 hover:bg-surface-container-low",
+        className
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      onClick={() => !isProcessing && fileInputRef.current?.click()}
+    >
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept={accept}
+        onChange={handleFileChange}
+        disabled={isProcessing}
+      />
+
+      {isProcessing ? (
+        <div className="flex flex-col items-center animate-in fade-in zoom-in duration-medium2">
+          <div className="w-16 h-16 rounded-full border-4 border-surface-container-high flex items-center justify-center relative mb-4">
+            <MaterialIcon name="progress_activity" size={32} className="text-primary animate-spin" />
+          </div>
+          <p className="text-title-small text-on-surface">Traitement en cours...</p>
+        </div>
+      ) : (
+        <>
+          <div className={cn(
+            "w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-all duration-medium2 ease-emphasized",
+            isDragging ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface-variant group-hover:text-primary group-hover:bg-surface-container-low shadow-elevation-1"
+          )}>
+            <MaterialIcon name="cloud_upload" size={32} />
+          </div>
+          <p className="text-title-small text-on-surface mb-1 transition-colors group-hover:text-primary">
+            {label}
+          </p>
+          <p className="text-body-small text-on-surface-variant">
+            {subLabel}
+          </p>
+        </>
+      )}
+    </div>
+  );
+};

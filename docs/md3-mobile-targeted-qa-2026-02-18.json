@@ -1,0 +1,137 @@
+{
+  "date": "2026-02-18",
+  "baseUrl": "http://127.0.0.1:3000",
+  "device": "iPhone 14 Pro (393x852)",
+  "routesChecked": 8,
+  "findingsCount": 1,
+  "findings": [
+    {
+      "severity": "medium",
+      "route": "management-models",
+      "issue": "Model row heights are inconsistent"
+    }
+  ],
+  "results": [
+    {
+      "route": "dashboard",
+      "hash": "/",
+      "viewport": {
+        "width": 393,
+        "height": 852
+      },
+      "title": "Tableau de bord - Tracker",
+      "hasTopHamburger": false,
+      "hasBottomNav": true,
+      "hasBottomPlus": true,
+      "plusActive": false,
+      "hasListFab": false,
+      "horizontalOverflow": false,
+      "screenshotPath": "C:\\Users\\eklu\\Downloads\\111\\neemba-tracker-login\\docs\\mobile-targeted-qa\\2026-02-18\\dashboard.png"
+    },
+    {
+      "route": "inventory",
+      "hash": "/inventory",
+      "viewport": {
+        "width": 393,
+        "height": 852
+      },
+      "title": "Inventaire - Tracker",
+      "hasTopHamburger": false,
+      "hasBottomNav": true,
+      "hasBottomPlus": true,
+      "plusActive": false,
+      "hasListFab": true,
+      "horizontalOverflow": false,
+      "screenshotPath": "C:\\Users\\eklu\\Downloads\\111\\neemba-tracker-login\\docs\\mobile-targeted-qa\\2026-02-18\\inventory.png"
+    },
+    {
+      "route": "users",
+      "hash": "/users",
+      "viewport": {
+        "width": 393,
+        "height": 852
+      },
+      "title": "Utilisateurs - Tracker",
+      "hasTopHamburger": false,
+      "hasBottomNav": true,
+      "hasBottomPlus": true,
+      "plusActive": false,
+      "hasListFab": true,
+      "horizontalOverflow": false,
+      "screenshotPath": "C:\\Users\\eklu\\Downloads\\111\\neemba-tracker-login\\docs\\mobile-targeted-qa\\2026-02-18\\users.png"
+    },
+    {
+      "route": "management",
+      "hash": "/management",
+      "viewport": {
+        "width": 393,
+        "height": 852
+      },
+      "title": "Gestion - Tracker",
+      "hasTopHamburger": false,
+      "hasBottomNav": true,
+      "hasBottomPlus": true,
+      "plusActive": false,
+      "hasListFab": true,
+      "horizontalOverflow": false,
+      "screenshotPath": "C:\\Users\\eklu\\Downloads\\111\\neemba-tracker-login\\docs\\mobile-targeted-qa\\2026-02-18\\management.png"
+    },
+    {
+      "route": "management-models",
+      "hash": "/management#models",
+      "modelRowsSampled": 6,
+      "modelRowHeights": [
+        95,
+        95,
+        95,
+        95,
+        95,
+        94
+      ],
+      "modelRowsUniformHeight": false,
+      "screenshotPath": "C:\\Users\\eklu\\Downloads\\111\\neemba-tracker-login\\docs\\mobile-targeted-qa\\2026-02-18\\management-models.png"
+    },
+    {
+      "route": "locations",
+      "hash": "/locations",
+      "viewport": {
+        "width": 393,
+        "height": 852
+      },
+      "title": "Emplacements - Tracker",
+      "hasTopHamburger": false,
+      "hasBottomNav": true,
+      "hasBottomPlus": true,
+      "plusActive": false,
+      "hasListFab": true,
+      "horizontalOverflow": false,
+      "screenshotPath": "C:\\Users\\eklu\\Downloads\\111\\neemba-tracker-login\\docs\\mobile-targeted-qa\\2026-02-18\\locations.png"
+    },
+    {
+      "route": "finance",
+      "hash": "/finance",
+      "viewport": {
+        "width": 393,
+        "height": 852
+      },
+      "title": "Gestion Financière - Tracker",
+      "hasTopHamburger": false,
+      "hasBottomNav": true,
+      "hasBottomPlus": true,
+      "plusActive": false,
+      "hasListFab": false,
+      "horizontalOverflow": false,
+      "screenshotPath": "C:\\Users\\eklu\\Downloads\\111\\neemba-tracker-login\\docs\\mobile-targeted-qa\\2026-02-18\\finance.png"
+    },
+    {
+      "route": "finance-pilotage",
+      "hash": "/finance#pilotage",
+      "budgetButtons": [
+        "addDéfinir budget"
+      ],
+      "containsPlusOnBudgetButton": false,
+      "hasDefineBudgetLabel": true,
+      "screenshotPath": "C:\\Users\\eklu\\Downloads\\111\\neemba-tracker-login\\docs\\mobile-targeted-qa\\2026-02-18\\finance-pilotage.png"
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+import React, { useState, useMemo } from 'react';
+import { useToast } from '../../../context/ToastContext';
+import Button from '../../../components/ui/Button';
+import Badge from '../../../components/ui/Badge';
+import { FileDropzone } from '../../../components/ui/FileDropzone';
+import { GLOSSARY } from '../../../constants/glossary';
+import { FullScreenFormLayout } from '../../../components/layout/FullScreenFormLayout';
+
+interface ImportLocationsPageProps {
+    onCancel: () => void;
+    onSave: () => void;
+}
+
+const ImportLocationsPage: React.FC<ImportLocationsPageProps> = ({ onCancel, onSave }) => {
+    const { showToast } = useToast();
+    const [file, setFile] = useState<File | null>(null);
+    const [parsedData, setParsedData] = useState<any[]>([]);
+    const [previewMode, setPreviewMode] = useState(false);
+
+    const processFile = (uploadedFile: File) => {
+        if (uploadedFile.type !== 'text/csv' && !uploadedFile.name.endsWith('.csv')) {
+            showToast('Fichier CSV requis', 'error');
+            return;
+        }
+        setFile(uploadedFile);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target?.result as string;
+            if (!text) return;
+
+            const lines = text.split('\n').filter(l => l.trim());
+            if (lines.length < 2) return;
+
+            const data = lines.slice(1).map((line, idx) => {
+                const vals = line.split(',');
+                const row: any = { _id: idx, name: vals[0]?.trim(), type: vals[1]?.trim(), parent: vals[2]?.trim() };
+
+                const isValidType = ['country', 'site', 'service'].includes(row.type?.toLowerCase());
+
+                row._status = (row.name && isValidType) ? 'valid' : 'error';
+                row._error = !row.name ? 'Nom requis' : !isValidType ? 'Type invalide' : '';
+                return row;
+            });
+            setParsedData(data);
+            setPreviewMode(true);
+        };
+        reader.readAsText(uploadedFile);
+    };
+
+    const stats = useMemo(() => ({
+        valid: parsedData.filter(d => d._status === 'valid').length,
+        invalid: parsedData.filter(d => d._status === 'error').length
+    }), [parsedData]);
+
+    const handleImport = () => {
+        if (!file || stats.valid === 0) return;
+        setTimeout(() => {
+            showToast(`${stats.valid} localisations importées.`, 'success');
+            onSave();
+        }, 800);
+    };
+
+    const reset = () => {
+        setFile(null);
+        setParsedData([]);
+        setPreviewMode(false);
+    };
+
+    return (
+        <FullScreenFormLayout
+            title={`Importer des ${GLOSSARY.LOCATION_PLURAL.toLowerCase()}`}
+            onCancel={onCancel}
+            onSave={handleImport}
+            saveLabel={`Importer ${stats.valid > 0 ? `(${stats.valid})` : ''}`}
+            isSaving={!previewMode || stats.valid === 0}
+        >
+            {!previewMode ? (
+                <div className="bg-surface rounded-card p-page shadow-elevation-1 border border-outline-variant animate-in fade-in zoom-in-95">
+                    <h3 className="text-sm font-bold text-on-surface mb-4">Étape 1: Télécharger le fichier CSV</h3>
+                    <p className="text-sm text-on-surface-variant mb-6">Colonnes : Name, Type (country/site/service), ParentName.</p>
+                    <FileDropzone
+                        onFileSelect={processFile}
+                        accept=".csv"
+                        label="Glisser un fichier CSV"
+                        subLabel="ou cliquer pour importer"
+                        className="rounded-card p-12"
+                    />
+                </div>
+            ) : (
+                <div className="space-y-6 animate-in slide-in-from-right-8">
+                    <div className="bg-surface p-4 rounded-xl border border-outline-variant flex justify-between items-center">
+                        <div>
+                            <p className="font-bold text-on-surface">{file?.name}</p>
+                            <p className="text-xs text-on-surface-variant">{stats.valid} valides, {stats.invalid} erreurs</p>
+                        </div>
+                        <Button variant="outlined" size="sm" onClick={reset} className="text-error">Annuler</Button>
+                    </div>
+
+                    <div className="bg-surface rounded-xl border border-outline-variant overflow-hidden">
+                        <div className="overflow-x-auto max-h-[400px]">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-surface-container text-on-surface-variant font-bold uppercase text-xs sticky top-0">
+                                    <tr>
+                                        <th className="px-4 py-3">Statut</th>
+                                        <th className="px-4 py-3">Nom</th>
+                                        <th className="px-4 py-3">Type</th>
+                                        <th className="px-4 py-3">Parent</th>
+                                        <th className="px-4 py-3">Info</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {parsedData.map((row) => (
+                                        <tr key={row._id} className="hover:bg-surface-container border-b border-outline-variant/30 last:border-0">
+                                            <td className="px-4 py-3">
+                                                {row._status === 'valid' ? <Badge variant="success">OK</Badge> : <Badge variant="danger">Erreur</Badge>}
+                                            </td>
+                                            <td className="px-4 py-3 font-bold">{row.name || '-'}</td>
+                                            <td className="px-4 py-3">{row.type || '-'}</td>
+                                            <td className="px-4 py-3 text-on-surface-variant">{row.parent || '-'}</td>
+                                            <td className="px-4 py-3 text-xs text-error font-bold">{row._error}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </FullScreenFormLayout>
+    );
+};
+
+export default ImportLocationsPage;
+

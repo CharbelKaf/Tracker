@@ -1,0 +1,212 @@
+import React from 'react';
+import { Approval } from '../../../types';
+import { cn } from '../../../lib/utils';
+import MaterialIcon from '../../../components/ui/MaterialIcon';
+import StatusBadge from '../../../components/ui/StatusBadge';
+import Button from '../../../components/ui/Button';
+import { UserAvatar } from '../../../components/ui/UserAvatar';
+import SecurityGate from '../../../components/security/SecurityGate';
+
+const CATEGORY_ICON_MAP: Record<string, string> = {
+    Laptop: 'laptop_mac',
+    Monitor: 'monitor',
+    Keyboard: 'keyboard',
+    Mouse: 'mouse',
+    Headphones: 'headphones',
+    Smartphone: 'smartphone',
+    Tablet: 'tablet_mac',
+    Printer: 'print',
+    Server: 'dns',
+};
+
+interface ApprovalRowProps {
+    approval: Approval;
+    onApprove?: (approval: Approval) => void;
+    onReject?: (approval: Approval) => void;
+    showActions?: boolean;
+    compact?: boolean;
+    requesterAvatar?: string;
+    beneficiaryAvatar?: string;
+    workflowHint?: string;
+    stepDetails: {
+        label: string;
+        color: string;
+        bg: string;
+        icon: React.ReactNode;
+        btnText: string;
+    };
+}
+
+export const ApprovalRow: React.FC<ApprovalRowProps> = ({
+    approval,
+    onApprove,
+    onReject,
+    showActions = false,
+    compact = false,
+    requesterAvatar,
+    beneficiaryAvatar,
+    workflowHint,
+    stepDetails,
+}) => {
+    const [imageError, setImageError] = React.useState(false);
+    const isDelegated = approval.beneficiaryId !== approval.requesterId;
+    const fallbackIcon = CATEGORY_ICON_MAP[approval.equipmentCategory || ''] || 'inventory_2';
+    const equipmentTitle = approval.equipmentName || approval.equipmentModel || approval.equipmentCategory;
+
+    if (compact) {
+        return (
+            <div className="group border-b border-outline-variant/50 last:border-0 bg-surface px-3 py-2.5 hover:bg-surface-container-low transition-colors duration-short4">
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className="shrink-0">
+                        <div className="w-9 h-9 bg-surface-container-high rounded-md flex items-center justify-center border border-outline-variant/30 overflow-hidden">
+                            {approval.image && !imageError ? (
+                                <img
+                                    src={approval.image}
+                                    alt={equipmentTitle || approval.equipmentCategory}
+                                    className="w-full h-full object-cover mix-blend-multiply opacity-85"
+                                    onError={() => setImageError(true)}
+                                />
+                            ) : (
+                                <MaterialIcon name={fallbackIcon} size={16} className="text-on-surface-variant" />
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-body-medium font-medium text-on-surface truncate">{equipmentTitle}</span>
+                            <span className="hidden medium:inline text-label-small text-on-surface-variant truncate">
+                                {approval.equipmentCategory || 'Demande'}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2 min-w-0 mt-0.5">
+                            <span className="text-label-small text-on-surface-variant truncate">
+                                {isDelegated
+                                    ? `${approval.requesterName} → ${approval.beneficiaryName}`
+                                    : approval.requesterName}
+                            </span>
+                            <span className={cn('hidden medium:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-label-small font-medium', stepDetails.bg, stepDetails.color)}>
+                                {stepDetails.icon}
+                                {stepDetails.label}
+                            </span>
+                        </div>
+                    </div>
+
+                    <span className="text-label-small text-on-surface-variant whitespace-nowrap shrink-0">
+                        {new Date(approval.createdAt).toLocaleDateString('fr-FR')}
+                    </span>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="group border-b border-outline-variant/50 last:border-0 bg-surface p-3 medium:p-4 hover:bg-surface-container-low transition-colors duration-short4">
+            <div className="flex items-start gap-3">
+                <div className="shrink-0 relative">
+                    <div className="w-11 h-11 bg-surface-container-high rounded-md flex items-center justify-center border border-outline-variant/30 overflow-hidden">
+                        {approval.image && !imageError ? (
+                            <img
+                                src={approval.image}
+                                alt={equipmentTitle || approval.equipmentCategory}
+                                className="w-full h-full object-cover mix-blend-multiply opacity-85"
+                                onError={() => setImageError(true)}
+                            />
+                        ) : (
+                            <MaterialIcon name={fallbackIcon} size={18} className="text-on-surface-variant" />
+                        )}
+                    </div>
+                    {approval.assignedEquipmentId && (
+                        <div className="absolute -bottom-1 -right-1 bg-tertiary text-on-tertiary rounded-full p-0.5 border border-surface text-label-small">
+                            <MaterialIcon name="check" size={10} />
+                        </div>
+                    )}
+                </div>
+
+                <div className="min-w-0 flex-1 space-y-2">
+                    <div className="min-w-0">
+                        <div className="flex items-start gap-2">
+                            <span className="text-title-small font-medium text-on-surface leading-snug line-clamp-2 break-words">{equipmentTitle}</span>
+                            {approval.urgency === 'high' && (
+                                <StatusBadge status="high" size="sm" className="py-0 leading-none shrink-0" />
+                            )}
+                        </div>
+                        <p className="text-body-small text-on-surface-variant line-clamp-2 mt-0.5">
+                            {approval.reason || 'Aucune raison'}
+                        </p>
+                        {workflowHint && (
+                            <p className="text-label-small text-on-surface-variant mt-1">{workflowHint}</p>
+                        )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex items-center -space-x-1 shrink-0">
+                                <UserAvatar name={approval.requesterName} src={requesterAvatar} size="sm" className="border border-surface" />
+                                {isDelegated && (
+                                    <>
+                                        <MaterialIcon name="arrow_right_alt" size={14} className="text-on-surface-variant mx-1" />
+                                        <UserAvatar name={approval.beneficiaryName} src={beneficiaryAvatar} size="sm" className="border border-surface" />
+                                    </>
+                                )}
+                            </div>
+                            <span className="text-label-small text-on-surface-variant truncate">
+                                {isDelegated
+                                    ? `${approval.requesterName} → ${approval.beneficiaryName}`
+                                    : approval.requesterName}
+                            </span>
+                        </div>
+
+                        <span className="text-label-small text-on-surface-variant shrink-0">
+                            {new Date(approval.createdAt).toLocaleDateString()}
+                        </span>
+                    </div>
+
+                    <div>
+                        <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-label-small font-medium', stepDetails.bg, stepDetails.color)}>
+                            {stepDetails.icon}
+                            {stepDetails.label}
+                        </span>
+                    </div>
+
+                    {showActions && onApprove && onReject && (
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                            <SecurityGate
+                                onVerified={() => onReject(approval)}
+                                title="Refuser la demande"
+                                description="Refuser cette demande ?"
+                                entityId={approval.id}
+                                trigger={
+                                    <Button
+                                        variant="outlined"
+                                        size="sm"
+                                        className="w-full min-w-0 px-3 text-error border-error/40 hover:bg-error-container/20"
+                                        icon={<MaterialIcon name="block" size={16} />}
+                                    >
+                                        Refuser
+                                    </Button>
+                                }
+                            />
+                            <SecurityGate
+                                onVerified={() => onApprove(approval)}
+                                title={stepDetails.btnText}
+                                description="Confirmer cette action."
+                                entityId={approval.id}
+                                trigger={
+                                    <Button
+                                        variant="tonal"
+                                        size="sm"
+                                        className="w-full min-w-0 px-3"
+                                        icon={stepDetails.icon}
+                                    >
+                                        {stepDetails.btnText}
+                                    </Button>
+                                }
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};

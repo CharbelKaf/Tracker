@@ -1,0 +1,249 @@
+import React, { useCallback, useMemo, useRef } from 'react';
+import { cn } from '../../lib/utils';
+import MaterialIcon from '../ui/MaterialIcon';
+import Button from '../ui/Button';
+import { ViewType } from '../../types';
+import { useAccessControl } from '../../hooks/useAccessControl';
+import { GLOSSARY } from '../../constants/glossary';
+
+interface NavigationBarProps {
+    currentView: ViewType;
+    onViewChange: (view: ViewType) => void;
+    onMoreClick?: () => void;
+    embedded?: boolean;
+    className?: string;
+}
+
+type NavDestinationId = 'dashboard' | 'equipment' | 'approvals' | 'users' | 'more';
+
+interface NavItemProps {
+    icon: string;
+    label: string;
+    active: boolean;
+    onClick: () => void;
+    onKeyDown: (event: React.KeyboardEvent<HTMLButtonElement>) => void;
+    tabIndex: number;
+    ariaLabel?: string;
+    badge?: number;
+}
+
+const NavItem = React.forwardRef<HTMLButtonElement, NavItemProps>(
+    ({ icon, label, active, onClick, onKeyDown, tabIndex, ariaLabel, badge }, ref) => (
+        <Button
+            ref={ref}
+            type="button"
+            variant="text"
+            onClick={onClick}
+            onKeyDown={onKeyDown}
+            tabIndex={tabIndex}
+            aria-current={active ? 'page' : undefined}
+            aria-label={ariaLabel ?? label}
+            title={label}
+            className={cn(
+                'flex-1 !px-0 !py-0 !min-h-0 !min-w-[64px] h-full !flex-col !items-center !justify-center gap-1 outline-none relative !rounded-none !border-none !shadow-none transition-all duration-short4 ease-emphasized',
+                active
+                    ? '!bg-secondary-container !text-on-secondary-container'
+                    : '!bg-transparent !text-on-surface-variant hover:!bg-on-surface/[0.08]'
+            )}
+        >
+            <div className="relative flex items-center justify-center w-16 h-8 transition-all duration-short4 ease-emphasized">
+                <MaterialIcon
+                    name={icon}
+                    size={24}
+                    filled={active}
+                    className={cn('transition-all', active ? 'text-on-secondary-container' : 'text-on-surface-variant')}
+                />
+                {badge !== undefined && badge > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center bg-error text-on-error text-[10px] font-bold rounded-full px-1 leading-none">
+                        {badge > 99 ? '99+' : badge}
+                    </span>
+                )}
+            </div>
+            <span
+                className={cn(
+                    'text-label-medium transition-colors duration-short4',
+                    active ? 'text-on-secondary-container font-medium' : 'text-on-surface-variant'
+                )}
+            >
+                {label}
+            </span>
+        </Button>
+    )
+);
+
+NavItem.displayName = 'NavItem';
+
+const resolveBottomNavDestination = (view: ViewType): NavDestinationId | null => {
+    if (
+        view === 'equipment' ||
+        view === 'equipment_details' ||
+        view === 'add_equipment' ||
+        view === 'edit_equipment' ||
+        view === 'import_equipment' ||
+        view === 'assignment_wizard' ||
+        view === 'return_wizard'
+    ) {
+        return 'equipment';
+    }
+
+    if (
+        view === 'users' ||
+        view === 'user_details' ||
+        view === 'add_user' ||
+        view === 'edit_user' ||
+        view === 'import_users' ||
+        view === 'admin_users'
+    ) {
+        return 'users';
+    }
+
+    if (view === 'approvals' || view === 'new_request') {
+        return 'approvals';
+    }
+
+    if (view === 'dashboard') {
+        return 'dashboard';
+    }
+
+    // Finance, gestion, audit, rapports, paramètres, etc. n'activent pas "Plus"
+    return null;
+};
+
+export const NavigationBar: React.FC<NavigationBarProps> = ({
+    currentView,
+    onViewChange,
+    onMoreClick,
+    embedded = false,
+    className
+}) => {
+    const { permissions } = useAccessControl();
+    const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+    const destinations = useMemo(() => {
+        const activeId = resolveBottomNavDestination(currentView);
+
+        const items: Array<{
+            id: NavDestinationId;
+            icon: string;
+            label: string;
+            onSelect: () => void;
+            ariaLabel?: string;
+        }> = [];
+
+        if (permissions.canViewInventory) {
+            items.push({
+                id: 'dashboard',
+                icon: 'dashboard',
+                label: GLOSSARY.DASHBOARD,
+                onSelect: () => onViewChange('dashboard'),
+            });
+
+            items.push({
+                id: 'equipment',
+                icon: 'devices',
+                label: 'Actifs',
+                onSelect: () => onViewChange('equipment'),
+            });
+        }
+
+        if (permissions.canViewApprovals) {
+            items.push({
+                id: 'approvals',
+                icon: 'task_alt',
+                label: 'Tâches',
+                onSelect: () => onViewChange('approvals'),
+            });
+        }
+
+        if (permissions.canViewUsers) {
+            items.push({
+                id: 'users',
+                icon: 'group',
+                label: 'Équipe',
+                onSelect: () => onViewChange('users'),
+            });
+        }
+
+        items.push({
+            id: 'more',
+            icon: 'menu',
+            label: 'Plus',
+            onSelect: () => {
+                if (onMoreClick) {
+                    onMoreClick();
+                    return;
+                }
+                onViewChange('settings');
+            },
+            ariaLabel: onMoreClick ? 'Ouvrir le menu' : 'Plus',
+        });
+
+        return items.slice(0, 5).map((item) => ({
+            ...item,
+            active: activeId !== null && item.id === activeId,
+        }));
+    }, [currentView, onMoreClick, onViewChange, permissions.canViewApprovals, permissions.canViewInventory, permissions.canViewUsers]);
+
+    const activeIndex = Math.max(0, destinations.findIndex((item) => item.active));
+
+    const focusItem = useCallback((index: number) => {
+        itemRefs.current[index]?.focus();
+    }, []);
+
+    const handleItemKeyDown = useCallback((index: number, event: React.KeyboardEvent<HTMLButtonElement>) => {
+        if (destinations.length === 0) {
+            return;
+        }
+
+        switch (event.key) {
+            case 'ArrowRight':
+                event.preventDefault();
+                focusItem((index + 1) % destinations.length);
+                break;
+            case 'ArrowLeft':
+                event.preventDefault();
+                focusItem((index - 1 + destinations.length) % destinations.length);
+                break;
+            case 'Home':
+                event.preventDefault();
+                focusItem(0);
+                break;
+            case 'End':
+                event.preventDefault();
+                focusItem(destinations.length - 1);
+                break;
+            default:
+                break;
+        }
+    }, [destinations.length, focusItem]);
+
+    return (
+        <nav
+            aria-label="Navigation principale"
+            role="navigation"
+            className={cn(
+                'h-20 w-full flex items-center justify-evenly pb-2 pt-3',
+                !embedded && 'bg-surface-container border-t border-outline-variant z-50',
+                className
+            )}
+        >
+            {destinations.map((item, index) => (
+                <NavItem
+                    key={item.id}
+                    ref={(el) => { itemRefs.current[index] = el; }}
+                    icon={item.icon}
+                    label={item.label}
+                    active={item.active}
+                    onClick={item.onSelect}
+                    onKeyDown={(event) => handleItemKeyDown(index, event)}
+                    tabIndex={index === activeIndex ? 0 : -1}
+                    ariaLabel={item.ariaLabel ?? item.label}
+                />
+            ))}
+        </nav>
+    );
+};
+
+
+
+
