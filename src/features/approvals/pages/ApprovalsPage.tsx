@@ -29,6 +29,12 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 type ApprovalView = 'active' | 'history';
+type WorkflowSection = {
+    id: 'standard' | 'legacy' | 'other' | 'all';
+    title?: string;
+    description?: string;
+    items: Approval[];
+};
 
 const ApprovalsPage = () => {
     const [activeView, setActiveView] = useState<ApprovalView>('active');
@@ -128,15 +134,65 @@ const ApprovalsPage = () => {
         return hasLegacy && hasModern;
     }, [activeView, filteredList]);
 
-    const workflowContextMessage = hasMixedWorkflowFamilies
-        ? 'Certaines demandes suivent un parcours précédent. Les actions proposées restent adaptées à chaque étape.'
-        : 'Les actions disponibles dépendent de l\'étape de validation affichée.';
+    const workflowContextMessage = useMemo(() => {
+        if (activeView !== 'active') return '';
+        if (hasMixedWorkflowFamilies) {
+            return 'Deux workflows coexistent: Standard et Parcours précédent. Les demandes sont séparées par section.';
+        }
+        const hasLegacyOnly = filteredList.some((item) => isLegacyApprovalWorkflow(item.status));
+        if (hasLegacyOnly) {
+            return 'Cette vue utilise le parcours précédent.';
+        }
+        return 'Cette vue utilise le workflow standard.';
+    }, [activeView, filteredList, hasMixedWorkflowFamilies]);
 
     const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE);
     const paginatedList = filteredList.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE,
     );
+    const paginatedSections = useMemo<WorkflowSection[]>(() => {
+        if (activeView !== 'active' || !hasMixedWorkflowFamilies) {
+            return [{ id: 'all', items: paginatedList }];
+        }
+
+        const standard: Approval[] = [];
+        const legacy: Approval[] = [];
+        const other: Approval[] = [];
+
+        paginatedList.forEach((item) => {
+            if (isModernApprovalWorkflow(item.status)) {
+                standard.push(item);
+                return;
+            }
+            if (isLegacyApprovalWorkflow(item.status)) {
+                legacy.push(item);
+                return;
+            }
+            other.push(item);
+        });
+
+        return [
+            {
+                id: 'standard',
+                title: 'Workflow standard',
+                description: 'Validation manager, traitement IT, validation de dotation, confirmation utilisateur.',
+                items: standard,
+            },
+            {
+                id: 'legacy',
+                title: 'Parcours précédent',
+                description: 'Demandes historisées sur le flux précédent.',
+                items: legacy,
+            },
+            {
+                id: 'other',
+                title: 'Autres statuts',
+                description: 'Demandes hors des workflows principaux.',
+                items: other,
+            },
+        ].filter((section) => section.items.length > 0);
+    }, [activeView, hasMixedWorkflowFamilies, paginatedList]);
 
     useEffect(() => {
         if (totalPages > 0 && currentPage > totalPages) {
@@ -228,6 +284,7 @@ const ApprovalsPage = () => {
                 bg: 'bg-tertiary-container',
                 icon: <MaterialIcon name="how_to_reg" size={14} />,
                 btnText: 'Approuver',
+                rejectText: 'Refuser',
             };
         }
         if (approval.status === 'WAITING_IT_PROCESSING' || approval.status === 'Pending' || approval.status === 'Processing') {
@@ -237,6 +294,7 @@ const ApprovalsPage = () => {
                 bg: 'bg-secondary-container',
                 icon: <MaterialIcon name="settings" size={14} />,
                 btnText: 'Affecter',
+                rejectText: 'Refuser',
             };
         }
         if (approval.status === 'WAITING_DOTATION_APPROVAL') {
@@ -245,7 +303,8 @@ const ApprovalsPage = () => {
                 color: 'text-on-primary-container',
                 bg: 'bg-primary-container',
                 icon: <MaterialIcon name="verified" size={14} />,
-                btnText: 'Valider',
+                btnText: 'Valider dotation',
+                rejectText: 'Renvoyer',
             };
         }
         if (approval.status === 'PENDING_DELIVERY' || approval.status === 'WaitingUser') {
@@ -254,7 +313,8 @@ const ApprovalsPage = () => {
                 color: 'text-on-secondary-container',
                 bg: 'bg-secondary-container',
                 icon: <MaterialIcon name="task_alt" size={14} />,
-                btnText: 'Confirmer',
+                btnText: 'Confirmer réception',
+                rejectText: 'Refuser',
             };
         }
         if (approval.status === 'Approved') {
@@ -264,6 +324,7 @@ const ApprovalsPage = () => {
                 bg: 'bg-tertiary-container',
                 icon: <MaterialIcon name="check_circle" size={14} />,
                 btnText: 'Voir',
+                rejectText: 'Refuser',
             };
         }
         if (approval.status === 'Rejected') {
@@ -273,6 +334,7 @@ const ApprovalsPage = () => {
                 bg: 'bg-error-container',
                 icon: <MaterialIcon name="cancel" size={14} />,
                 btnText: 'Voir',
+                rejectText: 'Refuser',
             };
         }
         if (approval.status === 'Cancelled') {
@@ -282,6 +344,7 @@ const ApprovalsPage = () => {
                 bg: 'bg-surface-container-high',
                 icon: <MaterialIcon name="do_not_disturb_on" size={14} />,
                 btnText: 'Voir',
+                rejectText: 'Refuser',
             };
         }
         if (approval.status === 'Completed') {
@@ -291,6 +354,7 @@ const ApprovalsPage = () => {
                 bg: 'bg-surface-container',
                 icon: <MaterialIcon name="task_alt" size={14} />,
                 btnText: 'Voir',
+                rejectText: 'Refuser',
             };
         }
 
@@ -300,6 +364,7 @@ const ApprovalsPage = () => {
             bg: 'bg-surface-container',
             icon: <MaterialIcon name="help" size={14} />,
             btnText: 'Voir',
+            rejectText: 'Refuser',
         };
     };
 
@@ -361,7 +426,7 @@ const ApprovalsPage = () => {
                             </p>
                         )}
                         {activeView === 'active' && (
-                            <div className="-mt-2 rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-body-small text-on-surface-variant flex items-start gap-2">
+                            <div className="-mt-2 rounded-md border border-secondary/30 bg-secondary-container/30 px-3 py-2 text-body-small text-on-secondary-container flex items-start gap-2">
                                 <MaterialIcon name="info" size={16} className="shrink-0 mt-0.5" />
                                 <p>{workflowContextMessage}</p>
                             </div>
@@ -369,26 +434,40 @@ const ApprovalsPage = () => {
 
                         <div className="bg-surface rounded-card border border-outline-variant shadow-elevation-1 overflow-hidden min-h-[400px]">
                             {paginatedList.length > 0 ? (
-                                <div className="divide-y divide-outline-variant/30">
-                                    {paginatedList.map((approval) => {
-                                        const stepDetails = getStepDetails(approval);
-                                        const isActionable = activeView === 'active' && isUserAllowedToValidate(approval);
+                                <div>
+                                    {paginatedSections.map((section, sectionIndex) => (
+                                        <div key={section.id} className={cn(sectionIndex > 0 && 'border-t border-outline-variant/40')}>
+                                            {section.title && (
+                                                <div className="px-4 py-2 bg-surface-container-low border-b border-outline-variant/30">
+                                                    <p className="text-label-medium text-on-surface">{section.title}</p>
+                                                    {section.description && (
+                                                        <p className="text-label-small text-on-surface-variant mt-0.5">{section.description}</p>
+                                                    )}
+                                                </div>
+                                            )}
+                                            <div className="divide-y divide-outline-variant/30">
+                                                {section.items.map((approval) => {
+                                                    const stepDetails = getStepDetails(approval);
+                                                    const isActionable = activeView === 'active' && isUserAllowedToValidate(approval);
 
-                                        return (
-                                            <ApprovalRow
-                                                key={approval.id}
-                                                approval={approval}
-                                                stepDetails={stepDetails}
-                                                compact={activeView === 'history'}
-                                                showActions={isActionable}
-                                                onApprove={handleAction}
-                                                onReject={handleReject}
-                                                requesterAvatar={userAvatarById.get(approval.requesterId)}
-                                                beneficiaryAvatar={userAvatarById.get(approval.beneficiaryId)}
-                                                workflowHint={getWorkflowHint(approval)}
-                                            />
-                                        );
-                                    })}
+                                                    return (
+                                                        <ApprovalRow
+                                                            key={approval.id}
+                                                            approval={approval}
+                                                            stepDetails={stepDetails}
+                                                            compact={activeView === 'history'}
+                                                            showActions={isActionable}
+                                                            onApprove={handleAction}
+                                                            onReject={handleReject}
+                                                            requesterAvatar={userAvatarById.get(approval.requesterId)}
+                                                            beneficiaryAvatar={userAvatarById.get(approval.beneficiaryId)}
+                                                            workflowHint={getWorkflowHint(approval)}
+                                                        />
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
                                 <div className="h-full flex items-center justify-center p-12">

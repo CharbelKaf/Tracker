@@ -34,6 +34,7 @@ interface ApprovalRowProps {
         bg: string;
         icon: React.ReactNode;
         btnText: string;
+        rejectText?: string;
     };
 }
 
@@ -52,6 +53,8 @@ export const ApprovalRow: React.FC<ApprovalRowProps> = ({
     const isDelegated = approval.beneficiaryId !== approval.requesterId;
     const fallbackIcon = CATEGORY_ICON_MAP[approval.equipmentCategory || ''] || 'inventory_2';
     const equipmentTitle = approval.equipmentName || approval.equipmentModel || approval.equipmentCategory;
+    const rejectLabel = stepDetails.rejectText || 'Refuser';
+    const rejectIcon = rejectLabel === 'Renvoyer' ? 'reply' : 'block';
 
     if (compact) {
         return (
@@ -173,17 +176,17 @@ export const ApprovalRow: React.FC<ApprovalRowProps> = ({
                         <div className="grid grid-cols-2 gap-2 pt-1">
                             <SecurityGate
                                 onVerified={() => onReject(approval)}
-                                title="Refuser la demande"
-                                description="Refuser cette demande ?"
+                                title={rejectLabel}
+                                description={`${rejectLabel} cette demande ?`}
                                 entityId={approval.id}
                                 trigger={
                                     <Button
                                         variant="outlined"
                                         size="sm"
                                         className="w-full min-w-0 px-3 text-error border-error/40 hover:bg-error-container/20"
-                                        icon={<MaterialIcon name="block" size={16} />}
+                                        icon={<MaterialIcon name={rejectIcon} size={16} />}
                                     >
-                                        Refuser
+                                        {rejectLabel}
                                     </Button>
                                 }
                             />

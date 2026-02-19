@@ -18,6 +18,7 @@ interface ApprovalCardProps {
         bg: string;
         icon: React.ReactNode;
         btnText: string;
+        rejectText?: string;
     };
 }
 
@@ -29,6 +30,8 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({
     stepDetails
 }) => {
     const isDelegated = approval.beneficiaryId && approval.beneficiaryId !== approval.requesterId;
+    const rejectLabel = stepDetails.rejectText || 'Refuser';
+    const rejectIcon = rejectLabel === 'Renvoyer' ? 'reply' : 'block';
 
     return (
         <div className="group flex flex-col bg-surface rounded-card shadow-elevation-1 border border-outline-variant overflow-hidden hover:border-primary/50 hover:shadow-elevation-3 transition-all duration-medium2 ease-emphasized relative">
@@ -126,16 +129,17 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({
                 <div className="px-4 py-3 bg-surface-container-low border-t border-outline-variant flex gap-3">
                     <SecurityGate
                         onVerified={() => onReject(approval)}
-                        title="Refuser la demande"
-                        description={`Voulez-vous vraiment refuser la demande de ${approval.requesterName} ?`}
+                        title={rejectLabel}
+                        description={`Voulez-vous vraiment ${rejectLabel.toLowerCase()} la demande de ${approval.requesterName} ?`}
                         entityId={approval.id}
                         trigger={
                             <Button
                                 variant="outlined"
                                 size="sm"
                                 className="flex-1 text-on-surface-variant hover:text-error hover:bg-error-container/20 border border-outline-variant/50"
+                                icon={<MaterialIcon name={rejectIcon} size={16} />}
                             >
-                                Refuser
+                                {rejectLabel}
                             </Button>
                         }
                     />
