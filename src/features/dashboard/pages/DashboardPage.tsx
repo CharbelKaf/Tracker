@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import MaterialIcon from '../../../components/ui/MaterialIcon';
 import Card from '../../../components/ui/Card';
-import { ViewType, HistoryEvent } from '../../../types';
+import { Approval, ViewType, HistoryEvent } from '../../../types';
 import { useData } from '../../../context/DataContext';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { PageHeader } from '../../../components/layout/PageHeader';
@@ -17,6 +17,7 @@ import { cn } from '../../../lib/utils';
 import TransactionTicketModal from '../../../components/modals/TransactionTicketModal';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import {
+    canUserActOnApproval,
     getHistoryEventIcon,
     getHistoryEventSentence,
     isOperationalEquipmentStatus,
@@ -28,8 +29,8 @@ interface DashboardPageProps {
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate }) => {
-    const { equipment: allEquipment, users, updateEquipment, settings } = useData();
-    const { filterEquipment, role, permissions, user: currentUser } = useAccessControl();
+    const { equipment: allEquipment, users, approvals, updateApproval, settings } = useData();
+    const { filterEquipment, permissions, user: currentUser } = useAccessControl();
     const { getRecentActivity } = useHistory();
     const { showToast } = useToast();
     const isCompact = useMediaQuery('(max-width: 599px)');
@@ -50,24 +51,71 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
         return all.slice(0, 8); // Slightly increased for the new list view
     }, [getRecentActivity]);
 
-    const equipmentToConfirm = useMemo(() => {
-        if (!currentUser) return [];
-        return allEquipment.filter(e =>
-            e.user?.email === currentUser.email &&
-            e.assignmentStatus === 'PENDING_DELIVERY'
-        );
-    }, [allEquipment, currentUser]);
+    const equipmentById = useMemo(
+        () => new Map(allEquipment.map((item) => [item.id, item])),
+        [allEquipment],
+    );
 
     const pendingManagerValidations = useMemo(() => {
-        if (role !== 'Manager' && role !== 'Admin' && role !== 'SuperAdmin') return [];
         if (!currentUser) return [];
 
-        return allEquipment.filter(e => {
-            if (e.assignmentStatus !== 'WAITING_MANAGER_APPROVAL') return false;
-            const assignedUser = users.find(u => u.name === e.user?.name || u.id === e.user?.id);
-            return assignedUser?.managerId === currentUser.id;
-        });
-    }, [allEquipment, users, currentUser, role]);
+        return approvals
+            .filter((approval) =>
+                (approval.status === 'WAITING_MANAGER_APPROVAL'
+                    || approval.status === 'WAITING_DOTATION_APPROVAL'
+                    || approval.status === 'WaitingManager')
+                && canUserActOnApproval({
+                    approval,
+                    actorRole: currentUser.role,
+                    actorId: currentUser.id,
+                    users,
+                }),
+            )
+            .map((approval) => {
+                const linkedEquipment = approval.assignedEquipmentId
+                    ? equipmentById.get(approval.assignedEquipmentId)
+                    : undefined;
+                return {
+                    approvalId: approval.id,
+                    approvalStatus: approval.status,
+                    beneficiaryName: approval.beneficiaryName,
+                    beneficiaryAvatar: users.find((user) => user.id === approval.beneficiaryId)?.avatar,
+                    equipmentName:
+                        approval.assignedEquipmentName
+                        || linkedEquipment?.name
+                        || approval.equipmentName
+                        || approval.equipmentCategory,
+                };
+            });
+    }, [approvals, currentUser, equipmentById, users]);
+
+    const equipmentToConfirm = useMemo(() => {
+        if (!currentUser) return [];
+
+        return approvals
+            .filter((approval) =>
+                (approval.status === 'PENDING_DELIVERY' || approval.status === 'WaitingUser')
+                && canUserActOnApproval({
+                    approval,
+                    actorRole: currentUser.role,
+                    actorId: currentUser.id,
+                    users,
+                }),
+            )
+            .map((approval) => {
+                const linkedEquipment = approval.assignedEquipmentId
+                    ? equipmentById.get(approval.assignedEquipmentId)
+                    : undefined;
+                return {
+                    approvalId: approval.id,
+                    equipmentName:
+                        approval.assignedEquipmentName
+                        || linkedEquipment?.name
+                        || approval.equipmentName
+                        || approval.equipmentCategory,
+                };
+            });
+    }, [approvals, currentUser, equipmentById, users]);
 
     const financialTotals = useMemo(() => {
         return equipment.reduce((acc, item) => {
@@ -201,33 +249,49 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
             insight
         };
     }, [equipment]);
-    const handleConfirmReceipt = (id: string) => {
+    const handleConfirmReceipt = (approvalId: string) => {
         if (confirm("Confirmez-vous avoir bien reçu cet équipement ?")) {
-            updateEquipment(id, {
-                assignmentStatus: 'CONFIRMED',
-                status: 'Attribué',
-                confirmedAt: new Date().toISOString()
-            });
+            const decision = updateApproval(approvalId, 'Completed');
+            if (!decision.allowed) {
+                showToast(decision.reason || 'Action non autorisée.', 'error');
+                return;
+            }
             showToast("Réception confirmée.", 'success');
         }
     };
 
-    const handleManagerValidation = (id: string, approve: boolean) => {
-        if (approve) {
-            updateEquipment(id, {
-                assignmentStatus: 'PENDING_DELIVERY',
-                managerValidationBy: currentUser?.id,
-                managerValidationAt: new Date().toISOString()
-            });
-            showToast("Attribution validée.", 'success');
-        } else {
-            updateEquipment(id, {
-                status: 'Disponible',
-                assignmentStatus: 'NONE',
-                user: null
-            });
-            showToast("Attribution refusée.", 'info');
+    const handleManagerValidation = (
+        approvalId: string,
+        status: Approval['status'],
+        approve: boolean,
+    ) => {
+        const isDotation = status === 'WAITING_DOTATION_APPROVAL';
+        const nextStatus: Approval['status'] = isDotation
+            ? (approve ? 'PENDING_DELIVERY' : 'WAITING_IT_PROCESSING')
+            : (approve ? 'WAITING_IT_PROCESSING' : 'Rejected');
+
+        const decision = updateApproval(approvalId, nextStatus);
+        if (!decision.allowed) {
+            showToast(decision.reason || 'Action non autorisée.', 'error');
+            return;
         }
+
+        if (isDotation) {
+            showToast(
+                approve
+                    ? 'Dotation validée. En attente de confirmation utilisateur.'
+                    : 'Dotation renvoyée au traitement IT.',
+                approve ? 'success' : 'info',
+            );
+            return;
+        }
+
+        showToast(
+            approve
+                ? "Besoin validé. Demande transmise à l'IT."
+                : 'Demande rejetée.',
+            approve ? 'success' : 'info',
+        );
     };
 
     const formatRelativeTime = (timestamp: string) => {
@@ -362,14 +426,33 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
                                     </div>
                                     <div className="space-y-2">
                                         {pendingManagerValidations.map(e => (
-                                            <div key={e.id} className="bg-surface/80 p-3 rounded flex items-center justify-between backdrop-blur-sm">
+                                            <div key={e.approvalId} className="bg-surface/80 p-3 rounded flex items-center justify-between backdrop-blur-sm">
                                                 <div className="flex items-center gap-3">
-                                                    <UserAvatar name={e.user?.name || ''} src={e.user?.avatar} size="xs" />
-                                                    <span className="text-body-medium font-medium">{e.user?.name} — {e.name}</span>
+                                                    <UserAvatar name={e.beneficiaryName || ''} src={e.beneficiaryAvatar} size="xs" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-body-medium font-medium">{e.beneficiaryName} — {e.equipmentName}</span>
+                                                        <span className="text-label-small text-on-surface-variant">
+                                                            {e.approvalStatus === 'WAITING_DOTATION_APPROVAL' ? 'Étape: Validation dotation' : 'Étape: Validation manager'}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    <Button size="sm" variant="text" className="text-error px-2" onClick={() => handleManagerValidation(e.id, false)}>Refuser</Button>
-                                                    <Button size="sm" variant="tonal" className="px-3" onClick={() => handleManagerValidation(e.id, true)}>Valider</Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="text"
+                                                        className="text-error px-2"
+                                                        onClick={() => handleManagerValidation(e.approvalId, e.approvalStatus, false)}
+                                                    >
+                                                        {e.approvalStatus === 'WAITING_DOTATION_APPROVAL' ? 'Renvoyer' : 'Refuser'}
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="tonal"
+                                                        className="px-3"
+                                                        onClick={() => handleManagerValidation(e.approvalId, e.approvalStatus, true)}
+                                                    >
+                                                        {e.approvalStatus === 'WAITING_DOTATION_APPROVAL' ? 'Valider dotation' : 'Valider'}
+                                                    </Button>
                                                 </div>
                                             </div>
                                         ))}
@@ -385,8 +468,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onViewChange, onNavigate 
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {equipmentToConfirm.map(e => (
-                                            <Button key={e.id} size="sm" variant="filled" onClick={() => handleConfirmReceipt(e.id)} icon={<MaterialIcon name="check" size={14} />}>
-                                                Valider {e.name}
+                                            <Button key={e.approvalId} size="sm" variant="filled" onClick={() => handleConfirmReceipt(e.approvalId)} icon={<MaterialIcon name="check" size={14} />}>
+                                                Valider {e.equipmentName}
                                             </Button>
                                         ))}
                                     </div>
