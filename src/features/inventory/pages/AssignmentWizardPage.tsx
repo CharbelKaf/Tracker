@@ -180,7 +180,7 @@ const AssignmentWizardPage: React.FC<{ onCancel: () => void; onComplete: () => v
             } else {
                 let finalAssignmentStatus: any = 'PENDING_DELIVERY';
                 let finalApprovalStatus: any = 'PENDING_DELIVERY';
-                let finalMainStatus = isImmediateHandover ? 'Attribué' : 'En attente';
+                const finalMainStatus = isImmediateHandover ? 'Attribué' : 'En attente';
 
                 if (isImmediateHandover) {
                     finalAssignmentStatus = 'CONFIRMED';

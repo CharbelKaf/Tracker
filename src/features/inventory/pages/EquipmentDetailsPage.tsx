@@ -57,86 +57,13 @@ const EquipmentDetailsPage: React.FC<EquipmentDetailsPageProps> = ({ equipmentId
         );
     }, [item]);
 
-    if (!item) return <div className="p-page-sm medium:p-page text-center text-on-surface-variant">{GLOSSARY.EQUIPMENT} non trouvé</div>;
-
-    const formatStatus = (status: string) => {
-        if (status === 'En réparation') return 'En Répar.';
-        return status;
-    };
-
-    const formatDate = (dateString: string | undefined) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    const formatDateCompact = (dateString: string | undefined) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('fr-FR');
-    };
-
-    const addYears = (dateString: string, years: number) => {
-        const date = new Date(dateString);
-        date.setFullYear(date.getFullYear() + years);
-        return date.toISOString();
-    };
-
-    const handleDownload = (docName: string) => {
-        showToast(`Téléchargement de ${docName}...`, 'info');
-    };
-
-    const handleReport = () => {
-        showToast('Signalement envoyé au support.', 'info');
-    };
-
-    const handleConfirmEndRepair = () => {
-        requestConfirmation({
-            title: "Terminer la réparation",
-            message: `Confirmez-vous que l'équipement "${item.name}" est de nouveau fonctionnel ? Il sera marqué comme "Disponible" dans l'inventaire.`,
-            confirmText: "Mettre en service",
-            variant: "warning",
-            onConfirm: () => {
-                updateEquipment(item.id, {
-                    status: 'Disponible',
-                    repairEndDate: new Date().toISOString(),
-                });
-                showToast("Équipement remis en service", 'success');
-            }
-        });
-    };
-
-    const handleDelete = () => {
-        if (item.status !== 'Disponible' && item.status !== 'En réparation') {
-            showToast("Impossible de supprimer un équipement attribué.", "error");
-            return;
-        }
-
-        requestConfirmation({
-            title: "Supprimer l'équipement",
-            message: `Êtes-vous sûr de vouloir supprimer l'équipement "${item.name}" ? Cette action est irréversible.`,
-            confirmText: "Supprimer définitivement",
-            variant: "danger",
-            requireTyping: true,
-            typingKeyword: "SUPPRIMER",
-            onConfirm: () => {
-                if (deleteEquipment(item.id)) {
-                    showToast(GLOSSARY.SUCCESS_DELETE(GLOSSARY.EQUIPMENT), 'success');
-                    onBack(); // Retour à la liste
-                } else {
-                    showToast("Erreur lors de la suppression.", "error");
-                }
-            }
-        });
-    };
-
     const [isScrolled, setIsScrolled] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const isCompactLayout = useMediaQuery('(max-width: 839px)');
 
     const equipmentMovementItems = useMemo<MovementTimelineItem[]>(() => {
+        if (!item) return [];
+
         const movementTypes = new Set([
             'CREATE',
             'ASSIGN',
@@ -223,6 +150,81 @@ const EquipmentDetailsPage: React.FC<EquipmentDetailsPageProps> = ({ equipmentId
 
         return deduped.slice(0, MAX_MOVEMENT_HISTORY_ITEMS);
     }, [events, item]);
+
+    if (!item) return <div className="p-page-sm medium:p-page text-center text-on-surface-variant">{GLOSSARY.EQUIPMENT} non trouvé</div>;
+
+    const formatStatus = (status: string) => {
+        if (status === 'En réparation') return 'En Répar.';
+        return status;
+    };
+
+    const formatDate = (dateString: string | undefined) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const formatDateCompact = (dateString: string | undefined) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('fr-FR');
+    };
+
+    const addYears = (dateString: string, years: number) => {
+        const date = new Date(dateString);
+        date.setFullYear(date.getFullYear() + years);
+        return date.toISOString();
+    };
+
+    const handleDownload = (docName: string) => {
+        showToast(`Téléchargement de ${docName}...`, 'info');
+    };
+
+    const handleReport = () => {
+        showToast('Signalement envoyé au support.', 'info');
+    };
+
+    const handleConfirmEndRepair = () => {
+        requestConfirmation({
+            title: "Terminer la réparation",
+            message: `Confirmez-vous que l'équipement "${item.name}" est de nouveau fonctionnel ? Il sera marqué comme "Disponible" dans l'inventaire.`,
+            confirmText: "Mettre en service",
+            variant: "warning",
+            onConfirm: () => {
+                updateEquipment(item.id, {
+                    status: 'Disponible',
+                    repairEndDate: new Date().toISOString(),
+                });
+                showToast("Équipement remis en service", 'success');
+            }
+        });
+    };
+
+    const handleDelete = () => {
+        if (item.status !== 'Disponible' && item.status !== 'En réparation') {
+            showToast("Impossible de supprimer un équipement attribué.", "error");
+            return;
+        }
+
+        requestConfirmation({
+            title: "Supprimer l'équipement",
+            message: `Êtes-vous sûr de vouloir supprimer l'équipement "${item.name}" ? Cette action est irréversible.`,
+            confirmText: "Supprimer définitivement",
+            variant: "danger",
+            requireTyping: true,
+            typingKeyword: "SUPPRIMER",
+            onConfirm: () => {
+                if (deleteEquipment(item.id)) {
+                    showToast(GLOSSARY.SUCCESS_DELETE(GLOSSARY.EQUIPMENT), 'success');
+                    onBack(); // Retour à la liste
+                } else {
+                    showToast("Erreur lors de la suppression.", "error");
+                }
+            }
+        });
+    };
 
     const handleScroll = () => {
         if (scrollContainerRef.current) {

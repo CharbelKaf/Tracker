@@ -316,10 +316,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const newId = Date.now().toString();
 
         // AUTOMATIC MANAGER ASSIGNMENT
-        let finalUser = { ...user, id: newId };
-        if (user.department && serviceManagers[user.department]) {
-            finalUser.managerId = serviceManagers[user.department];
-        }
+        const finalUser = user.department && serviceManagers[user.department]
+            ? { ...user, id: newId, managerId: serviceManagers[user.department] }
+            : { ...user, id: newId };
 
         logEvent({
             type: 'CREATE',
@@ -362,12 +361,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { allowed: false, reason: 'Utilisateur introuvable.' };
         }
 
-        let finalUpdates = { ...updates };
-
-        // If department changes, automatically update manager
-        if (updates.department && serviceManagers[updates.department]) {
-            finalUpdates.managerId = serviceManagers[updates.department];
-        }
+        const finalUpdates = updates.department && serviceManagers[updates.department]
+            ? { ...updates, managerId: serviceManagers[updates.department] }
+            : { ...updates };
 
         const hasActiveApprovals = approvals.some((approval) =>
             ACTIVE_APPROVAL_STATUSES.includes(approval.status)

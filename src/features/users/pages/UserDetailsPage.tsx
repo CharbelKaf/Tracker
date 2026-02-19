@@ -53,6 +53,9 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onVie
     const user = users.find(u => u.id === userId);
     const [activeTab, setActiveTab] = useState<UserDetailsTab>('overview');
     const [authUser, setAuthUser] = useState<AppUser | null>(null);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const isCompactLayout = useMediaQuery('(max-width: 839px)');
 
     useEffect(() => {
         if (user?.email && permissions.canManageUsers) {
@@ -225,10 +228,6 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onVie
         if (type === 'Phone') return 'smartphone';
         return 'monitor';
     };
-
-    const [isScrolled, setIsScrolled] = useState(false);
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const isCompactLayout = useMediaQuery('(max-width: 839px)');
 
     const handleScroll = () => {
         if (scrollContainerRef.current) {

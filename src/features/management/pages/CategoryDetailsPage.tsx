@@ -14,11 +14,10 @@ interface CategoryDetailsPageProps {
 
 const CategoryDetailsPage: React.FC<CategoryDetailsPageProps> = ({ categoryId, onBack, onModelClick }) => {
     const { equipment } = useData();
+    const [activeTab, setActiveTab] = useState<'models' | 'assets'>('models');
     const category = mockCategories.find(c => c.id === categoryId);
 
     if (!category) return <div className="p-page-sm medium:p-page">Category not found</div>;
-
-    const [activeTab, setActiveTab] = useState<'models' | 'assets'>('models');
 
     // Filter models and equipment
     const categoryModels = mockModels.filter(m => m.type === category.name);
