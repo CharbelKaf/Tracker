@@ -3,6 +3,7 @@ import { FinanceExpenseType } from '../types';
 export const INVOICE_NUMBER_PATTERNS: RegExp[] = [
     /\b(?:invoice|facture|fact|inv|bill|document)\s*(?:no|n|num|number|#|n[°º])?\s*[:-]?\s*([a-z0-9][a-z0-9/_-]{2,})\b/i,
     /\b((?:inv|fac|fact|bill|doc)[-_ ]?\d{2,}[a-z0-9/_-]*)\b/i,
+    /\b(?:ref(?:erence)?|reference|piece|n[°º])\s*[:-]?\s*([a-z0-9][a-z0-9/_-]{2,})\b/i,
 ];
 
 export const AMOUNT_LABEL_PATTERNS: RegExp[] = [
@@ -18,6 +19,7 @@ export const DATE_PATTERNS: RegExp[] = [
 
 export const SUPPLIER_LABEL_PATTERNS: RegExp[] = [
     /\b(?:fournisseur|vendor|seller|supplier|societe|company)\b\s*[:-]?\s*(.+)/i,
+    /\b(?:from|emetteur|émetteur|issued\s+by)\b\s*[:-]?\s*(.+)/i,
 ];
 
 export const CURRENCY_PATTERNS: Array<{ code: string; regex: RegExp }> = [
@@ -43,4 +45,10 @@ export const NON_SUPPLIER_TOKENS = [
     'client',
     'description',
     'tva',
+    'objet',
+    'service',
+    'article',
+    'payment',
+    'paiement',
+    'due',
 ];

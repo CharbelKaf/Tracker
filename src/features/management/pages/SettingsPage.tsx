@@ -228,9 +228,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onLogout }) => {
                                                         value={financeForm.currency}
                                                         onChange={(e) => handleFinanceChange('currency', e.target.value)}
                                                         options={[
-                                                            { value: 'EUR', label: 'Euro (€)' },
-                                                            { value: 'USD', label: 'US Dollar ($)' },
-                                                            { value: 'XOF', label: 'CFA Franc (FCFA)' }
+                                                            { value: 'XOF', label: 'XOF (Franc CFA)' }
                                                         ]}
                                                     />
                                                     <SelectField

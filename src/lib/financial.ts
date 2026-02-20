@@ -2,11 +2,11 @@
  * Utility functions for Financial Calculations with Inheritance Support
  */
 
-// Taux de change fixes pour la démo (Base : 1 EUR)
+// Taux de change fixes pour conversion explicite (pas appliquée automatiquement à l'affichage)
 const EXCHANGE_RATES: Record<string, number> = {
   'EUR': 1,
   'USD': 1.05,    // 1 EUR = 1.05 USD
-  'XOF': 655.957, // 1 EUR = 655.957 FCFA (Taux fixe)
+  'XOF': 655.957, // 1 EUR = 655.957 XOF (Taux fixe BCEAO)
   'GBP': 0.85,    // 1 EUR = 0.85 GBP
   'JPY': 160      // 1 EUR = 160 JPY
 };
@@ -115,14 +115,38 @@ function getMonthsDifference(startDate: Date, endDate: Date): number {
 }
 
 /**
- * Formatage monétaire standardisé avec support dynamique de la conversion et de la devise.
- * Convertit automatiquement le montant (supposé en EUR) vers la devise cible.
+ * Conversion explicite d'un montant d'une devise vers une autre.
  * 
- * @param amount Montant en devise de base (EUR)
+ * @param amount Montant source
+ * @param fromCurrency Devise source
+ * @param toCurrency Devise cible
+ */
+export const convertCurrency = (amount: number, fromCurrency = 'EUR', toCurrency = 'EUR') => {
+  const fromRate = EXCHANGE_RATES[fromCurrency] || 1;
+  const toRate = EXCHANGE_RATES[toCurrency] || 1;
+  if (fromRate === 0) return amount;
+
+  // Conversion pivotée via EUR
+  const amountInEur = amount / fromRate;
+  return amountInEur * toRate;
+};
+
+/**
+ * Formatage monétaire standardisé.
+ * Par défaut, le montant est supposé déjà dans la devise cible pour éviter
+ * les écarts visuels entre saisie et affichage.
+ * 
+ * @param amount Montant à afficher
  * @param currency Code devise cible (ex: 'XOF', 'USD')
  * @param compact Si true, utilise la notation compacte (ex: 2K, 1.5M)
+ * @param convertFrom Devise source optionnelle (si conversion explicite requise)
  */
-export const formatCurrency = (amount: number, currency = 'EUR', compact = false) => {
+export const formatCurrency = (
+  amount: number,
+  currency = 'EUR',
+  compact = false,
+  convertFrom?: string
+) => {
   let locale = 'fr-FR';
   
   // Configuration Locale
@@ -130,9 +154,9 @@ export const formatCurrency = (amount: number, currency = 'EUR', compact = false
   if (currency === 'GBP') locale = 'en-GB';
   if (currency === 'JPY') locale = 'ja-JP';
   
-  // 1. Appliquer le taux de change (Conversion de EUR vers Target)
-  const rate = EXCHANGE_RATES[currency] || 1;
-  const convertedAmount = amount * rate;
+  const displayAmount = convertFrom && convertFrom !== currency
+    ? convertCurrency(amount, convertFrom, currency)
+    : amount;
 
   // 2. Définir les décimales (0 pour XOF/JPY, 2 pour les autres)
   const digits = (currency === 'XOF' || currency === 'JPY') ? 0 : 2;
@@ -140,12 +164,13 @@ export const formatCurrency = (amount: number, currency = 'EUR', compact = false
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
+    currencyDisplay: currency === 'XOF' ? 'code' : 'symbol',
     minimumFractionDigits: compact ? 0 : digits,
     maximumFractionDigits: compact ? 1 : digits,
     notation: compact ? 'compact' : 'standard',
     compactDisplay: 'short',
     useGrouping: true // Assure le séparateur de milliers
-  }).format(convertedAmount);
+  }).format(displayAmount);
 };
 
 /**

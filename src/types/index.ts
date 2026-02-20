@@ -48,6 +48,11 @@ export interface FinanceExpense {
   description: string;
   invoiceNumber?: string;
   sourceFileName?: string;
+  sourceFileId?: string;
+  sourceFileUrl?: string;
+  currencyCode?: string;
+  extractionSource?: 'filename' | 'content' | 'hybrid';
+  textSource?: 'native' | 'ocr' | 'hybrid' | 'none';
   importFingerprint?: string;
   extractionConfidence?: ExtractionConfidence;
   createdAt: string;

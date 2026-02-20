@@ -422,7 +422,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose 
                                                 </td>
                                                 <td className="px-6 py-3">
                                                     <div className="relative">
-                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold text-xs">{settings.currency === 'USD' ? '$' : settings.currency === 'XOF' ? 'F' : 'â‚¬'}</span>
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold text-xs">{settings.currency === 'USD' ? '$' : settings.currency === 'XOF' ? 'XOF' : '€'}</span>
                                                         <InputField
                                                             type="number"
                                                             value={line.amount}

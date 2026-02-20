@@ -299,7 +299,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ onUserClick, onViewChange }) => {
               <SearchFilterBar
                 searchValue={searchQuery}
                 onSearchChange={setSearchQuery}
-                onFilterClick={() => setShowFilters(!showFilters)}
+                onFilterClick={() => setShowFilters((prev) => !prev)}
                 filterActive={showFilters}
                 placeholder="Rechercher par nom, email, département..."
               />
@@ -310,7 +310,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ onUserClick, onViewChange }) => {
           <SearchFilterBar
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
-            onFilterClick={() => setShowFilters(!showFilters)}
+            onFilterClick={() => setShowFilters((prev) => !prev)}
             filterActive={showFilters}
             resultCount={filteredUsers.length}
             placeholder="Rechercher par nom, email, département..."

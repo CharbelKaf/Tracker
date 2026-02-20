@@ -4,6 +4,8 @@ import { cn } from '../../lib/utils';
 
 interface FileDropzoneProps {
   onFileSelect: (file: File) => void;
+  onFilesSelect?: (files: File[]) => void;
+  multiple?: boolean;
   accept?: string;
   label?: string;
   subLabel?: string;
@@ -13,6 +15,8 @@ interface FileDropzoneProps {
 
 export const FileDropzone: React.FC<FileDropzoneProps> = ({
   onFileSelect,
+  onFilesSelect,
+  multiple = false,
   accept = ".csv,.xlsx,.pdf,.jpg,.png",
   label = "Glisser-déposer votre fichier",
   subLabel = "ou cliquez pour parcourir",
@@ -21,6 +25,50 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const getNormalizedFiles = (incomingFiles: File[]): File[] => {
+    if (!incomingFiles.length) return [];
+
+    const acceptTokens = accept
+      .split(',')
+      .map((token) => token.trim().toLowerCase())
+      .filter(Boolean);
+
+    if (!acceptTokens.length) return incomingFiles;
+
+    return incomingFiles.filter((file) => {
+      const fileName = file.name.toLowerCase();
+      const fileType = (file.type || '').toLowerCase();
+
+      return acceptTokens.some((token) => {
+        if (token === '*/*') return true;
+        if (token.endsWith('/*')) {
+          const typePrefix = token.slice(0, -1);
+          return fileType.startsWith(typePrefix);
+        }
+        if (token.startsWith('.')) {
+          return fileName.endsWith(token);
+        }
+        return fileType === token;
+      });
+    });
+  };
+
+  const dispatchFiles = (incomingFiles: File[]) => {
+    const normalizedFiles = getNormalizedFiles(incomingFiles);
+    if (!normalizedFiles.length) return;
+
+    if (multiple) {
+      if (onFilesSelect) {
+        onFilesSelect(normalizedFiles);
+      } else {
+        onFileSelect(normalizedFiles[0]);
+      }
+      return;
+    }
+
+    onFileSelect(normalizedFiles[0]);
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -35,15 +83,12 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      onFileSelect(e.dataTransfer.files[0]);
-    }
+    dispatchFiles(Array.from(e.dataTransfer.files || []));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      onFileSelect(e.target.files[0]);
-    }
+    dispatchFiles(Array.from(e.target.files || []));
+    e.target.value = '';
   };
 
   return (
@@ -63,6 +108,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         ref={fileInputRef}
         className="hidden"
         accept={accept}
+        multiple={multiple}
         onChange={handleFileChange}
         disabled={isProcessing}
       />

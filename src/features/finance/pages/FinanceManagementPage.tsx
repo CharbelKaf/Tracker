@@ -8,16 +8,22 @@ import Button from '../../../components/ui/Button';
 import { formatCurrency, calculateLinearDepreciation } from '../../../lib/financial';
 import { useToast } from '../../../context/ToastContext';
 import { useData } from '../../../context/DataContext';
+import { useConfirmation } from '../../../context/ConfirmationContext';
 import Badge from '../../../components/ui/Badge';
 import { cn } from '../../../lib/utils';
 import { AddExpenseModal } from '../components/AddExpenseModal';
 import { AddBudgetModal } from '../components/AddBudgetModal';
 import { PageTabs, TabItem } from '../../../components/ui/PageTabs';
 import SelectField from '../../../components/ui/SelectField';
+import InputField from '../../../components/ui/InputField';
+import Modal from '../../../components/ui/Modal';
+import { TextArea } from '../../../components/ui/TextArea';
 import SideSheet from '../../../components/ui/SideSheet';
 import Tooltip from '../../../components/ui/Tooltip';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
-import { FinanceExpense } from '../../../types';
+import { parseAmountString } from '../../../lib/expenseExtraction';
+import { getExpenseSourceFile } from '../../../lib/financeFileStorage';
+import { FinanceExpense, FinanceExpenseStatus, FinanceExpenseType } from '../../../types';
 
 // --- MOCK DATA ---
 
@@ -39,13 +45,116 @@ const classifyBudgetLine = (category: string, amount: number): 'CAPEX' | 'OPEX' 
     return amount > 5000 ? 'CAPEX' : 'OPEX';
 };
 
+const EXPENSE_TYPE_LABELS: Record<FinanceExpenseType, string> = {
+    Purchase: 'Achat',
+    License: 'Licence',
+    Maintenance: 'Maintenance',
+    Service: 'Service',
+    Cloud: 'Cloud',
+};
+
+const EXPENSE_TYPE_OPTIONS = [
+    { value: 'Purchase', label: 'Achat (CAPEX)' },
+    { value: 'License', label: 'Licence' },
+    { value: 'Maintenance', label: 'Maintenance' },
+    { value: 'Service', label: 'Service' },
+    { value: 'Cloud', label: 'Cloud' },
+];
+
+const EXPENSE_STATUS_OPTIONS = [
+    { value: 'Paid', label: 'Payée' },
+    { value: 'Pending', label: 'En attente' },
+    { value: 'Recurring', label: 'Récurrente' },
+];
+
+const getExpenseStatusLabel = (status: FinanceExpenseStatus): string => {
+    if (status === 'Paid') return 'Payée';
+    if (status === 'Pending') return 'En attente';
+    return 'Récurrente';
+};
+
+const getExpenseStatusVariant = (status: FinanceExpenseStatus): 'success' | 'warning' | 'info' => {
+    if (status === 'Paid') return 'success';
+    if (status === 'Pending') return 'warning';
+    return 'info';
+};
+
+const getExpenseTypeIcon = (type: FinanceExpenseType): string => {
+    if (type === 'Purchase') return 'work';
+    if (type === 'Cloud') return 'cloud_upload';
+    if (type === 'License') return 'vpn_key';
+    if (type === 'Maintenance') return 'build';
+    return 'layers';
+};
+
+const formatExpenseDate = (value: string): string => {
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) {
+        return value;
+    }
+    return new Intl.DateTimeFormat('fr-FR').format(parsedDate);
+};
+
+const formatExpenseAmount = (amount: number, currencyCode: string): string => {
+    const numericValue = Number(amount);
+    if (!Number.isFinite(numericValue)) {
+        return `0,00 ${currencyCode}`;
+    }
+
+    const sign = numericValue < 0 ? '-' : '';
+    const absolute = Math.abs(numericValue);
+    const fixed = absolute.toFixed(2);
+    const [integerPart, decimalPart] = fixed.split('.');
+    const groupedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${sign}${groupedInteger},${decimalPart} ${currencyCode}`;
+};
+
+const toExpenseDescriptionPreview = (value: string, maxLength = 88): string => {
+    const normalized = (value || '').trim();
+    if (normalized.length <= maxLength) {
+        return normalized;
+    }
+    return `${normalized.slice(0, maxLength).trimEnd()}...`;
+};
+
+const toExpenseDisplayTitle = (expense: FinanceExpense): string => {
+    const formattedDate = formatExpenseDate(expense.date);
+    const supplier = expense.supplier?.trim() || 'Fournisseur';
+    const title = `Dépense · ${supplier} · ${formattedDate}`;
+    return title.length > 56 ? `${title.slice(0, 56).trimEnd()}...` : title;
+};
+
+type ResolvedExpenseSource = {
+    url: string;
+    fileName: string;
+    revokeAfterUse: boolean;
+};
+
 const FinanceManagementPage = () => {
-    const { equipment, settings, financeExpenses, financeBudgets } = useData();
+    const {
+        equipment,
+        settings,
+        financeExpenses,
+        financeBudgets,
+        updateFinanceExpense,
+        deleteFinanceExpense,
+    } = useData();
     const { showToast } = useToast();
+    const { requestConfirmation } = useConfirmation();
     const [activeView, setActiveView] = useState<FinanceView>('overview');
     const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
     const [isAddBudgetModalOpen, setIsAddBudgetModalOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<FinanceExpense | null>(null);
+    const [editingExpense, setEditingExpense] = useState<FinanceExpense | null>(null);
+    const [expenseForm, setExpenseForm] = useState({
+        date: new Date().toISOString().split('T')[0],
+        supplier: '',
+        amount: '',
+        type: 'Purchase',
+        status: 'Paid',
+        description: '',
+        invoiceNumber: '',
+    });
     const isCompact = useMediaQuery('(max-width: 599px)');
 
     // Budget State
@@ -161,36 +270,274 @@ const FinanceManagementPage = () => {
         }
     };
 
+    const openExpenseEditor = (expense: FinanceExpense) => {
+        setEditingExpense(expense);
+        setExpenseForm({
+            date: expense.date,
+            supplier: expense.supplier,
+            amount: expense.amount.toFixed(2).replace('.', ','),
+            type: expense.type,
+            status: expense.status,
+            description: expense.description,
+            invoiceNumber: expense.invoiceNumber || '',
+        });
+    };
+
+    const closeExpenseEditor = () => {
+        setEditingExpense(null);
+        setExpenseForm({
+            date: new Date().toISOString().split('T')[0],
+            supplier: '',
+            amount: '',
+            type: 'Purchase',
+            status: 'Paid',
+            description: '',
+            invoiceNumber: '',
+        });
+    };
+
+    const handleExpenseFormChange = (field: keyof typeof expenseForm, value: string) => {
+        setExpenseForm((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleExpenseUpdate = () => {
+        if (!editingExpense) return;
+
+        const normalizedAmount = parseAmountString(expenseForm.amount);
+        if (!normalizedAmount || normalizedAmount <= 0) {
+            showToast('Le montant doit être supérieur à zéro.', 'error');
+            return;
+        }
+
+        if (!expenseForm.supplier.trim()) {
+            showToast('Le fournisseur est obligatoire.', 'error');
+            return;
+        }
+
+        const isUpdated = updateFinanceExpense(editingExpense.id, {
+            date: expenseForm.date,
+            supplier: expenseForm.supplier.trim(),
+            amount: normalizedAmount,
+            type: expenseForm.type as FinanceExpenseType,
+            status: expenseForm.status as FinanceExpenseStatus,
+            description: expenseForm.description.trim() || `Facture ${expenseForm.supplier.trim()}`,
+            invoiceNumber: expenseForm.invoiceNumber.trim() || undefined,
+        });
+
+        if (!isUpdated) {
+            showToast('Modification impossible: données invalides ou doublon détecté.', 'error');
+            return;
+        }
+
+        setSelectedExpense((prev) => {
+            if (!prev || prev.id !== editingExpense.id) return prev;
+            return {
+                ...prev,
+                date: expenseForm.date,
+                supplier: expenseForm.supplier.trim(),
+                amount: normalizedAmount,
+                type: expenseForm.type as FinanceExpenseType,
+                status: expenseForm.status as FinanceExpenseStatus,
+                description: expenseForm.description.trim() || `Facture ${expenseForm.supplier.trim()}`,
+                invoiceNumber: expenseForm.invoiceNumber.trim() || undefined,
+            };
+        });
+
+        showToast('Dépense mise à jour avec succès.', 'success');
+        closeExpenseEditor();
+    };
+
+    const handleDeleteExpense = (expense: FinanceExpense) => {
+        requestConfirmation({
+            title: 'Supprimer cette dépense ?',
+            message: `Cette action supprimera définitivement la dépense "${expense.supplier}" (${formatExpenseAmount(expense.amount, expense.currencyCode || settings.currency)}).`,
+            variant: 'danger',
+            confirmText: 'Supprimer',
+            cancelText: 'Annuler',
+            requireTyping: true,
+            typingKeyword: 'SUPPRIMER',
+            onConfirm: () => {
+                const isDeleted = deleteFinanceExpense(expense.id);
+                if (!isDeleted) {
+                    showToast('Suppression impossible.', 'error');
+                    return;
+                }
+
+                if (selectedExpense?.id === expense.id) {
+                    setSelectedExpense(null);
+                }
+                if (editingExpense?.id === expense.id) {
+                    closeExpenseEditor();
+                }
+                showToast('Dépense supprimée.', 'success');
+            },
+        });
+    };
+
+    const resolveExpenseSource = async (expense: FinanceExpense): Promise<ResolvedExpenseSource | null> => {
+        if (expense.sourceFileId) {
+            try {
+                const stored = await getExpenseSourceFile(expense.sourceFileId);
+                if (stored?.blob) {
+                    return {
+                        url: URL.createObjectURL(stored.blob),
+                        fileName: expense.sourceFileName || stored.name || `depense-${expense.id}.pdf`,
+                        revokeAfterUse: true,
+                    };
+                }
+            } catch {
+                // Ignore storage read errors and fallback to legacy URL.
+            }
+        }
+
+        if (expense.sourceFileUrl) {
+            return {
+                url: expense.sourceFileUrl,
+                fileName: expense.sourceFileName || `depense-${expense.id}.pdf`,
+                revokeAfterUse: false,
+            };
+        }
+
+        return null;
+    };
+
+    const handlePreviewSourceFile = async (expense: FinanceExpense) => {
+        const source = await resolveExpenseSource(expense);
+        if (!source) {
+            showToast('Prévisualisation indisponible: aucun fichier source enregistré.', 'warning');
+            return;
+        }
+
+        const previewWindow = window.open(source.url, '_blank', 'noopener,noreferrer');
+        if (!previewWindow) {
+            if (source.revokeAfterUse && source.url.startsWith('blob:')) {
+                URL.revokeObjectURL(source.url);
+            }
+            showToast('Prévisualisation bloquée par le navigateur.', 'warning');
+            return;
+        }
+
+        if (source.revokeAfterUse && source.url.startsWith('blob:')) {
+            window.setTimeout(() => URL.revokeObjectURL(source.url), 60_000);
+        }
+    };
+
+    const handleDownloadSourceFile = async (expense: FinanceExpense) => {
+        const source = await resolveExpenseSource(expense);
+        if (!source) {
+            showToast('Téléchargement indisponible: aucun fichier source enregistré.', 'warning');
+            return;
+        }
+
+        const link = document.createElement('a');
+        link.href = source.url;
+        link.download = source.fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        if (source.revokeAfterUse && source.url.startsWith('blob:')) {
+            window.setTimeout(() => URL.revokeObjectURL(source.url), 1_000);
+        }
+    };
+
     return (
         <div className="flex flex-col h-full bg-surface-background">
             <AddExpenseModal isOpen={isAddExpenseModalOpen} onClose={() => setIsAddExpenseModalOpen(false)} />
             <AddBudgetModal isOpen={isAddBudgetModalOpen} onClose={() => setIsAddBudgetModalOpen(false)} />
+            <Modal
+                isOpen={!!editingExpense}
+                onClose={closeExpenseEditor}
+                title={editingExpense ? `Modifier · ${toExpenseDisplayTitle(editingExpense)}` : 'Modifier la dépense'}
+                maxWidth="max-w-2xl"
+                footer={(
+                    <>
+                        <Button variant="outlined" onClick={closeExpenseEditor}>
+                            Annuler
+                        </Button>
+                        <Button variant="filled" onClick={handleExpenseUpdate}>
+                            Enregistrer
+                        </Button>
+                    </>
+                )}
+            >
+                <div className="grid grid-cols-1 medium:grid-cols-2 gap-4">
+                    <InputField
+                        label="Fournisseur"
+                        value={expenseForm.supplier}
+                        onChange={(event) => handleExpenseFormChange('supplier', event.target.value)}
+                        required
+                    />
+                    <InputField
+                        label="Date"
+                        type="date"
+                        value={expenseForm.date}
+                        onChange={(event) => handleExpenseFormChange('date', event.target.value)}
+                        required
+                    />
+                    <InputField
+                        label="Montant"
+                        value={expenseForm.amount}
+                        onChange={(event) => handleExpenseFormChange('amount', event.target.value)}
+                        supportingText="Format accepté: 1.000.000,00"
+                        required
+                    />
+                    <InputField
+                        label="Référence facture"
+                        value={expenseForm.invoiceNumber}
+                        onChange={(event) => handleExpenseFormChange('invoiceNumber', event.target.value)}
+                    />
+                    <SelectField
+                        name="expense-type-edit"
+                        label="Type"
+                        value={expenseForm.type}
+                        onChange={(event) => handleExpenseFormChange('type', event.target.value)}
+                        options={EXPENSE_TYPE_OPTIONS}
+                    />
+                    <SelectField
+                        name="expense-status-edit"
+                        label="Statut"
+                        value={expenseForm.status}
+                        onChange={(event) => handleExpenseFormChange('status', event.target.value)}
+                        options={EXPENSE_STATUS_OPTIONS}
+                    />
+                </div>
+                <div className="mt-4">
+                    <TextArea
+                        label="Description"
+                        value={expenseForm.description}
+                        onChange={(event) => handleExpenseFormChange('description', event.target.value)}
+                        rows={4}
+                    />
+                </div>
+            </Modal>
             <SideSheet
                 open={!!selectedExpense}
                 onClose={() => setSelectedExpense(null)}
-                title={selectedExpense ? `Dépense #${selectedExpense.id}` : 'Détail de dépense'}
+                title={selectedExpense ? toExpenseDisplayTitle(selectedExpense) : 'Détail de dépense'}
                 description="Vérification rapide d'une ligne du journal des dépenses."
                 width="standard"
+                className="expanded:!rounded-none"
                 footer={selectedExpense ? (
                     <div className="flex items-center justify-end gap-2">
-                        <Button variant="outlined" onClick={() => setSelectedExpense(null)}>
-                            Fermer
+                        <Button
+                            variant="tonal"
+                            onClick={() => openExpenseEditor(selectedExpense)}
+                        >
+                            Modifier
                         </Button>
                         <Button
-                            variant="filled"
-                            onClick={() => {
-                                showToast('Dépense marquée comme vérifiée.', 'success');
-                                setSelectedExpense(null);
-                            }}
+                            variant="danger"
+                            onClick={() => handleDeleteExpense(selectedExpense)}
                         >
-                            Marquer vérifiée
+                            Supprimer
                         </Button>
                     </div>
                 ) : undefined}
             >
                 {selectedExpense && (
                     <div className="space-y-6">
-                        <div className="rounded-md border border-outline-variant bg-surface-container-low p-4">
+                        <div className="border border-outline-variant bg-surface-container-low p-4">
                             <p className="text-label-small uppercase tracking-widest text-on-surface-variant mb-2">Description</p>
                             <p className="text-body-medium text-on-surface">{selectedExpense.description}</p>
                         </div>
@@ -202,30 +549,94 @@ const FinanceManagementPage = () => {
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-body-small text-on-surface-variant">Date</span>
-                                <span className="text-label-large text-on-surface">{selectedExpense.date}</span>
+                                <span className="text-label-large text-on-surface">{formatExpenseDate(selectedExpense.date)}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-body-small text-on-surface-variant">Type</span>
-                                <span className="text-label-large text-on-surface">{selectedExpense.type}</span>
+                                <span className="text-label-large text-on-surface">{EXPENSE_TYPE_LABELS[selectedExpense.type]}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-body-small text-on-surface-variant">Montant</span>
-                                <span className="text-title-medium text-on-surface">{formatCurrency(selectedExpense.amount, settings.currency)}</span>
+                                <span className="text-title-medium text-on-surface">
+                                    {formatExpenseAmount(selectedExpense.amount, selectedExpense.currencyCode || settings.currency)}
+                                </span>
                             </div>
+                            {selectedExpense.invoiceNumber ? (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-body-small text-on-surface-variant">Référence</span>
+                                    <span className="text-label-large text-on-surface">{selectedExpense.invoiceNumber}</span>
+                                </div>
+                            ) : null}
+                            {(selectedExpense.sourceFileName || selectedExpense.sourceFileId || selectedExpense.sourceFileUrl) ? (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <span className="text-body-small text-on-surface-variant">Fichier source</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                void handlePreviewSourceFile(selectedExpense);
+                                            }}
+                                            className="text-label-medium text-primary hover:underline truncate text-right"
+                                            title={selectedExpense.sourceFileName || 'Document source'}
+                                        >
+                                            {selectedExpense.sourceFileName || 'Document source'}
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <Button
+                                            variant="outlined"
+                                            size="sm"
+                                            onClick={() => {
+                                                void handlePreviewSourceFile(selectedExpense);
+                                            }}
+                                        >
+                                            Voir
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            size="sm"
+                                            onClick={() => {
+                                                void handleDownloadSourceFile(selectedExpense);
+                                            }}
+                                        >
+                                            Télécharger
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : null}
+                            {selectedExpense.extractionConfidence ? (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-body-small text-on-surface-variant">Confiance extraction</span>
+                                    <Badge
+                                        variant={
+                                            selectedExpense.extractionConfidence === 'high'
+                                                ? 'success'
+                                                : selectedExpense.extractionConfidence === 'medium'
+                                                    ? 'warning'
+                                                    : 'danger'
+                                        }
+                                    >
+                                        {selectedExpense.extractionConfidence === 'high'
+                                            ? 'Élevée'
+                                            : selectedExpense.extractionConfidence === 'medium'
+                                                ? 'Moyenne'
+                                                : 'Faible'}
+                                    </Badge>
+                                </div>
+                            ) : null}
+                            {(selectedExpense.extractionConfidence === 'medium' || selectedExpense.extractionConfidence === 'low') ? (
+                                <p className="text-label-small text-on-surface-variant">
+                                    Vérification recommandée du document source avant validation finale.
+                                </p>
+                            ) : null}
                         </div>
 
                         <div className="pt-2 border-t border-outline-variant">
                             <p className="text-label-small uppercase tracking-widest text-on-surface-variant mb-3">Statut</p>
                             <Badge
-                                variant={
-                                    selectedExpense.status === 'Paid'
-                                        ? 'success'
-                                        : selectedExpense.status === 'Pending'
-                                            ? 'warning'
-                                            : 'info'
-                                }
+                                variant={getExpenseStatusVariant(selectedExpense.status)}
                             >
-                                {selectedExpense.status}
+                                {getExpenseStatusLabel(selectedExpense.status)}
                             </Badge>
                         </div>
                     </div>
@@ -396,7 +807,7 @@ const FinanceManagementPage = () => {
                                         <div className="mt-4 p-4 bg-secondary-container rounded-xl border border-secondary/20 flex items-start gap-3">
                                             <MaterialIcon name="auto_awesome" size={18} className="text-secondary shrink-0 mt-0.5" />
                                             <p className="text-xs text-on-secondary-container leading-relaxed">
-                                                <strong>IA Note :</strong> La valeur du parc atteindra son point d'équilibre en <strong>Mai</strong>. Prévoyez une injection de capital de ~12kâ‚¬ pour maintenir la santé technologique.
+                                                <strong>IA Note :</strong> La valeur du parc atteindra son point d'équilibre en <strong>Mai</strong>. Prévoyez une injection de capital pour maintenir la santé technologique.
                                             </p>
                                         </div>
                                     </Card>
@@ -475,49 +886,67 @@ const FinanceManagementPage = () => {
                                                     <th className="px-6 py-4">Fournisseur</th>
                                                     <th className="px-6 py-4">Description</th>
                                                     <th className="px-6 py-4">Type</th>
-                                                    <th className="px-6 py-4">Montant</th>
+                                                    <th className="px-6 py-4 text-right">Montant</th>
                                                     <th className="px-6 py-4 text-center">Statut</th>
-                                                    <th className="px-6 py-4"></th>
+                                                    <th className="px-6 py-4 text-right">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-outline-variant">
-                                                {financeExpenses.map((exp) => (
-                                                    <tr key={exp.id} className="hover:bg-surface-container/50 transition-colors group">
-                                                        <td className="px-6 py-4 text-on-surface-variant font-mono text-xs">{exp.date}</td>
-                                                        <td className="px-6 py-4 font-bold text-on-surface">{exp.supplier}</td>
-                                                        <td className="px-6 py-4 text-on-surface-variant truncate max-w-[200px]">{exp.description}</td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center gap-2">
-                                                                {exp.type === 'Purchase' && <MaterialIcon name="work" size={14} className="text-secondary" />}
-                                                                {exp.type === 'Cloud' && <MaterialIcon name="cloud_upload" size={14} className="text-tertiary" />}
-                                                                {exp.type === 'License' && <MaterialIcon name="vpn_key" size={14} className="text-tertiary" />}
-                                                                {exp.type === 'Maintenance' && <MaterialIcon name="build" size={14} className="text-on-surface-variant" />}
-                                                                {exp.type === 'Service' && <MaterialIcon name="layers" size={14} className="text-on-surface-variant" />}
-                                                                <span className="text-xs font-medium">{exp.type}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 font-bold text-on-surface">{formatCurrency(exp.amount, settings.currency)}</td>
-                                                        <td className="px-6 py-4 text-center">
-                                                            <Badge variant={
-                                                                exp.status === 'Paid' ? 'success' :
-                                                                    exp.status === 'Pending' ? 'warning' : 'info'
-                                                            }>
-                                                                {exp.status}
-                                                            </Badge>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-right">
-                                                            <Button
-                                                                variant="outlined"
-                                                                size="sm"
-                                                                aria-label={`Voir le détail de la dépense ${exp.id}`}
-                                                                onClick={() => setSelectedExpense(exp)}
-                                                                className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                                            >
-                                                                <MaterialIcon name="chevron_right" size={16} />
-                                                            </Button>
+                                                {financeExpenses.length > 0 ? (
+                                                    financeExpenses.map((exp) => (
+                                                        <tr
+                                                            key={exp.id}
+                                                            className="hover:bg-surface-container/50 transition-colors group cursor-pointer"
+                                                            onClick={() => setSelectedExpense(exp)}
+                                                        >
+                                                            <td className="px-6 py-4 text-on-surface-variant font-mono text-xs whitespace-nowrap">
+                                                                {formatExpenseDate(exp.date)}
+                                                            </td>
+                                                            <td className="px-6 py-4 font-bold text-on-surface whitespace-nowrap">
+                                                                {exp.supplier}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-on-surface-variant max-w-[260px]">
+                                                                <span className="block truncate" title={exp.description}>
+                                                                    {toExpenseDescriptionPreview(exp.description)}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    <MaterialIcon name={getExpenseTypeIcon(exp.type)} size={14} className="text-on-surface-variant" />
+                                                                    <span className="text-xs font-medium whitespace-nowrap">{EXPENSE_TYPE_LABELS[exp.type]}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 font-bold text-on-surface text-right tabular-nums whitespace-nowrap">
+                                                                {formatExpenseAmount(exp.amount, exp.currencyCode || settings.currency)}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <Badge variant={getExpenseStatusVariant(exp.status)}>
+                                                                    {getExpenseStatusLabel(exp.status)}
+                                                                </Badge>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right">
+                                                                <Button
+                                                                    variant="text"
+                                                                    size="sm"
+                                                                    className="h-8 w-8 min-w-0 p-0 rounded-full text-error hover:bg-error-container/40"
+                                                                    aria-label={`Supprimer la dépense ${exp.id}`}
+                                                                    onClick={(event) => {
+                                                                        event.stopPropagation();
+                                                                        handleDeleteExpense(exp);
+                                                                    }}
+                                                                >
+                                                                    <MaterialIcon name="delete" size={16} />
+                                                                </Button>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan={7} className="px-6 py-10 text-center text-on-surface-variant">
+                                                            Aucune dépense enregistrée pour le moment.
                                                         </td>
                                                     </tr>
-                                                ))}
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>

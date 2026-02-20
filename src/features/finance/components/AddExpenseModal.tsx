@@ -10,7 +10,12 @@ import IconButton from '../../../components/ui/IconButton';
 import { useToast } from '../../../context/ToastContext';
 import { useData } from '../../../context/DataContext';
 import { FileDropzone } from '../../../components/ui/FileDropzone';
-import { extractExpenseDraftFromFile, ExtractedExpenseDraft } from '../../../lib/expenseExtraction';
+import {
+    extractExpenseDraftFromFile,
+    ExtractedExpenseDraft,
+    parseAmountString,
+} from '../../../lib/expenseExtraction';
+import { deleteExpenseSourceFile, saveExpenseSourceFile } from '../../../lib/financeFileStorage';
 import { FinanceExpenseType } from '../../../types';
 
 interface AddExpenseModalProps {
@@ -33,6 +38,21 @@ const MODE_OPTIONS = [
     { value: 'manual', label: 'Saisie', icon: 'description' },
 ];
 
+const getObjectUrlForFile = (file?: File | null): string | undefined => {
+    if (!file) return undefined;
+    try {
+        return URL.createObjectURL(file);
+    } catch {
+        return undefined;
+    }
+};
+
+type PreparedSourceFile = {
+    sourceFileId?: string;
+    sourceFileName?: string;
+    sourceFileUrl?: string;
+};
+
 export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClose }) => {
     const { showToast } = useToast();
     const { settings, addFinanceExpense } = useData();
@@ -40,7 +60,10 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
     const [mode, setMode] = useState<AddExpenseMode>('scan');
     const [isScanning, setIsScanning] = useState(false);
     const [scannedFile, setScannedFile] = useState<File | null>(null);
-    const [extractionMeta, setExtractionMeta] = useState<Pick<ExtractedExpenseDraft, 'confidence' | 'warnings'> | null>(null);
+    const [extractionMeta, setExtractionMeta] = useState<Pick<
+        ExtractedExpenseDraft,
+        'confidence' | 'warnings' | 'fieldConfidence' | 'source' | 'currencyCode' | 'textSource'
+    > | null>(null);
     const [isLowConfidenceReviewed, setIsLowConfidenceReviewed] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -52,8 +75,109 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
         invoiceNumber: '',
     });
 
-    const currencySymbol = settings.currency === 'USD' ? '$' : settings.currency === 'XOF' ? 'F' : '€';
+    const currencySymbol = settings.currency === 'USD' ? '$' : settings.currency === 'XOF' ? 'XOF' : '€';
     const requiresLowConfidenceReview = Boolean(scannedFile && extractionMeta?.confidence === 'low');
+
+    const confidenceLabel = (value: 'high' | 'medium' | 'low') => (
+        value === 'high' ? 'élevée' : value === 'medium' ? 'moyenne' : 'faible'
+    );
+
+    const textSourceLabel = (source: ExtractedExpenseDraft['textSource']) => {
+        if (source === 'native') return 'Texte natif';
+        if (source === 'ocr') return 'OCR';
+        if (source === 'hybrid') return 'Natif + OCR';
+        return 'Indéterminée';
+    };
+
+    const prepareSourceFile = async (file?: File | null): Promise<PreparedSourceFile> => {
+        if (!file) {
+            return {};
+        }
+
+        let sourceFileId: string | undefined;
+        try {
+            sourceFileId = await saveExpenseSourceFile(file);
+        } catch {
+            sourceFileId = undefined;
+        }
+
+        return {
+            sourceFileId,
+            sourceFileName: file.name,
+            sourceFileUrl: sourceFileId ? undefined : getObjectUrlForFile(file),
+        };
+    };
+
+    const cleanupPreparedSourceFile = async (prepared: PreparedSourceFile): Promise<void> => {
+        if (prepared.sourceFileId) {
+            try {
+                await deleteExpenseSourceFile(prepared.sourceFileId);
+            } catch {
+                // Ignore cleanup errors for already-removed records.
+            }
+        }
+        if (prepared.sourceFileUrl?.startsWith('blob:')) {
+            URL.revokeObjectURL(prepared.sourceFileUrl);
+        }
+    };
+
+    const applyDraftToForm = (file: File, extracted: ExtractedExpenseDraft) => {
+        setScannedFile(file);
+        setMode('manual');
+        setIsLowConfidenceReviewed(false);
+        setFormData({
+            type: extracted.type,
+            amount: extracted.amount,
+            supplier: extracted.supplier,
+            date: extracted.date,
+            description: extracted.description,
+            invoiceNumber: extracted.invoiceNumber,
+        });
+        setExtractionMeta({
+            confidence: extracted.confidence,
+            warnings: extracted.warnings,
+            fieldConfidence: extracted.fieldConfidence,
+            source: extracted.source,
+            currencyCode: extracted.currencyCode,
+            textSource: extracted.textSource,
+        });
+    };
+
+    const createExpenseFromDraft = async (file: File, extracted: ExtractedExpenseDraft) => {
+        const parsedAmount = parseAmountString(extracted.amount);
+        if (!parsedAmount || parsedAmount <= 0) {
+            return { ok: false as const, reason: 'invalid_amount' as const };
+        }
+
+        if (!extracted.supplier || extracted.supplier === 'Fournisseur non détecté') {
+            return { ok: false as const, reason: 'invalid_supplier' as const };
+        }
+
+        const preparedSource = await prepareSourceFile(file);
+        const inserted = addFinanceExpense({
+            date: extracted.date,
+            supplier: extracted.supplier.trim(),
+            amount: parsedAmount,
+            type: extracted.type,
+            status: 'Paid',
+            description: extracted.description.trim() || `Facture ${extracted.supplier.trim()}`,
+            invoiceNumber: extracted.invoiceNumber.trim() || undefined,
+            sourceFileName: preparedSource.sourceFileName,
+            sourceFileId: preparedSource.sourceFileId,
+            sourceFileUrl: preparedSource.sourceFileUrl,
+            currencyCode: extracted.currencyCode,
+            extractionSource: extracted.source,
+            textSource: extracted.textSource,
+            extractionConfidence: extracted.confidence,
+        });
+
+        if (!inserted.ok) {
+            await cleanupPreparedSourceFile(preparedSource);
+            return { ok: false as const, reason: 'duplicate' as const };
+        }
+
+        return { ok: true as const };
+    };
 
     const reset = () => {
         setMode('scan');
@@ -91,19 +215,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
             const extracted = await extractExpenseDraftFromFile(file);
 
             setIsScanning(false);
-            setMode('manual');
-            setFormData({
-                type: extracted.type,
-                amount: extracted.amount,
-                supplier: extracted.supplier,
-                date: extracted.date,
-                description: extracted.description,
-                invoiceNumber: extracted.invoiceNumber,
-            });
-            setExtractionMeta({
-                confidence: extracted.confidence,
-                warnings: extracted.warnings,
-            });
+            applyDraftToForm(file, extracted);
 
             if (extracted.confidence === 'high') {
                 showToast('Facture analysée avec succès.', 'success');
@@ -117,7 +229,72 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
         }
     };
 
-    const handleSubmit = () => {
+    const startBatchScan = async (files: File[]) => {
+        if (files.length <= 1) {
+            if (files[0]) {
+                await startScan(files[0]);
+            }
+            return;
+        }
+
+        setIsScanning(true);
+        setMode('scan');
+        setScannedFile(null);
+        setExtractionMeta(null);
+        setIsLowConfidenceReviewed(false);
+
+        let imported = 0;
+        let duplicates = 0;
+        let reviewRequired = 0;
+        let failed = 0;
+        let firstReviewItem: { file: File; draft: ExtractedExpenseDraft } | null = null;
+
+        for (const file of files) {
+            try {
+                const extracted = await extractExpenseDraftFromFile(file);
+                const coreAmount = parseAmountString(extracted.amount);
+                const needsReview = extracted.confidence === 'low'
+                    || !coreAmount
+                    || !extracted.supplier
+                    || extracted.supplier === 'Fournisseur non détecté';
+
+                if (needsReview) {
+                    reviewRequired += 1;
+                    if (!firstReviewItem) {
+                        firstReviewItem = { file, draft: extracted };
+                    }
+                    continue;
+                }
+
+                const created = await createExpenseFromDraft(file, extracted);
+                if (created.ok) {
+                    imported += 1;
+                } else if (created.reason === 'duplicate') {
+                    duplicates += 1;
+                } else {
+                    reviewRequired += 1;
+                    if (!firstReviewItem) {
+                        firstReviewItem = { file, draft: extracted };
+                    }
+                }
+            } catch {
+                failed += 1;
+            }
+        }
+
+        setIsScanning(false);
+
+        if (firstReviewItem) {
+            applyDraftToForm(firstReviewItem.file, firstReviewItem.draft);
+        }
+
+        showToast(
+            `Import lot: ${imported} ajoutées, ${duplicates} doublons, ${reviewRequired} à vérifier, ${failed} en échec.`,
+            reviewRequired > 0 || failed > 0 ? 'warning' : 'success',
+        );
+    };
+
+    const handleSubmit = async () => {
         if (requiresLowConfidenceReview && !isLowConfidenceReviewed) {
             showToast('Confirmez la revue manuelle des champs avant validation.', 'warning');
             return;
@@ -128,12 +305,13 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
             return;
         }
 
-        const parsedAmount = Number(formData.amount);
-        if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+        const parsedAmount = parseAmountString(formData.amount);
+        if (parsedAmount === null || parsedAmount <= 0) {
             showToast('Le montant doit être supérieur à zéro.', 'error');
             return;
         }
 
+        const preparedSource = await prepareSourceFile(scannedFile);
         const createdExpense = addFinanceExpense({
             date: formData.date,
             supplier: formData.supplier.trim(),
@@ -142,11 +320,17 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
             status: 'Paid',
             description: formData.description.trim() || `Facture ${formData.supplier.trim()}`,
             invoiceNumber: formData.invoiceNumber.trim() || undefined,
-            sourceFileName: scannedFile?.name,
+            sourceFileName: preparedSource.sourceFileName,
+            sourceFileId: preparedSource.sourceFileId,
+            sourceFileUrl: preparedSource.sourceFileUrl,
+            currencyCode: extractionMeta?.currencyCode,
+            extractionSource: extractionMeta?.source,
+            textSource: extractionMeta?.textSource,
             extractionConfidence: extractionMeta?.confidence,
         });
 
         if (!createdExpense.ok) {
+            await cleanupPreparedSourceFile(preparedSource);
             showToast('Dépense déjà importée. Aucun doublon ajouté.', 'warning');
             handleClose();
             return;
@@ -161,7 +345,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
             <Button variant="outlined" onClick={handleClose}>Annuler</Button>
             <Button
                 variant="filled"
-                onClick={handleSubmit}
+                onClick={() => {
+                    void handleSubmit();
+                }}
                 disabled={requiresLowConfidenceReview && !isLowConfidenceReviewed}
             >
                 Enregistrer la dépense
@@ -177,7 +363,11 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
             footer={mode === 'manual' ? footer : undefined}
             maxWidth="max-w-5xl"
         >
-            <div className="mb-6 rounded-xl border border-outline-variant bg-surface-container-low p-2">
+            <div className="mb-6 rounded-md border border-outline-variant bg-gradient-to-r from-surface-container-low to-surface-container p-3">
+                <div className="mb-2 flex items-center gap-2 text-label-small text-on-surface-variant uppercase tracking-widest">
+                    <MaterialIcon name="sync_alt" size={14} />
+                    Mode de saisie
+                </div>
                 <SegmentedButton
                     options={MODE_OPTIONS}
                     value={mode}
@@ -191,9 +381,11 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                     {!isScanning ? (
                         <FileDropzone
                             onFileSelect={startScan}
+                            onFilesSelect={startBatchScan}
+                            multiple
                             accept=".pdf,.jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff"
-                            label="Déposez votre facture ici"
-                            subLabel="Notre IA extraira automatiquement le montant et le fournisseur"
+                            label="Déposez vos factures ici"
+                            subLabel="Import unitaire ou en lot: extraction automatique des informations clés"
                             className="w-full h-64 border-outline-variant hover:border-primary"
                         />
                     ) : (
@@ -243,9 +435,19 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                                     <p className="text-xs text-tertiary truncate max-w-[260px]">{scannedFile.name}</p>
                                     {extractionMeta && (
                                         <p className="text-[11px] text-on-tertiary-container/80 mt-0.5">
-                                            Confiance: {extractionMeta.confidence === 'high' ? 'élevée' : extractionMeta.confidence === 'medium' ? 'moyenne' : 'faible'}
+                                            Confiance: {confidenceLabel(extractionMeta.confidence)}
                                         </p>
                                     )}
+                                    {extractionMeta?.currencyCode ? (
+                                        <p className="text-[11px] text-on-tertiary-container/80">
+                                            Devise détectée: {extractionMeta.currencyCode}
+                                        </p>
+                                    ) : null}
+                                    {extractionMeta ? (
+                                        <p className="text-[11px] text-on-tertiary-container/80">
+                                            Source lecture: {textSourceLabel(extractionMeta.textSource)}
+                                        </p>
+                                    ) : null}
                                 </div>
                             </div>
                             <IconButton
@@ -267,6 +469,12 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                         </div>
                     ) : null}
 
+                    {extractionMeta?.fieldConfidence ? (
+                        <div className="rounded-xl border border-outline-variant bg-surface-container-low px-3 py-2 text-[11px] text-on-surface-variant">
+                            Champs détectés: fournisseur {confidenceLabel(extractionMeta.fieldConfidence.supplier)} · montant {confidenceLabel(extractionMeta.fieldConfidence.amount)} · référence {confidenceLabel(extractionMeta.fieldConfidence.invoiceNumber)} · date {confidenceLabel(extractionMeta.fieldConfidence.date)}
+                        </div>
+                    ) : null}
+
                     {requiresLowConfidenceReview ? (
                         <label className="flex items-start gap-2 rounded-xl border border-outline-variant bg-surface-container-low px-3 py-2 text-xs text-on-surface-variant">
                             <input
@@ -281,20 +489,47 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                         </label>
                     ) : null}
 
-                    <div className="grid grid-cols-1 expanded:grid-cols-2 gap-4">
+                    <div className="border border-primary/25 bg-primary-container/10 p-4">
+                        <div className="mb-3 flex items-center gap-2">
+                            <MaterialIcon name="priority_high" size={16} className="text-primary" />
+                            <p className="text-label-medium uppercase tracking-widest text-on-surface">Champs critiques</p>
+                        </div>
+                        <div className="grid grid-cols-1 expanded:grid-cols-3 gap-4">
+                            <InputField
+                                label={`Montant (${currencySymbol}) *`}
+                                type="number"
+                                value={formData.amount}
+                                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                placeholder="0.00"
+                                required
+                            />
+                            <InputField
+                                label="Fournisseur *"
+                                value={formData.supplier}
+                                onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                                placeholder="Ex: Dell Technologies"
+                                required
+                            />
+                            <InputField
+                                label="Date *"
+                                type="date"
+                                value={formData.date}
+                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 expanded:grid-cols-2 gap-4 border border-outline-variant bg-surface-container-low p-4">
+                        <div className="expanded:col-span-2 mb-1 flex items-center gap-2">
+                            <MaterialIcon name="tune" size={16} className="text-on-surface-variant" />
+                            <p className="text-label-medium uppercase tracking-widest text-on-surface-variant">Détails complémentaires</p>
+                        </div>
                         <InputField
-                            label="Date *"
-                            type="date"
-                            value={formData.date}
-                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            required
-                        />
-                        <InputField
-                            label="Fournisseur *"
-                            value={formData.supplier}
-                            onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                            placeholder="Ex: Dell Technologies"
-                            required
+                            label="N° Facture (optionnel)"
+                            value={formData.invoiceNumber}
+                            onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
+                            placeholder="INV-2024-001"
                         />
                         <SelectField
                             label="Type de dépense *"
@@ -305,23 +540,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                             placeholder="Sélectionner un type"
                             required
                         />
-                        <InputField
-                            label={`Montant (${currencySymbol}) *`}
-                            type="number"
-                            value={formData.amount}
-                            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                            placeholder="0.00"
-                            required
-                        />
-                        <InputField
-                            label="N° Facture"
-                            value={formData.invoiceNumber}
-                            onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
-                            placeholder="INV-2024-001"
-                        />
                         <div className="expanded:col-span-2">
                             <TextArea
-                                label="Description"
+                                label="Description (optionnelle)"
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 rows={3}

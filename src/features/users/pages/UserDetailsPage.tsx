@@ -381,13 +381,15 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onEqu
                         />
 
                         <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <img
-                                src={user.avatar}
-                                alt={user.name}
-                                loading="lazy"
-                                decoding="async"
-                                className="w-10 h-10 rounded-full border-2 border-surface shadow-elevation-1 bg-surface-container object-cover"
-                            />
+                            <div className="relative shrink-0">
+                                <img
+                                    src={user.avatar}
+                                    alt={user.name}
+                                    loading="lazy"
+                                    decoding="async"
+                                    className="w-10 h-10 rounded-full border-2 border-surface shadow-elevation-1 bg-surface-container object-cover"
+                                />
+                            </div>
                             <div className="min-w-0">
                                 <h1 className="text-title-small text-on-surface font-bold truncate">{user.name}</h1>
                                 <p className="text-label-small text-on-surface-variant truncate">{user.role} • {user.department}</p>
@@ -448,11 +450,6 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ userId, onBack, onEqu
                                         decoding="async"
                                         className="w-24 h-24 large:w-32 large:h-32 rounded-full border-4 border-surface shadow-elevation-2 bg-surface-container object-cover"
                                     />
-                                    {user.role === 'SuperAdmin' && (
-                                        <div className="absolute bottom-1 right-1 bg-tertiary text-on-tertiary p-1.5 rounded-full border-2 border-surface shadow-elevation-1 animate-in fade-in zoom-in" title="SuperAdmin">
-                                            <MaterialIcon name="shield" size={16} fill />
-                                        </div>
-                                    )}
                                 </div>
                             )}
                             title={user.name}

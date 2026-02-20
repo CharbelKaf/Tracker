@@ -46,7 +46,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
                 // Vertical spacing
                 "!py-3",
                 // Horizontal spacing
-                isCollapsed ? "!w-12 !mx-auto !px-0 !justify-center" : "!w-full !px-4 !justify-start",
+                isCollapsed
+                    ? "!w-12 !h-12 !min-h-12 !mx-auto !px-0 !py-0 !justify-center !gap-0"
+                    : "!w-full !px-4 !justify-start",
                 // MD3 Active: secondaryContainer background, onSecondaryContainer text
                 active
                     ? "!bg-secondary-container !text-on-secondary-container !ring-1 !ring-secondary/35 !shadow-elevation-1"

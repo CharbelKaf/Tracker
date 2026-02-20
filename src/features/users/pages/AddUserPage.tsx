@@ -261,20 +261,6 @@ const AddUserPage: React.FC<AddUserPageProps> = ({ userId, onCancel, onSave }) =
                                 placeholder="+221 77 000 00 00"
                                 icon={<MaterialIcon name="phone" size={18} />}
                             />
-
-                            {/* Manager Field is read-only and visually distinct from interactive fields */}
-                            <div className="rounded-md border border-outline-variant bg-surface-container-low px-4 py-3">
-                                <div className="flex items-center justify-between gap-3">
-                                    <label className="text-label-large text-on-surface">Manager direct (N+1)</label>
-                                    <MaterialIcon name="lock" size={16} className="text-on-surface-variant" />
-                                </div>
-                                <p className="mt-1 text-body-medium text-on-surface">
-                                    {formData.department ? (assignedManagerName || 'Aucun manager configuré') : 'Sélectionnez un service pour attribuer le manager'}
-                                </p>
-                                <p className="mt-1 text-label-small text-on-surface-variant italic">
-                                    Déterminé automatiquement par le service.
-                                </p>
-                            </div>
                         </div>
                     </section>
 
@@ -286,7 +272,7 @@ const AddUserPage: React.FC<AddUserPageProps> = ({ userId, onCancel, onSave }) =
                             <h2 className="font-bold text-on-surface text-title-medium">Affectation géographique</h2>
                         </div>
 
-                        <div className="grid grid-cols-1 medium:grid-cols-2 expanded:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 medium:grid-cols-2 large:grid-cols-3 gap-6">
                             <SelectField
                                 label="Pays"
                                 name="country"
@@ -304,7 +290,7 @@ const AddUserPage: React.FC<AddUserPageProps> = ({ userId, onCancel, onSave }) =
                                 value={formData.site}
                                 onChange={handleChange}
                                 disabled={!formData.country}
-                                placeholder={!formData.country ? "Choisir pays" : "Choisir site"}
+                                placeholder="Choisir site"
                                 required
                                 error={errors.site}
                             />
@@ -316,8 +302,19 @@ const AddUserPage: React.FC<AddUserPageProps> = ({ userId, onCancel, onSave }) =
                                 value={formData.department}
                                 onChange={handleChange}
                                 disabled={!formData.site}
-                                placeholder={!formData.site ? "Choisir site" : "Département"}
+                                placeholder="Choisir service"
                             />
+
+                            <div className="medium:col-span-2 large:col-span-3">
+                                <InputField
+                                    label="Manager direct (N+1)"
+                                    name="managerId"
+                                    value={formData.department ? (assignedManagerName || 'Aucun manager configuré') : 'Sélectionnez un service'}
+                                    disabled
+                                    icon={<MaterialIcon name="account_tree" size={18} />}
+                                    supportingText="Ce champ est alimenté automatiquement selon le service sélectionné."
+                                />
+                            </div>
                         </div>
                     </section>
                 </div>

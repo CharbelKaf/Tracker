@@ -27,6 +27,7 @@ import {
     getEquipmentUpdatesForApprovalStatus,
     MANAGER_VALIDATION_PENDING_STATUSES,
 } from '../lib/businessRules';
+import { deleteExpenseSourceFile } from '../lib/financeFileStorage';
 
 // Structure des données de localisation pour la cascade
 interface LocationData {
@@ -76,6 +77,8 @@ interface DataContextType {
     // Global Settings
     updateSettings: (newSettings: Partial<AppSettings>) => void;
     addFinanceExpense: (expense: Omit<FinanceExpense, 'id' | 'createdAt'>) => FinanceExpenseInsertResult;
+    updateFinanceExpense: (id: string, updates: Partial<Omit<FinanceExpense, 'id' | 'createdAt'>>) => boolean;
+    deleteFinanceExpense: (id: string) => boolean;
     upsertFinanceBudget: (budget: Omit<FinanceBudget, 'updatedAt'> & { updatedAt?: string }) => void;
 }
 
@@ -84,7 +87,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const DEFAULT_SETTINGS: AppSettings = {
     theme: 'system',
     accentColor: 'yellow',
-    currency: 'EUR',
+    currency: 'XOF',
     fiscalYearStart: '01',
     defaultDepreciationMethod: 'linear',
     defaultDepreciationYears: 3,
@@ -158,6 +161,94 @@ const buildExpenseFingerprint = (expense: Pick<FinanceExpense, 'supplier' | 'inv
     return `${supplier}|${invoice}|${amount}|${date}`;
 };
 
+const resolveExpenseYear = (date: string): number => {
+    const parsedYear = Number(date?.slice(0, 4));
+    if (Number.isFinite(parsedYear) && parsedYear > 0) {
+        return parsedYear;
+    }
+    return new Date().getFullYear();
+};
+
+const adjustBudgetWithExpense = (
+    budgets: FinanceBudget[],
+    expense: Pick<FinanceExpense, 'date' | 'type' | 'amount'>,
+    direction: 1 | -1,
+    updatedAt: string
+): FinanceBudget[] => {
+    const expenseYear = resolveExpenseYear(expense.date);
+    const budgetCategory = getBudgetCategoryByExpenseType(expense.type);
+    const normalizedAmount = Math.max(0, Number(expense.amount) || 0);
+
+    if (normalizedAmount <= 0) {
+        return budgets;
+    }
+
+    const existingBudget = budgets.find((budget) => budget.year === expenseYear);
+
+    if (!existingBudget) {
+        if (direction < 0) {
+            return budgets;
+        }
+
+        const createdBudget: FinanceBudget = {
+            year: expenseYear,
+            status: expenseYear < new Date().getFullYear() ? 'Clôturé' : 'En cours',
+            totalAllocated: normalizedAmount,
+            items: [
+                {
+                    category: budgetCategory,
+                    type: expense.type,
+                    allocated: normalizedAmount,
+                    spent: normalizedAmount,
+                },
+            ],
+            updatedAt,
+        };
+
+        return [createdBudget, ...budgets].sort((a, b) => b.year - a.year);
+    }
+
+    const hasCategory = existingBudget.items.some((item) => item.category === budgetCategory);
+
+    const nextItems = hasCategory
+        ? existingBudget.items.map((item) => {
+            if (item.category !== budgetCategory) {
+                return item;
+            }
+
+            return {
+                ...item,
+                spent: direction > 0
+                    ? item.spent + normalizedAmount
+                    : Math.max(0, item.spent - normalizedAmount),
+            };
+        })
+        : direction > 0
+            ? [
+                ...existingBudget.items,
+                {
+                    category: budgetCategory,
+                    type: expense.type,
+                    allocated: normalizedAmount,
+                    spent: normalizedAmount,
+                },
+            ]
+            : existingBudget.items;
+
+    const nextBudget: FinanceBudget = {
+        ...existingBudget,
+        items: nextItems,
+        totalAllocated: direction > 0 && !hasCategory
+            ? existingBudget.totalAllocated + normalizedAmount
+            : existingBudget.totalAllocated,
+        updatedAt,
+    };
+
+    return budgets
+        .map((budget) => budget.year === expenseYear ? nextBudget : budget)
+        .sort((a, b) => b.year - a.year);
+};
+
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { currentUser } = useAuth();
 
@@ -165,7 +256,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [settings, setSettings] = useState<AppSettings>(() => {
         try {
             const saved = getPersistedValue(STORAGE_KEYS.settings.current, STORAGE_KEYS.settings.legacy);
-            return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+            return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved), currency: 'XOF' } : DEFAULT_SETTINGS;
         } catch {
             return DEFAULT_SETTINGS;
         }
@@ -399,7 +490,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
-        setSettings(prev => ({ ...prev, ...newSettings }));
+        setSettings(prev => ({ ...prev, ...newSettings, currency: 'XOF' }));
     }, []);
 
     const addFinanceExpense = useCallback((expenseData: Omit<FinanceExpense, 'id' | 'createdAt'>): FinanceExpenseInsertResult => {
@@ -541,6 +632,147 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             expense: newExpense,
         };
     }, [currentUser, logEvent, financeExpenses]);
+
+    const updateFinanceExpense = useCallback((id: string, updates: Partial<Omit<FinanceExpense, 'id' | 'createdAt'>>) => {
+        const existingExpense = financeExpenses.find((expense) => expense.id === id);
+        if (!existingExpense) {
+            return false;
+        }
+
+        const now = new Date().toISOString();
+        const mergedExpense: FinanceExpense = {
+            ...existingExpense,
+            ...updates,
+            id: existingExpense.id,
+            createdAt: existingExpense.createdAt,
+            supplier: typeof updates.supplier === 'string' ? updates.supplier.trim() : existingExpense.supplier,
+            description: typeof updates.description === 'string' ? updates.description.trim() : existingExpense.description,
+            invoiceNumber: typeof updates.invoiceNumber === 'string'
+                ? (updates.invoiceNumber.trim() || undefined)
+                : existingExpense.invoiceNumber,
+            amount: updates.amount !== undefined ? Number(updates.amount) : existingExpense.amount,
+        };
+
+        if (!Number.isFinite(mergedExpense.amount) || mergedExpense.amount <= 0) {
+            return false;
+        }
+
+        const updatedFingerprint = buildExpenseFingerprint({
+            supplier: mergedExpense.supplier,
+            invoiceNumber: mergedExpense.invoiceNumber,
+            amount: mergedExpense.amount,
+            date: mergedExpense.date,
+        });
+
+        const duplicateExpense = financeExpenses.find((existing) => {
+            if (existing.id === id) {
+                return false;
+            }
+
+            if (existing.importFingerprint && existing.importFingerprint === updatedFingerprint) {
+                return true;
+            }
+
+            const sameInvoice = existing.invoiceNumber
+                && mergedExpense.invoiceNumber
+                && normalizeValueForFingerprint(existing.invoiceNumber) === normalizeValueForFingerprint(mergedExpense.invoiceNumber);
+            const sameSupplier = normalizeValueForFingerprint(existing.supplier) === normalizeValueForFingerprint(mergedExpense.supplier);
+            const sameAmount = Number(existing.amount).toFixed(2) === Number(mergedExpense.amount).toFixed(2);
+            const sameDate = existing.date === mergedExpense.date;
+
+            if (sameInvoice && sameSupplier && sameAmount) return true;
+            return sameSupplier && sameAmount && sameDate;
+        });
+
+        if (duplicateExpense) {
+            return false;
+        }
+
+        const finalExpense: FinanceExpense = {
+            ...mergedExpense,
+            importFingerprint: updatedFingerprint,
+        };
+
+        setFinanceExpenses((prev) => prev.map((expense) => expense.id === id ? finalExpense : expense));
+        setFinanceBudgets((prev) => {
+            const removed = adjustBudgetWithExpense(prev, existingExpense, -1, now);
+            return adjustBudgetWithExpense(removed, finalExpense, 1, now);
+        });
+
+        logEvent({
+            type: 'UPDATE',
+            actorId: currentUser?.id || 'system',
+            actorName: currentUser?.name || 'Système',
+            actorRole: currentUser?.role || 'Admin',
+            targetType: 'SYSTEM',
+            targetId: finalExpense.id,
+            targetName: `Dépense ${finalExpense.supplier}`,
+            description: `Dépense mise à jour (${finalExpense.supplier})`,
+            metadata: {
+                amount: {
+                    from: existingExpense.amount,
+                    to: finalExpense.amount,
+                },
+                supplier: {
+                    from: existingExpense.supplier,
+                    to: finalExpense.supplier,
+                },
+                date: {
+                    from: existingExpense.date,
+                    to: finalExpense.date,
+                },
+            },
+            isSystem: false,
+            isSensitive: false,
+        });
+
+        return true;
+    }, [currentUser, financeExpenses, logEvent]);
+
+    const deleteFinanceExpense = useCallback((id: string) => {
+        const existingExpense = financeExpenses.find((expense) => expense.id === id);
+        if (!existingExpense) {
+            return false;
+        }
+
+        if (existingExpense.sourceFileId) {
+            void deleteExpenseSourceFile(existingExpense.sourceFileId).catch(() => {
+                // Ignore cleanup failures; expense deletion must stay deterministic.
+            });
+        }
+
+        if (typeof existingExpense.sourceFileUrl === 'string' && existingExpense.sourceFileUrl.startsWith('blob:')) {
+            try {
+                URL.revokeObjectURL(existingExpense.sourceFileUrl);
+            } catch {
+                // Ignore URL revocation errors for stale blob handles.
+            }
+        }
+
+        const now = new Date().toISOString();
+        setFinanceExpenses((prev) => prev.filter((expense) => expense.id !== id));
+        setFinanceBudgets((prev) => adjustBudgetWithExpense(prev, existingExpense, -1, now));
+
+        logEvent({
+            type: 'DELETE',
+            actorId: currentUser?.id || 'system',
+            actorName: currentUser?.name || 'Système',
+            actorRole: currentUser?.role || 'Admin',
+            targetType: 'SYSTEM',
+            targetId: existingExpense.id,
+            targetName: `Dépense ${existingExpense.supplier}`,
+            description: `Dépense supprimée (${existingExpense.supplier})`,
+            metadata: {
+                amount: existingExpense.amount,
+                type: existingExpense.type,
+                date: existingExpense.date,
+            },
+            isSystem: false,
+            isSensitive: true,
+        });
+
+        return true;
+    }, [currentUser, financeExpenses, logEvent]);
 
     const upsertFinanceBudget = useCallback((budgetData: Omit<FinanceBudget, 'updatedAt'> & { updatedAt?: string }) => {
         const updatedBudget: FinanceBudget = {
@@ -1157,8 +1389,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteModel,
         updateSettings,
         addFinanceExpense,
+        updateFinanceExpense,
+        deleteFinanceExpense,
         upsertFinanceBudget,
-    }), [users, equipment, categories, models, approvals, events, locationData, serviceManagers, settings, financeExpenses, financeBudgets, addUser, updateUser, deleteUser, addEquipment, updateEquipment, deleteEquipment, updateApproval, addApproval, logEvent, addLocation, renameLocation, deleteLocation, assignManagerToService, addCategory, updateCategory, deleteCategory, addModel, updateModel, deleteModel, updateSettings, addFinanceExpense, upsertFinanceBudget]);
+    }), [users, equipment, categories, models, approvals, events, locationData, serviceManagers, settings, financeExpenses, financeBudgets, addUser, updateUser, deleteUser, addEquipment, updateEquipment, deleteEquipment, updateApproval, addApproval, logEvent, addLocation, renameLocation, deleteLocation, assignManagerToService, addCategory, updateCategory, deleteCategory, addModel, updateModel, deleteModel, updateSettings, addFinanceExpense, updateFinanceExpense, deleteFinanceExpense, upsertFinanceBudget]);
 
     return (
         <DataContext.Provider value={contextValue}>

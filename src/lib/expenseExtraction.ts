@@ -18,6 +18,8 @@ export interface ExtractedExpenseDraft {
     date: string;
     type: FinanceExpenseType;
     description: string;
+    currencyCode?: string;
+    textSource: DocumentExtractionSource;
     confidence: ExtractionConfidence;
     fieldConfidence: {
         supplier: ExtractionConfidence;
@@ -87,7 +89,21 @@ const normalizeTokenNumber = (token: string): number | null => {
     return Number.isFinite(parsed) ? parsed : null;
 };
 
+export const parseAmountString = (value: string): number | null => {
+    return normalizeTokenNumber(value);
+};
+
 const normalizeWhitespace = (value: string): string => {
+    return value
+        .replace(/\r/g, '\n')
+        .split('\n')
+        .map((line) => line.replace(/\s+/g, ' ').trim())
+        .filter(Boolean)
+        .join('\n')
+        .trim();
+};
+
+const normalizeInlineWhitespace = (value: string): string => {
     return value.replace(/\s+/g, ' ').trim();
 };
 
@@ -257,7 +273,7 @@ const extractFromFilename = (normalizedName: string): {
         .filter((value): value is number => value !== null && value > 0);
 
     const amount = amountCandidates.length ? Math.max(...amountCandidates) : null;
-    const supplier = normalizeWhitespace(
+    const supplier = normalizeInlineWhitespace(
         normalizedName
             .replace(/\d[\d\s.,]*/g, ' ')
             .replace(/\b(inv|invoice|facture|fact|bill|doc)\b/gi, ' '),
@@ -277,7 +293,7 @@ const extractFromFilename = (normalizedName: string): {
 const extractInvoiceNumberFromText = (text: string): string => {
     for (const pattern of INVOICE_NUMBER_PATTERNS) {
         const match = text.match(pattern);
-        if (match?.[1]) return normalizeWhitespace(match[1]).toUpperCase();
+        if (match?.[1]) return normalizeInlineWhitespace(match[1]).toUpperCase();
     }
     return '';
 };
@@ -300,7 +316,7 @@ const extractAmountFromText = (text: string): number | null => {
 };
 
 const cleanSupplierCandidate = (value: string): string => {
-    const cleaned = normalizeWhitespace(
+    const cleaned = normalizeInlineWhitespace(
         value
             .replace(/[:|]/g, ' ')
             .replace(/[0-9]/g, ' ')
@@ -325,7 +341,7 @@ const extractSupplierFromText = (text: string): string => {
 
     const lines = text
         .split(/\r?\n/)
-        .map((line) => normalizeWhitespace(line))
+        .map((line) => normalizeInlineWhitespace(line))
         .filter(Boolean)
         .slice(0, 15);
 
@@ -427,6 +443,11 @@ export const extractExpenseDraftFromFile = async (file: File): Promise<Extracted
         ? (fromFilename.amount || fromFilename.invoiceNumber ? 'hybrid' : 'content')
         : 'filename';
 
+    const descriptionParts = [
+        invoiceNumber ? `Réf ${invoiceNumber}` : null,
+        supplier && supplier !== 'Fournisseur non détecté' ? supplier : null,
+    ].filter(Boolean);
+    const descriptionPrefix = descriptionParts.length ? `${descriptionParts.join(' · ')} · ` : '';
     const descriptionCurrencySuffix = detectedCurrency ? ` (${detectedCurrency})` : '';
 
     return {
@@ -435,7 +456,9 @@ export const extractExpenseDraftFromFile = async (file: File): Promise<Extracted
         invoiceNumber,
         date,
         type,
-        description: `Facture importée depuis ${file.name}${descriptionCurrencySuffix}`,
+        description: `${descriptionPrefix}Facture importée depuis ${file.name}${descriptionCurrencySuffix}`,
+        currencyCode: detectedCurrency || undefined,
+        textSource: extractedTextSource,
         confidence,
         fieldConfidence,
         warnings: Array.from(new Set(warnings)),

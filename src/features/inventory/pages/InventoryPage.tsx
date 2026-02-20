@@ -291,7 +291,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ onViewChange, onEquipment
                             <SearchFilterBar
                                 searchValue={searchQuery}
                                 onSearchChange={setSearchQuery}
-                                onFilterClick={() => setShowFilters(!showFilters)}
+                                onFilterClick={() => setShowFilters((prev) => !prev)}
                                 filterActive={showFilters}
                                 placeholder="Rechercher..."
                             />
@@ -301,7 +301,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ onViewChange, onEquipment
                     <SearchFilterBar
                         searchValue={searchQuery}
                         onSearchChange={setSearchQuery}
-                        onFilterClick={() => setShowFilters(!showFilters)}
+                        onFilterClick={() => setShowFilters((prev) => !prev)}
                         filterActive={showFilters}
                         resultCount={filteredEquipment.length}
                         placeholder="Rechercher..."

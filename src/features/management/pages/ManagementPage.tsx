@@ -57,6 +57,7 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ onCategoryClick, onMode
     const [activeTab, setActiveTab] = useState<ManagementTab>('categories');
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
     const [categorySort, setCategorySort] = useState<CategorySortValue>('name-asc');
     const [categoryMethodFilter, setCategoryMethodFilter] = useState<CategoryMethodFilter>('');
     const [modelTypeFilter, setModelTypeFilter] = useState('');
@@ -710,48 +711,52 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ onCategoryClick, onMode
                                     <SearchFilterBar
                                         searchValue={searchQuery}
                                         onSearchChange={setSearchQuery}
+                                        onFilterClick={() => setShowFilters((prev) => !prev)}
+                                        filterActive={showFilters}
                                         placeholder="Rechercher des catégories..."
                                         resultCount={filteredCategories.length}
                                         className="flex-1"
                                     />
-                                    <div className="flex flex-col medium:flex-row items-stretch medium:items-center gap-2">
-                                        <SelectFilter
-                                            options={[
-                                                { value: '', label: 'Toutes les méthodes' },
-                                                { value: 'linear', label: 'Linéaire' },
-                                                { value: 'degressive', label: 'Dégressif' },
-                                            ]}
-                                            value={categoryMethodFilter}
-                                            onChange={(value) => setCategoryMethodFilter(value as CategoryMethodFilter)}
-                                            placeholder="Méthode"
-                                            className="w-full medium:w-auto"
-                                        />
-                                        <SelectFilter
-                                            options={[
-                                                { value: 'name-asc', label: 'Nom (A-Z)' },
-                                                { value: 'name-desc', label: 'Nom (Z-A)' },
-                                                { value: 'depreciation-asc', label: 'Amortissement (court)' },
-                                                { value: 'depreciation-desc', label: 'Amortissement (long)' },
-                                            ]}
-                                            value={categorySort}
-                                            onChange={(value) => setCategorySort(value as CategorySortValue)}
-                                            placeholder="Trier"
-                                            className="w-full medium:w-auto"
-                                        />
-                                        {(searchQuery || categorySort !== 'name-asc' || categoryMethodFilter !== '') && (
-                                            <Button
-                                                variant="text"
+                                    {showFilters && (
+                                        <div className="flex flex-col medium:flex-row items-stretch medium:items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-short4">
+                                            <SelectFilter
+                                                options={[
+                                                    { value: '', label: 'Toutes les méthodes' },
+                                                    { value: 'linear', label: 'Linéaire' },
+                                                    { value: 'degressive', label: 'Dégressif' },
+                                                ]}
+                                                value={categoryMethodFilter}
+                                                onChange={(value) => setCategoryMethodFilter(value as CategoryMethodFilter)}
+                                                placeholder="Méthode"
                                                 className="w-full medium:w-auto"
-                                                onClick={() => {
-                                                    setSearchQuery('');
-                                                    setCategorySort('name-asc');
-                                                    setCategoryMethodFilter('');
-                                                }}
-                                            >
-                                                Réinitialiser
-                                            </Button>
-                                        )}
-                                    </div>
+                                            />
+                                            <SelectFilter
+                                                options={[
+                                                    { value: 'name-asc', label: 'Nom (A-Z)' },
+                                                    { value: 'name-desc', label: 'Nom (Z-A)' },
+                                                    { value: 'depreciation-asc', label: 'Amortissement (court)' },
+                                                    { value: 'depreciation-desc', label: 'Amortissement (long)' },
+                                                ]}
+                                                value={categorySort}
+                                                onChange={(value) => setCategorySort(value as CategorySortValue)}
+                                                placeholder="Trier"
+                                                className="w-full medium:w-auto"
+                                            />
+                                            {(searchQuery || categorySort !== 'name-asc' || categoryMethodFilter !== '') && (
+                                                <Button
+                                                    variant="text"
+                                                    className="w-full medium:w-auto"
+                                                    onClick={() => {
+                                                        setSearchQuery('');
+                                                        setCategorySort('name-asc');
+                                                        setCategoryMethodFilter('');
+                                                    }}
+                                                >
+                                                    Réinitialiser
+                                                </Button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {selectionMode && (
@@ -890,31 +895,35 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ onCategoryClick, onMode
                                     <SearchFilterBar
                                         searchValue={searchQuery}
                                         onSearchChange={setSearchQuery}
+                                        onFilterClick={() => setShowFilters((prev) => !prev)}
+                                        filterActive={showFilters}
                                         placeholder="Rechercher des modèles..."
                                         resultCount={filteredModels.length}
                                         className="flex-1"
                                     />
-                                    <div className="flex flex-col medium:flex-row items-stretch medium:items-center gap-2">
-                                        <SelectFilter
-                                            options={[{ value: '', label: 'Tous les types' }, ...modelTypeOptions]}
-                                            value={modelTypeFilter}
-                                            onChange={setModelTypeFilter}
-                                            placeholder="Type"
-                                            className="w-full medium:w-auto"
-                                        />
-                                        {(searchQuery || modelTypeFilter !== '') && (
-                                            <Button
-                                                variant="text"
+                                    {showFilters && (
+                                        <div className="flex flex-col medium:flex-row items-stretch medium:items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-short4">
+                                            <SelectFilter
+                                                options={[{ value: '', label: 'Tous les types' }, ...modelTypeOptions]}
+                                                value={modelTypeFilter}
+                                                onChange={setModelTypeFilter}
+                                                placeholder="Type"
                                                 className="w-full medium:w-auto"
-                                                onClick={() => {
-                                                    setSearchQuery('');
-                                                    setModelTypeFilter('');
-                                                }}
-                                            >
-                                                Réinitialiser
-                                            </Button>
-                                        )}
-                                    </div>
+                                            />
+                                            {(searchQuery || modelTypeFilter !== '') && (
+                                                <Button
+                                                    variant="text"
+                                                    className="w-full medium:w-auto"
+                                                    onClick={() => {
+                                                        setSearchQuery('');
+                                                        setModelTypeFilter('');
+                                                    }}
+                                                >
+                                                    Réinitialiser
+                                                </Button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {selectionMode && (

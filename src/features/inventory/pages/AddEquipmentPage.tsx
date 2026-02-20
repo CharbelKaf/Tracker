@@ -387,7 +387,7 @@ const AddEquipmentPage: React.FC<AddEquipmentPageProps> = ({ equipmentId, onCanc
                                 value={formData.purchasePrice}
                                 onChange={handleChange}
                                 placeholder="0.00"
-                                icon={<span className="text-on-surface-variant font-medium">{settings.currency === 'USD' ? '$' : settings.currency === 'XOF' ? 'F' : '€'}</span>}
+                                icon={<span className="text-on-surface-variant font-medium">{settings.currency === 'USD' ? '$' : settings.currency === 'XOF' ? 'XOF' : '€'}</span>}
                                 required
                             />
                             <InputField
