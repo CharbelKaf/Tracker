@@ -143,9 +143,6 @@ export const authService = {
 
         mockAppUsers = [user, ...mockAppUsers];
 
-        // Log "Email Sent" to console
-        console.log(`[Backend] 📧 EMAIL SENT to ${user.MicrosoftEmail}: Link=..., TempPass=${tempPass}`);
-
         return user;
     },
 

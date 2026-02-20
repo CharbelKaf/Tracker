@@ -251,7 +251,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                     </div>
 
                     {/* Navigation Items */}
-                    <nav aria-label="Sections principales" className={cn("space-y-1 transition-all duration-medium2", isCollapsed ? "space-y-1" : "space-y-1")}>
+                    <nav
+                        aria-label="Sections principales"
+                        className={cn(
+                            "space-y-1 transition-all duration-medium2",
+                            isCollapsed && !isMobileOpen && "flex flex-col items-center"
+                        )}
+                    >
 
                         {showPrimaryDrawerItems && permissions.canViewInventory && (
                             <>
@@ -347,7 +353,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                     </nav>
 
                     {/* Bottom Actions */}
-                    <nav aria-label="Actions secondaires" className="mt-auto space-y-1 pt-4">
+                    <nav
+                        aria-label="Actions secondaires"
+                        className={cn(
+                            "mt-auto space-y-1 pt-4",
+                            isCollapsed && !isMobileOpen && "flex flex-col items-center"
+                        )}
+                    >
                         <SidebarItem
                             isCollapsed={isCollapsed && !isMobileOpen}
                             icon="settings"

@@ -11,6 +11,7 @@ const PORT = 4173;
 const BASE_URL = `http://${HOST}:${PORT}`;
 const RUN_DATE = new Date().toISOString().slice(0, 10);
 const UPDATE_BASELINE = process.argv.includes('--update');
+const VITE_BIN = path.resolve('node_modules/vite/bin/vite.js');
 
 const DEVICES = [
   { id: 'compact', label: 'Compact (iPhone 14 Pro)', width: 393, height: 852, isMobile: true, hasTouch: true, deviceScaleFactor: 3 },
@@ -55,9 +56,58 @@ const sha256 = async (filePath) => {
   return createHash('sha256').update(bytes).digest('hex');
 };
 
+const runProductionBuild = async () => {
+  await new Promise((resolve, reject) => {
+    const buildProcess = spawn(process.execPath, [VITE_BIN, 'build'], {
+      shell: false,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: process.env,
+    });
+
+    buildProcess.stdout.on('data', (chunk) => {
+      const line = String(chunk).trim();
+      if (line) process.stdout.write(`[build] ${line}\n`);
+    });
+    buildProcess.stderr.on('data', (chunk) => {
+      const line = String(chunk).trim();
+      if (line) process.stderr.write(`[build] ${line}\n`);
+    });
+
+    buildProcess.on('close', (code) => {
+      if (code === 0) {
+        resolve(undefined);
+      } else {
+        reject(new Error(`Production build failed with exit code ${code}`));
+      }
+    });
+  });
+};
+
+const startPreviewServer = () => {
+  const child = spawn(
+    process.execPath,
+    [VITE_BIN, 'preview', '--host', HOST, '--port', String(PORT)],
+    {
+      shell: false,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: process.env,
+    }
+  );
+
+  child.stdout.on('data', (chunk) => {
+    const line = String(chunk).trim();
+    if (line) process.stdout.write(`[preview] ${line}\n`);
+  });
+  child.stderr.on('data', (chunk) => {
+    const line = String(chunk).trim();
+    if (line) process.stderr.write(`[preview] ${line}\n`);
+  });
+
+  return child;
+};
+
 const startDevServer = () => {
-  const viteBin = path.resolve('node_modules/vite/bin/vite.js');
-  const child = spawn(process.execPath, [viteBin, '--host', HOST, '--port', String(PORT)], {
+  const child = spawn(process.execPath, [VITE_BIN, '--host', HOST, '--port', String(PORT)], {
     shell: false,
     stdio: ['ignore', 'pipe', 'pipe'],
     env: process.env,
@@ -87,17 +137,39 @@ const bootstrapDeterministicSession = async (page) => {
       })
     );
   });
-  await page.reload({ waitUntil: 'networkidle' });
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(500);
 };
 
 const loginWithDemoAccount = async (page) => {
-  const emailInput = page.getByPlaceholder('Ex: nom@neemba.com');
-  if (await emailInput.count()) {
-    await emailInput.fill('alice.admin@neemba.com');
+  const isLoginVisible = async () => {
+    const byLabel = page.getByLabel('Adresse e-mail').first();
+    const byPlaceholder = page.getByPlaceholder(/Ex:\s*nom@/i).first();
+    return (await byLabel.count()) > 0 || (await byPlaceholder.count()) > 0;
+  };
+
+  const byLabel = page.getByLabel('Adresse e-mail').first();
+  const byPlaceholder = page.getByPlaceholder(/Ex:\s*nom@/i).first();
+  const emailInput = (await byLabel.count()) > 0 ? byLabel : byPlaceholder;
+
+  if ((await emailInput.count()) > 0) {
+    await emailInput.fill('alice.admin@tracker.app');
     await page.getByPlaceholder('Votre mot de passe').fill('demo-password');
     await page.getByRole('button', { name: /Se connecter/i }).click();
     await page.waitForTimeout(1300);
+  }
+
+  if (await isLoginVisible()) {
+    const demoAccountButton = page.getByRole('button', { name: /Connexion démo:/i }).first();
+    if ((await demoAccountButton.count()) > 0) {
+      await demoAccountButton.click();
+      await page.getByRole('button', { name: /Se connecter/i }).click();
+      await page.waitForTimeout(1300);
+    }
+  }
+
+  if (await isLoginVisible()) {
+    throw new Error('Demo login failed before visual capture.');
   }
 };
 
@@ -111,6 +183,14 @@ const waitForStablePaint = async (page) => {
     )
     .catch(() => {});
   await page.evaluate(() => window.scrollTo(0, 0));
+  await page.addStyleTag({ content: '* { caret-color: transparent !important; }' }).catch(() => {});
+  await page.evaluate(() => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) {
+      active.blur();
+    }
+  });
+  await page.mouse.move(1, 1).catch(() => {});
   await page.waitForTimeout(700);
   await page.evaluate(async () => {
     if (document.fonts?.ready) {
@@ -122,7 +202,7 @@ const waitForStablePaint = async (page) => {
 
 const snapshotCheckpoint = async (page, device, checkpoint) => {
   const routeUrl = `${BASE_URL}/#${checkpoint.hash}`;
-  await page.goto(routeUrl, { waitUntil: 'networkidle' });
+  await page.goto(routeUrl, { waitUntil: 'domcontentloaded' });
   await waitForStablePaint(page);
 
   const tempPath = path.join(TEMP_DIR, device.id, `${checkpoint.id}.png`);
@@ -203,7 +283,8 @@ const run = async () => {
   try {
     await rm(TEMP_DIR, { recursive: true, force: true });
     await mkdir(TEMP_DIR, { recursive: true });
-    server = startDevServer();
+    await runProductionBuild();
+    server = startPreviewServer();
     await waitForServer(BASE_URL);
 
     const browser = await chromium.launch({ headless: true });
@@ -229,6 +310,18 @@ const run = async () => {
       });
 
       await loginWithDemoAccount(page);
+      const closeToastButton = page.getByRole('button', { name: 'Fermer la notification' });
+      if ((await closeToastButton.count()) > 0) {
+        await closeToastButton.first().click().catch(() => {});
+      }
+      await page.waitForTimeout(4500);
+      await page
+        .waitForFunction(
+          () => !document.querySelector('[role="status"]'),
+          { timeout: 6000 }
+        )
+        .catch(() => {});
+      await page.waitForTimeout(200);
 
       for (const checkpoint of AUTH_CHECKPOINTS) {
         const snapshotResult = await snapshotCheckpoint(page, device, checkpoint);

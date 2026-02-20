@@ -22,6 +22,8 @@ import {
     BusinessRuleDecision,
     canDeleteEquipmentByBusinessRule,
     canDeleteUserByBusinessRule,
+    canManageFinanceByRole,
+    canManageInventoryByRole,
     canTransitionApprovalStatus,
     canUpdateUserByBusinessRule,
     getEquipmentUpdatesForApprovalStatus,
@@ -494,6 +496,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const addFinanceExpense = useCallback((expenseData: Omit<FinanceExpense, 'id' | 'createdAt'>): FinanceExpenseInsertResult => {
+        const permissionDecision = canManageFinanceByRole(currentUser?.role);
+        if (!permissionDecision.allowed) {
+            return {
+                ok: false,
+                reason: 'forbidden',
+            };
+        }
+
         const now = new Date().toISOString();
         const computedFingerprint = expenseData.importFingerprint || buildExpenseFingerprint({
             supplier: expenseData.supplier,
@@ -634,6 +644,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [currentUser, logEvent, financeExpenses]);
 
     const updateFinanceExpense = useCallback((id: string, updates: Partial<Omit<FinanceExpense, 'id' | 'createdAt'>>) => {
+        const permissionDecision = canManageFinanceByRole(currentUser?.role);
+        if (!permissionDecision.allowed) {
+            return false;
+        }
+
         const existingExpense = financeExpenses.find((expense) => expense.id === id);
         if (!existingExpense) {
             return false;
@@ -730,6 +745,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [currentUser, financeExpenses, logEvent]);
 
     const deleteFinanceExpense = useCallback((id: string) => {
+        const permissionDecision = canManageFinanceByRole(currentUser?.role);
+        if (!permissionDecision.allowed) {
+            return false;
+        }
+
         const existingExpense = financeExpenses.find((expense) => expense.id === id);
         if (!existingExpense) {
             return false;
@@ -775,6 +795,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [currentUser, financeExpenses, logEvent]);
 
     const upsertFinanceBudget = useCallback((budgetData: Omit<FinanceBudget, 'updatedAt'> & { updatedAt?: string }) => {
+        const permissionDecision = canManageFinanceByRole(currentUser?.role);
+        if (!permissionDecision.allowed) {
+            return;
+        }
+
         const updatedBudget: FinanceBudget = {
             ...budgetData,
             updatedAt: budgetData.updatedAt || new Date().toISOString(),
@@ -993,6 +1018,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // ... (Equipment CRUD, Approval, etc. kept same, abbreviated for brevity)
     // Re-inserting existing Equipment logic to not break file
     const addEquipment = useCallback((item: Equipment) => {
+        const permissionDecision = canManageInventoryByRole(currentUser?.role);
+        if (!permissionDecision.allowed) {
+            return;
+        }
+
         const newItem = { ...item, id: item.id || Date.now().toString() };
         setEquipment(prev => [...prev, newItem]);
         logEvent({
@@ -1011,6 +1041,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [currentUser, logEvent]);
 
     const updateEquipment = useCallback((id: string, updates: Partial<Equipment>, logMetadata?: Record<string, unknown>) => {
+        const permissionDecision = canManageInventoryByRole(currentUser?.role);
+        if (!permissionDecision.allowed) {
+            return;
+        }
+
         const oldItem = equipment.find(e => e.id === id);
         if (oldItem) {
             const nextItem = { ...oldItem, ...updates };
@@ -1121,6 +1156,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [equipment, currentUser, logEvent]);
 
     const deleteEquipment = useCallback((id: string) => {
+        const permissionDecision = canManageInventoryByRole(currentUser?.role);
+        if (!permissionDecision.allowed) return false;
+
         const itemToDelete = equipment.find(e => e.id === id);
         if (!itemToDelete) return false;
 

@@ -67,6 +67,19 @@ const startDevServer = () => {
   return child;
 };
 
+const loginWithDemoAccount = async (page) => {
+  const byLabel = page.getByLabel('Adresse e-mail').first();
+  const byPlaceholder = page.getByPlaceholder(/Ex:\s*nom@/i).first();
+  const emailInput = (await byLabel.count()) > 0 ? byLabel : byPlaceholder;
+
+  if ((await emailInput.count()) > 0) {
+    await emailInput.fill('alice.admin@tracker.app');
+    await page.getByPlaceholder('Votre mot de passe').fill('demo-password');
+    await page.getByRole('button', { name: /Se connecter/i }).click();
+    await page.waitForTimeout(1300);
+  }
+};
+
 const focusProbe = async (page, presses = 10) => {
   const focused = [];
   let hasVisibleFocus = false;
@@ -218,13 +231,7 @@ const run = async () => {
       await page.goto(`${BASE_URL}/#/`);
       await page.waitForTimeout(600);
 
-      const emailInput = page.getByPlaceholder('Ex: nom@neemba.com');
-      if (await emailInput.count()) {
-        await emailInput.fill('alice.admin@neemba.com');
-        await page.getByPlaceholder('Votre mot de passe').fill('demo-password');
-        await page.getByRole('button', { name: /Se connecter/i }).click();
-        await page.waitForTimeout(1300);
-      }
+      await loginWithDemoAccount(page);
 
       const flowResults = [];
       for (const route of ROUTES) {

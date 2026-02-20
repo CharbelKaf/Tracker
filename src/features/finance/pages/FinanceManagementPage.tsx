@@ -517,7 +517,7 @@ const FinanceManagementPage = () => {
                 title={selectedExpense ? toExpenseDisplayTitle(selectedExpense) : 'Détail de dépense'}
                 description="Vérification rapide d'une ligne du journal des dépenses."
                 width="standard"
-                className="expanded:!rounded-none"
+                className="!rounded-none"
                 footer={selectedExpense ? (
                     <div className="flex items-center justify-end gap-2">
                         <Button

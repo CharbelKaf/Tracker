@@ -14,6 +14,31 @@ export interface BusinessRuleDecision {
     reason?: string;
 }
 
+const ADMINISTRATIVE_ROLES: readonly UserRole[] = ['SuperAdmin', 'Admin'];
+
+const isAdministrativeRole = (role?: UserRole): boolean =>
+    role !== undefined && ADMINISTRATIVE_ROLES.includes(role);
+
+const buildAdministrativeGuardDecision = (
+    actorRole: UserRole | undefined,
+    areaLabel: string,
+): BusinessRuleDecision => {
+    if (isAdministrativeRole(actorRole)) {
+        return { allowed: true };
+    }
+
+    return {
+        allowed: false,
+        reason: `Action refusée: permissions insuffisantes pour la section ${areaLabel}.`,
+    };
+};
+
+export const canManageInventoryByRole = (actorRole?: UserRole): BusinessRuleDecision =>
+    buildAdministrativeGuardDecision(actorRole, 'Inventaire');
+
+export const canManageFinanceByRole = (actorRole?: UserRole): BusinessRuleDecision =>
+    buildAdministrativeGuardDecision(actorRole, 'Finances');
+
 interface ApprovalTransitionContext {
     approval: Approval;
     nextStatus: ApprovalStatus;

@@ -173,7 +173,10 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
 
         if (!inserted.ok) {
             await cleanupPreparedSourceFile(preparedSource);
-            return { ok: false as const, reason: 'duplicate' as const };
+            const reason = inserted.reason === 'forbidden'
+                ? 'forbidden'
+                : 'duplicate';
+            return { ok: false as const, reason };
         }
 
         return { ok: true as const };
@@ -248,6 +251,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
         let reviewRequired = 0;
         let failed = 0;
         let firstReviewItem: { file: File; draft: ExtractedExpenseDraft } | null = null;
+        let permissionDenied = false;
 
         for (const file of files) {
             try {
@@ -271,6 +275,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                     imported += 1;
                 } else if (created.reason === 'duplicate') {
                     duplicates += 1;
+                } else if (created.reason === 'forbidden') {
+                    permissionDenied = true;
+                    break;
                 } else {
                     reviewRequired += 1;
                     if (!firstReviewItem) {
@@ -283,6 +290,11 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
         }
 
         setIsScanning(false);
+
+        if (permissionDenied) {
+            showToast('Action refusée: permissions insuffisantes pour ajouter des dépenses.', 'error');
+            return;
+        }
 
         if (firstReviewItem) {
             applyDraftToForm(firstReviewItem.file, firstReviewItem.draft);
@@ -331,6 +343,10 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
 
         if (!createdExpense.ok) {
             await cleanupPreparedSourceFile(preparedSource);
+            if (createdExpense.reason === 'forbidden') {
+                showToast('Action refusée: permissions insuffisantes pour ajouter des dépenses.', 'error');
+                return;
+            }
             showToast('Dépense déjà importée. Aucun doublon ajouté.', 'warning');
             handleClose();
             return;

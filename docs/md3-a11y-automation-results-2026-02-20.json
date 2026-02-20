@@ -1,0 +1,880 @@
+{
+  "date": "2026-02-20",
+  "baseUrl": "http://127.0.0.1:4173",
+  "totals": {
+    "flows": 11,
+    "pass": 11,
+    "fail": 0
+  },
+  "results": [
+    {
+      "id": "login",
+      "label": "Login",
+      "hash": "/#/",
+      "pageMetrics": {
+        "interactiveCount": 9,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 0,
+        "title": "Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 10,
+        "uniqueFocusTargets": 10,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "input",
+            "role": "",
+            "id": "_r_0_",
+            "className": "w-full min-h-14 px-4 py-4 text-body-large text-on-surface transition-[color,background-color,border-color,box-shadow] duration-short4 ease-emphasized focus:outline-none placeholder:text-on-surface-variant/80 disabled:cursor-not-allowed disabled:text-on-surface/[0.38] disabled:placeholder:text-on-surface/[0.38] bg-surface-container-highest rounded-t-xs rounded-b-none border-b-2 border-on-surface-variant hover:bg-surface-container-high hover:border-on-surface focus:border-primary disabled:bg-on-surface/[0.04] disabled:border-on-surface/[0.12] pl-12 pr-4 !bg-surface-container-low",
+            "text": "",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "none"
+          },
+          {
+            "tag": "input",
+            "role": "",
+            "id": "_r_1_",
+            "className": "w-full min-h-14 px-4 py-4 text-body-large text-on-surface transition-[color,background-color,border-color,box-shadow] duration-short4 ease-emphasized focus:outline-none placeholder:text-on-surface-variant/80 disabled:cursor-not-allowed disabled:text-on-surface/[0.38] disabled:placeholder:text-on-surface/[0.38] bg-surface-container-highest rounded-t-xs rounded-b-none border-b-2 border-on-surface-variant hover:bg-surface-container-high hover:border-on-surface focus:border-primary disabled:bg-on-surface/[0.04] disabled:border-on-surface/[0.12] pl-12 pr-12 !bg-surface-container-low",
+            "text": "",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "none"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "h-12 w-12 inline-flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors duration-short4 state-layer",
+            "text": "visibility",
+            "outlineStyle": "auto",
+            "outlineWidth": "1px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, oklab(0.483146 0.00872092 0.0986463 / 0.4) 0px 0px 0px 2px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-6 py-2.5 text-label-large !rounded-sm",
+            "text": "Mot de passe oublié ?",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-primary text-on-primary shadow-elevation-0 disabled:bg-on-surface/[0.12] disabled:text-on-surface/[0.38] px-7 py-3 text-label-large w-full h-12",
+            "text": "Se connecter",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-6 py-2.5 text-label-large group relative !w-12 !h-12 !p-0 !rounded-full !min-w-12 !min-h-12 !overflow-visible",
+            "text": "S",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "settings",
+      "hash": "/settings",
+      "label": "Settings",
+      "pageMetrics": {
+        "interactiveCount": 26,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 1,
+        "title": "Paramètres - Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 12,
+        "uniqueFocusTargets": 12,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium hidden expanded:flex text-on-surface-variant hover:text-primary hover:bg-primary-container/30 p-1.5 h-auto rounded-full transition-all duration-medium2 border-none shadow-none",
+            "text": "chevron_left",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "dashboardTableau de bord",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46433px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92866px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "devicesÉquipement",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31015px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.6203px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "groupUtilisateurs",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31017px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.62034px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "task_altApprobations1",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46434px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92869px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "paymentsFinances",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.792) 0px 0px 0px 1.58428px, rgba(120, 89, 0, 0.792) 0px 0px 0px 3.16856px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "assignment_wizard",
+      "hash": "/wizards/assignment",
+      "label": "Assignment wizard",
+      "pageMetrics": {
+        "interactiveCount": 18,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 0,
+        "title": "Assistant d'attribution - Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 12,
+        "uniqueFocusTargets": 12,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium w-12 h-12 p-0 text-on-surface-variant hover:text-on-surface rounded-full border-none",
+            "text": "close",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "input",
+            "role": "",
+            "id": "",
+            "className": "w-full h-14 bg-transparent text-on-surface rounded-full py-0 pl-12 focus:outline-none placeholder-on-surface-variant text-body-large pr-32 medium:pr-36",
+            "text": "",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "none"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "h-12 w-12 rounded-full transition-all duration-short4 ease-emphasized flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-95 state-layer bg-primary-container text-on-primary-container hover:shadow-elevation-1",
+            "text": "tune",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(120, 89, 0) 0px 0px 0px 2px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "div",
+            "role": "button",
+            "id": "",
+            "className": "group flex items-center gap-4 p-4 min-h-[80px] border-b border-outline-variant/50 last:border-0 relative outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset transition-all duration-short4 bg-surface state-layer hover:bg-surface-container-low cursor-pointer active:scale-[0.99]",
+            "text": "SCR-DK-01ASSET-20001• MonitorDisponiblechevron_right",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(120, 89, 0) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "div",
+            "role": "button",
+            "id": "",
+            "className": "group flex items-center gap-4 p-4 min-h-[80px] border-b border-outline-variant/50 last:border-0 relative outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset transition-all duration-short4 bg-surface state-layer hover:bg-surface-container-low cursor-pointer active:scale-[0.99]",
+            "text": "PRT-HQ-01ASSET-70001• PrinterDisponiblechevron_right",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(120, 89, 0) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "div",
+            "role": "button",
+            "id": "",
+            "className": "group flex items-center gap-4 p-4 min-h-[80px] border-b border-outline-variant/50 last:border-0 relative outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset transition-all duration-short4 bg-surface state-layer hover:bg-surface-container-low cursor-pointer active:scale-[0.99]",
+            "text": "MSE-TOG-02ASSET-90002• MouseDisponiblechevron_right",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(120, 89, 0) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "return_wizard",
+      "hash": "/wizards/return",
+      "label": "Return wizard",
+      "pageMetrics": {
+        "interactiveCount": 24,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 1,
+        "title": "Assistant de retour - Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 12,
+        "uniqueFocusTargets": 12,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "task_altApprobations1",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.792) 0px 0px 0px 1.58434px, rgba(120, 89, 0, 0.792) 0px 0px 0px 3.16868px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "paymentsFinances",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31038px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.62077px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "tuneGestion",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.553) 0px 0px 0px 1.10481px, rgba(120, 89, 0, 0.553) 0px 0px 0px 2.20961px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "location_onEmplacements",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31038px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.62077px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "fact_checkAudit",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46451px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92901px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "bar_chartRapports",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31038px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.62077px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "user_details",
+      "hash": "/users/1",
+      "label": "User details",
+      "pageMetrics": {
+        "interactiveCount": 21,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 0,
+        "title": "Détails utilisateur - Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 12,
+        "uniqueFocusTargets": 11,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-6 py-2.5 text-label-large mb-4 text-on-surface-variant hover:text-on-surface px-0 hover:bg-transparent border-none shadow-none active:scale-90 transition-transform duration-short4",
+            "text": "arrow_backRetour",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary border border-outline disabled:border-on-surface/[0.12] disabled:text-on-surface/[0.38] px-6 py-2.5 text-label-large",
+            "text": "editModifier",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-6 py-2.5 text-label-large h-10 w-10 min-w-0 p-0 rounded-full",
+            "text": "arrow_back",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary border border-outline disabled:border-on-surface/[0.12] disabled:text-on-surface/[0.38] px-6 py-2.5 text-label-large",
+            "text": "editModifier",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "tab",
+            "id": "_r_4_-tab-0",
+            "className": "group relative flex items-center gap-2 min-h-12 px-4 py-3 text-title-small transition-all duration-short4 ease-emphasized outline-none select-none whitespace-nowrap state-layer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset text-primary",
+            "text": "Aperçu & Sécurité",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(120, 89, 0) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "div",
+            "role": "button",
+            "id": "",
+            "className": "bg-gradient-to-br from-inverse-surface to-inverse-surface/90 rounded-md p-card text-inverse-on-surface shadow-elevation-3 relative overflow-hidden group w-full cursor-pointer hover:scale-[1.01] hover:shadow-elevation-4 transition-all duration-medium2 outline-none focus-visible:ring-4 focus-visible:ring-primary/40",
+            "text": "monitorAppareil principalEn ligneMSE-HQ-03ModèleLogitech MX ",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, oklab(0.483146 0.00872092 0.0986463 / 0.4) 0px 0px 0px 4px, rgba(0, 0, 0, 0.3) 0px 2px 3px 0px, rgba(0, 0, 0, 0.15) 0px 6px 10px 4px"
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "add_equipment",
+      "hash": "/inventory/add",
+      "label": "Add equipment",
+      "pageMetrics": {
+        "interactiveCount": 30,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 2,
+        "title": "Ajouter un équipement - Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 12,
+        "uniqueFocusTargets": 12,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "dashboardTableau de bord",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46451px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92901px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !bg-secondary-container !text-on-secondary-container !ring-1 !ring-secondary/35 !shadow-elevation-1",
+            "text": "devicesÉquipement",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31038px, oklab(0.484033 0.00366913 0.0478127 / 0.35) 0px 0px 0px 2.31038px, rgba(0, 0, 0, 0.3) 0px 1px 2px 0px, rgba(0, 0, 0, 0.15) 0px 1px 3px 1px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "groupUtilisateurs",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46451px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92901px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "task_altApprobations1",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31038px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.62077px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "paymentsFinances",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.792) 0px 0px 0px 1.58435px, rgba(120, 89, 0, 0.792) 0px 0px 0px 3.16871px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "tuneGestion",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46452px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92905px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "audit_details",
+      "hash": "/audit/details",
+      "label": "Audit details",
+      "pageMetrics": {
+        "interactiveCount": 34,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 0,
+        "title": "Détails audit - Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 12,
+        "uniqueFocusTargets": 6,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-6 py-2.5 text-label-large mb-4 text-on-surface-variant hover:text-on-surface px-0 hover:bg-transparent border-none shadow-none active:scale-90 transition-transform duration-short4",
+            "text": "arrow_backRetour",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "tab",
+            "id": "_r_i_-tab-0",
+            "className": "group relative flex items-center gap-2 min-h-12 px-4 py-3 text-title-small transition-all duration-short4 ease-emphasized outline-none select-none whitespace-nowrap state-layer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset text-primary",
+            "text": "À scanner9",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(120, 89, 0) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "input",
+            "role": "",
+            "id": "",
+            "className": "w-full h-14 bg-transparent text-on-surface rounded-full py-0 pl-12 focus:outline-none placeholder-on-surface-variant text-body-large pr-32 medium:pr-36",
+            "text": "",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "none"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "h-12 w-12 rounded-full transition-all duration-short4 ease-emphasized flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-95 state-layer bg-primary-container text-on-primary-container hover:shadow-elevation-1",
+            "text": "tune",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(120, 89, 0) 0px 0px 0px 2px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-primary text-on-primary shadow-elevation-0 disabled:bg-on-surface/[0.12] disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium bg-inverse-surface text-inverse-on-surface hover:bg-inverse-surface/90 border-none",
+            "text": "document_scannerSCANNER",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary border border-outline disabled:border-on-surface/[0.12] disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium px-2 text-outline hover:text-on-surface",
+            "text": "more_vert",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "category_details",
+      "hash": "/management/categories/1",
+      "label": "Category details",
+      "pageMetrics": {
+        "interactiveCount": 15,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 0,
+        "title": "Détails catégorie - Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 12,
+        "uniqueFocusTargets": 12,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-6 py-2.5 text-label-large mb-4 text-on-surface-variant hover:text-on-surface px-0 hover:bg-transparent border-none shadow-none active:scale-90 transition-transform duration-short4",
+            "text": "arrow_backRetour",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "tab",
+            "id": "_r_j_-tab-0",
+            "className": "group relative flex items-center gap-2 min-h-12 px-4 py-3 text-title-small transition-all duration-short4 ease-emphasized outline-none select-none whitespace-nowrap state-layer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset text-primary",
+            "text": "Modèles",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(120, 89, 0) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "shrink-0 w-12 h-12 inline-flex items-center justify-center -mr-1 rounded-full hover:opacity-80 transition-opacity duration-short4 outline-none focus-visible:ring-2 focus-visible:ring-current",
+            "text": "close",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(7, 33, 9) 0px 0px 0px 2px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "body",
+            "role": "",
+            "id": "",
+            "className": "",
+            "text": "Trackerchevron_leftdashboardTableau de borddevicesÉquipement",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "none"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium hidden expanded:flex text-on-surface-variant hover:text-primary hover:bg-primary-container/30 p-1.5 h-auto rounded-full transition-all duration-medium2 border-none shadow-none",
+            "text": "chevron_left",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "dashboardTableau de bord",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46452px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92905px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "import_locations",
+      "hash": "/locations/import",
+      "label": "Import locations",
+      "pageMetrics": {
+        "interactiveCount": 16,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 2,
+        "title": "Importer localisations - Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 12,
+        "uniqueFocusTargets": 12,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "fact_checkAudit",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.792) 0px 0px 0px 1.58435px, rgba(120, 89, 0, 0.792) 0px 0px 0px 3.16871px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "bar_chartRapports",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.3104px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.62081px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "settingsParamètres",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46452px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92905px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium w-12 h-12 p-0 text-on-surface-variant hover:text-on-surface rounded-full border-none",
+            "text": "close",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "shrink-0 w-12 h-12 inline-flex items-center justify-center -mr-1 rounded-full hover:opacity-80 transition-opacity duration-short4 outline-none focus-visible:ring-2 focus-visible:ring-current",
+            "text": "close",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(7, 33, 9) 0px 0px 0px 2px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "body",
+            "role": "",
+            "id": "",
+            "className": "",
+            "text": "Trackerchevron_leftdashboardTableau de borddevicesÉquipement",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "none"
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "import_models",
+      "hash": "/management/models/import",
+      "label": "Import models",
+      "pageMetrics": {
+        "interactiveCount": 16,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 2,
+        "title": "Importer modèles - Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 12,
+        "uniqueFocusTargets": 12,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !bg-secondary-container !text-on-secondary-container !ring-1 !ring-secondary/35 !shadow-elevation-1",
+            "text": "tuneGestion",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.792) 0px 0px 0px 1.58433px, oklab(0.484033 0.00366913 0.0478127 / 0.35) 0px 0px 0px 2.58433px, rgba(0, 0, 0, 0.3) 0px 1px 2px 0px, rgba(0, 0, 0, 0.15) 0px 1px 3px 1px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "location_onEmplacements",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31036px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.62073px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "fact_checkAudit",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.792) 0px 0px 0px 1.58433px, rgba(120, 89, 0, 0.792) 0px 0px 0px 3.16866px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "bar_chartRapports",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31036px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.62073px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "settingsParamètres",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31036px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.62073px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium w-12 h-12 p-0 text-on-surface-variant hover:text-on-surface rounded-full border-none",
+            "text": "close",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 251, 255) 0px 0px 0px 2px, rgb(120, 89, 0) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "finance",
+      "hash": "/finance",
+      "label": "Finance",
+      "pageMetrics": {
+        "interactiveCount": 16,
+        "iconOnlyButtonsMissingLabel": 0,
+        "disabledCount": 0,
+        "title": "Gestion Financière - Tracker"
+      },
+      "focusMetrics": {
+        "tabPresses": 12,
+        "uniqueFocusTargets": 12,
+        "hasVisibleFocus": true,
+        "focusedSample": [
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "task_altApprobations1",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.792) 0px 0px 0px 1.58424px, rgba(120, 89, 0, 0.792) 0px 0px 0px 3.16848px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !bg-secondary-container !text-on-secondary-container !ring-1 !ring-secondary/35 !shadow-elevation-1",
+            "text": "paymentsFinances",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46438px, oklab(0.484033 0.00366913 0.0478127 / 0.35) 0px 0px 0px 2.46438px, rgba(0, 0, 0, 0.3) 0px 1px 2px 0px, rgba(0, 0, 0, 0.15) 0px 1px 3px 1px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "tuneGestion",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46438px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92875px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "location_onEmplacements",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.655) 0px 0px 0px 1.31021px, rgba(120, 89, 0, 0.655) 0px 0px 0px 2.62043px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "fact_checkAudit",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46438px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92875px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          },
+          {
+            "tag": "button",
+            "role": "",
+            "id": "",
+            "className": "inline-flex items-center justify-center gap-2 rounded-full min-h-12 min-w-12 transition-[color,background-color,box-shadow,opacity] duration-short4 ease-emphasized outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:pointer-events-none state-layer select-none text-label-large bg-transparent text-primary disabled:text-on-surface/[0.38] px-4 py-2 text-label-medium group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden !rounded-full !outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset !w-full !min-h-12 !px-4 !py-3 !justify-start !text-on-surface-variant",
+            "text": "bar_chartRapports",
+            "outlineStyle": "none",
+            "outlineWidth": "0px",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 251, 255, 0.733) 0px 0px 0px 1.46438px, rgba(120, 89, 0, 0.733) 0px 0px 0px 2.92875px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+          }
+        ]
+      },
+      "pass": true
+    }
+  ]
+}

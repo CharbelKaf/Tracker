@@ -7,6 +7,8 @@ import { authService } from '../services/authService';
 import { mockAllUsersExtended } from '../data/mockData';
 import { useToast } from './ToastContext';
 
+const DEMO_LOGIN_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+
 interface AuthContextType {
   currentUser: User | null;
   isAuthenticated: boolean;
@@ -38,7 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const verifyUserWithBackend = useCallback(async (email: string) => {
     setIsLoading(true);
-    console.log(`[AuthContext] Verifying user ${email}...`);
 
     try {
       // In a real app, we would acquire a token silently here:
@@ -48,8 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await authService.verifyUser(mockAccessToken, email);
 
       if (result.success && result.user) {
-        console.log(`[AuthContext] User verified: ${result.user.Role}`);
-
         // Map SharePoint User to App User
         const appUser: User = {
           id: result.user.id,
@@ -99,9 +98,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (email: string) => {
     // Dev/Mock login
+    if (!DEMO_LOGIN_ENABLED) {
+      showToast("Connexion démo désactivée dans cet environnement.", "error");
+      return;
+    }
+
     const user = mockAllUsersExtended.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (user) {
-      console.log(`[AuthContext] Demo login for ${user.email}`);
       setCurrentUser(user);
       setNeedsPasswordChange(false);
       setAccessDenied(false);

@@ -167,8 +167,8 @@ const SideSheet: React.FC<SideSheetProps> = ({
     const sideClass = renderAsBottomSheet
         ? 'inset-x-0 bottom-0 border-t border-outline-variant rounded-t-xl'
         : side === 'right'
-            ? 'right-0 border-l border-outline-variant rounded-l-xl'
-            : 'left-0 border-r border-outline-variant rounded-r-xl';
+            ? 'right-0 border-l border-outline-variant rounded-none'
+            : 'left-0 border-r border-outline-variant rounded-none';
 
     const animationClass = renderAsBottomSheet
         ? (

@@ -1,7 +1,6 @@
 import React from 'react';
 import MaterialIcon from '../ui/MaterialIcon';
 import SideSheet from '../ui/SideSheet';
-import Button from '../ui/Button';
 import { cn } from '../../lib/utils';
 import { HistoryEvent } from '../../types';
 
@@ -247,13 +246,7 @@ const TransactionTicketModal: React.FC<TransactionTicketModalProps> = ({ isOpen,
             title={sheetTitle}
             description="Détails contextualisés de l’événement sélectionné."
             width="standard"
-            footer={
-                <div className="flex justify-end">
-                    <Button variant="outlined" onClick={onClose}>
-                        Fermer
-                    </Button>
-                </div>
-            }
+            className="!rounded-none"
         >
             <div className="space-y-4">
                 {isAssignment && renderAssignmentTicket()}

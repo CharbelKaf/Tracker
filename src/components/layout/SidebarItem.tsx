@@ -38,17 +38,15 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             aria-current={active ? 'page' : undefined}
             title={isCollapsed ? label : undefined}
             className={cn(
-                "group relative !w-full !min-h-12 !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden",
+                "group relative !cursor-pointer !transition-all !duration-medium2 !ease-emphasized !flex !items-center !overflow-hidden",
                 // MD3 Active indicator shape: stadium (full rounded)
                 "!rounded-full",
                 // Accessibility
                 "!outline-none !focus-visible:ring-2 !focus-visible:ring-primary !focus-visible:ring-inset",
-                // Vertical spacing
-                "!py-3",
                 // Horizontal spacing
                 isCollapsed
-                    ? "!w-12 !h-12 !min-h-12 !mx-auto !px-0 !py-0 !justify-center !gap-0"
-                    : "!w-full !px-4 !justify-start",
+                    ? "!w-12 !h-12 !min-h-12 !min-w-12 !self-center !mx-auto !px-0 !py-0 !justify-center !gap-0"
+                    : "!w-full !min-h-12 !px-4 !py-3 !justify-start",
                 // MD3 Active: secondaryContainer background, onSecondaryContainer text
                 active
                     ? "!bg-secondary-container !text-on-secondary-container !ring-1 !ring-secondary/35 !shadow-elevation-1"
@@ -67,13 +65,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             </span>
 
             {/* Label — MD3 Label Large */}
-            <span className={cn(
-                "whitespace-nowrap overflow-hidden transition-all duration-medium2 ease-emphasized text-label-large",
-                isCollapsed ? "w-0 opacity-0 ml-0" : "w-auto opacity-100 ml-3",
-                active ? "font-semibold" : "font-medium"
-            )}>
-                {label}
-            </span>
+            {!isCollapsed && (
+                <span className={cn(
+                    "whitespace-nowrap overflow-hidden transition-all duration-medium2 ease-emphasized text-label-large w-auto opacity-100 ml-3",
+                    active ? "font-semibold" : "font-medium"
+                )}>
+                    {label}
+                </span>
+            )}
 
             {/* Badge */}
             {badge && badgeCount > 0 && (

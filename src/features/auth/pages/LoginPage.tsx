@@ -14,6 +14,8 @@ interface LoginPageProps {
 
 type AuthView = 'login' | 'forgot-password';
 
+const DEMO_LOGIN_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -61,6 +63,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             return;
         }
 
+        if (!DEMO_LOGIN_ENABLED) {
+            showToast("Connexion démo désactivée dans cet environnement.", 'error');
+            return;
+        }
+
         setIsLoading(true);
         setAuthMethod('email');
 
@@ -84,13 +91,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 setIsLoading(false);
                 setEmailError(undefined);
                 setPasswordError(undefined);
-                showToast('Connexion réussie à ' + APP_CONFIG.appName + '.', 'success');
                 onLoginSuccess();
             } else {
                 setIsLoading(false);
                 setAuthMethod(null);
                 setPasswordError('Identifiants incorrects. Vérifiez vos informations.');
-                showToast('Identifiants incorrects. Utilisez un compte de démonstration.', 'error');
+                showToast('Identifiants incorrects.', 'error');
             }
         }, 800);
     };
@@ -141,6 +147,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     };
 
     const fillDemoCredentials = (userEmail: string) => {
+        if (!DEMO_LOGIN_ENABLED) {
+            showToast("Connexion démo désactivée dans cet environnement.", 'error');
+            return;
+        }
+
         setEmail(userEmail);
         setPassword('password123');
         setEmailError(undefined);
@@ -281,7 +292,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                                                 variant="text"
                                                 onClick={openForgotPassword}
                                                 disabled={isLoading}
-                                                className="!h-auto !w-auto !min-h-0 !min-w-0 !rounded-sm !px-2 !py-1"
+                                                className="!rounded-sm"
                                             >
                                                 Mot de passe oublié ?
                                             </Button>
@@ -302,35 +313,37 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                                 </Button>
                             </form>
 
-                            <div className="pt-8">
-                                <p className="text-label-small text-on-surface-variant uppercase tracking-widest text-center mb-4">
-                                    Comptes Démo
-                                </p>
-                                <div className="flex justify-center gap-3">
-                                    {mockAllUsersExtended.slice(0, 4).map((user) => (
-                                        <Button
-                                            key={user.id}
-                                            type="button"
-                                            variant="text"
-                                            onClick={() => fillDemoCredentials(user.email)}
-                                            aria-label={`Connexion démo: ${user.name}, rôle ${user.role}`}
-                                            className="group relative !w-auto !h-auto !p-0 !rounded-full !min-w-0 !min-h-0 !overflow-visible"
-                                            title={`Se connecter en tant que ${user.role} (${user.name})`}
-                                        >
-                                            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-short4 ease-emphasized">
-                                                <img
-                                                    src={user.avatar}
-                                                    className="w-full h-full object-contain bg-surface-container p-0.5"
-                                                    alt={user.name}
-                                                />
-                                            </div>
-                                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-surface flex items-center justify-center text-label-small font-medium text-on-primary bg-primary">
-                                                {user.role[0]}
-                                            </div>
-                                        </Button>
-                                    ))}
+                            {DEMO_LOGIN_ENABLED && (
+                                <div className="pt-8">
+                                    <p className="text-label-small text-on-surface-variant uppercase tracking-widest text-center mb-4">
+                                        Comptes Démo
+                                    </p>
+                                    <div className="flex justify-center gap-3">
+                                        {mockAllUsersExtended.slice(0, 4).map((user) => (
+                                            <Button
+                                                key={user.id}
+                                                type="button"
+                                                variant="text"
+                                                onClick={() => fillDemoCredentials(user.email)}
+                                                aria-label={`Connexion démo: ${user.name}, rôle ${user.role}`}
+                                                className="group relative !w-12 !h-12 !p-0 !rounded-full !min-w-12 !min-h-12 !overflow-visible"
+                                                title={`Se connecter en tant que ${user.role} (${user.name})`}
+                                            >
+                                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-short4 ease-emphasized">
+                                                    <img
+                                                        src={user.avatar}
+                                                        className="w-full h-full object-contain bg-surface-container p-0.5"
+                                                        alt={user.name}
+                                                    />
+                                                </div>
+                                                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-surface flex items-center justify-center text-label-small font-medium text-on-primary bg-primary">
+                                                    {user.role[0]}
+                                                </div>
+                                            </Button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </>
                     ) : (
                         <form noValidate onSubmit={handleForgotPasswordSubmit} className="space-y-6">
