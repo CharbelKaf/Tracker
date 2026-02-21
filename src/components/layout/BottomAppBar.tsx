@@ -10,7 +10,7 @@ interface BottomAppBarProps {
  * MD3 Bottom App Bar container.
  * Height: 80dp, elevation level 2.
  */
-export const BottomAppBar: React.FC<BottomAppBarProps> = ({ children, className }) => {
+const BottomAppBar: React.FC<BottomAppBarProps> = ({ children, className }) => {
   return (
     <div
       className={cn(

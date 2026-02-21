@@ -9,6 +9,7 @@ import SegmentedButton from '../../../components/ui/SegmentedButton';
 import IconButton from '../../../components/ui/IconButton';
 import { useToast } from '../../../context/ToastContext';
 import { useData } from '../../../context/DataContext';
+import { useFinanceData } from '../../../context/FinanceDataContext';
 import { FileDropzone } from '../../../components/ui/FileDropzone';
 import {
     extractExpenseDraftFromFile,
@@ -55,7 +56,8 @@ type PreparedSourceFile = {
 
 export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClose }) => {
     const { showToast } = useToast();
-    const { settings, addFinanceExpense } = useData();
+    const { settings } = useData();
+    const { addFinanceExpense } = useFinanceData();
 
     const [mode, setMode] = useState<AddExpenseMode>('scan');
     const [isScanning, setIsScanning] = useState(false);

@@ -21,7 +21,7 @@ interface TopAppBarProps {
  * MD3 Top App Bar (small).
  * Height: 64dp, leading navigation icon + title + up to 3 trailing actions.
  */
-export const TopAppBar: React.FC<TopAppBarProps> = ({
+const TopAppBar: React.FC<TopAppBarProps> = ({
   title,
   leadingAction,
   trailingActions = [],

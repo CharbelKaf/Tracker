@@ -61,7 +61,7 @@ const SIZE_CLASSES = {
   lg: 'px-4 py-2 text-label-medium',
 };
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({
+const StatusBadge: React.FC<StatusBadgeProps> = ({
   status,
   size = 'md',
   className

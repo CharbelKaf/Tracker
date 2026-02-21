@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useId } from 'react';
 import { cn } from '../../lib/utils';
 
-export interface TooltipProps {
+interface TooltipProps {
     /** Tooltip content (text or rich) */
     content: React.ReactNode;
     /** Trigger element */
@@ -165,3 +165,4 @@ const Tooltip: React.FC<TooltipProps> = ({
 };
 
 export default Tooltip;
+

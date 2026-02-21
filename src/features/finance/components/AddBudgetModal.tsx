@@ -10,6 +10,7 @@ import Badge from '../../../components/ui/Badge';
 import { FileDropzone } from '../../../components/ui/FileDropzone';
 import { useToast } from '../../../context/ToastContext';
 import { useData } from '../../../context/DataContext';
+import { useFinanceData } from '../../../context/FinanceDataContext';
 import { cn } from '../../../lib/utils';
 import { formatCurrency } from '../../../lib/financial';
 import { FinanceBudget, FinanceExpenseType } from '../../../types';
@@ -35,7 +36,8 @@ const MODE_OPTIONS = [
 
 export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose }) => {
     const { showToast } = useToast();
-    const { settings, financeBudgets, upsertFinanceBudget } = useData();
+    const { settings } = useData();
+    const { financeBudgets, upsertFinanceBudget } = useFinanceData();
 
     const [mode, setMode] = useState<AddBudgetMode>('import');
     const [isProcessing, setIsProcessing] = useState(false);

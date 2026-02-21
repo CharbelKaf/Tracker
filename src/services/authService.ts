@@ -47,7 +47,7 @@ let mockAppUsers: AppUser[] = [
     }
 ];
 
-export interface AuthResult {
+interface AuthResult {
     success: boolean;
     user?: AppUser;
     error?: string;
@@ -160,4 +160,5 @@ export const authService = {
         mockAppUsers = mockAppUsers.filter(u => u.id !== id);
     }
 };
+
 

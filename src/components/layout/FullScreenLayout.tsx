@@ -5,7 +5,7 @@ import CloseButton from '../ui/CloseButton';
 import { cn } from '../../lib/utils';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
-export interface FullScreenLayoutProps {
+interface FullScreenLayoutProps {
   title: string;
   onClose: () => void;
   onBack?: () => void;
@@ -112,4 +112,5 @@ export const FullScreenLayout: React.FC<FullScreenLayoutProps> = ({
     </div>
   );
 };
+
 

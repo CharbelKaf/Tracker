@@ -29,7 +29,7 @@ const DARK_SURFACE_TONES = {
   surfaceContainerHighest: 22,
 };
 
-export const ACCENT_SEED_HEX: Record<AccentColor, string> = {
+const ACCENT_SEED_HEX: Record<AccentColor, string> = {
   yellow: '#FFC107',
   blue: '#3B82F6',
   purple: '#A855F7',
@@ -53,7 +53,7 @@ const toneHex = (palette: TonalPalette, tone: number) =>
 export const getAccentSeedHex = (accentColor: AccentColor): string =>
   ACCENT_SEED_HEX[accentColor] ?? ACCENT_SEED_HEX.yellow;
 
-export const resolveIsDarkMode = (
+const resolveIsDarkMode = (
   themeMode: ThemeMode,
   prefersDark: boolean,
 ): boolean => {

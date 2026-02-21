@@ -9,7 +9,7 @@ import { useToast } from '../../../context/ToastContext';
 import { useAccessControl } from '../../../hooks/useAccessControl';
 import { useAppNavigation } from '../../../hooks/useAppNavigation';
 import { useConfirmation } from '../../../context/ConfirmationContext';
-import PageTabs from '../../../components/ui/PageTabs';
+import { PageTabs } from '../../../components/ui/PageTabs';
 import Menu, { MenuItem } from '../../../components/ui/Menu';
 import { DetailHeader } from '../../../components/layout/DetailHeader';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';

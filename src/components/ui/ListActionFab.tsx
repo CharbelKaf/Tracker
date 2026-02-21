@@ -6,7 +6,7 @@ import { FabContainer } from './FabContainer';
 import FloatingActionButton from './FloatingActionButton';
 import MaterialIcon from './MaterialIcon';
 
-export interface ListActionFabItem {
+interface ListActionFabItem {
     id: string;
     label: string;
     icon: string;
@@ -23,7 +23,7 @@ interface ListActionFabProps {
     disabled?: boolean;
 }
 
-export const ListActionFab: React.FC<ListActionFabProps> = ({
+const ListActionFab: React.FC<ListActionFabProps> = ({
     label,
     sheetTitle,
     actions,
@@ -80,6 +80,7 @@ export const ListActionFab: React.FC<ListActionFabProps> = ({
 };
 
 export default ListActionFab;
+
 
 
 

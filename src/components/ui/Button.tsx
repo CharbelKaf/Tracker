@@ -73,7 +73,7 @@ const normalizeIcon = (icon: React.ReactNode): React.ReactNode => {
  * Filled, Filled Tonal, Outlined, Text, Elevated.
  * Legacy aliases are mapped for gradual migration.
  */
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({
     variant = 'filled',
     size = 'md',

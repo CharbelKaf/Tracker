@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useData } from '../../../context/DataContext';
 import { mockCategories, mockModels, renderCategoryIcon } from '../../../data/mockData';
 import Badge from '../../../components/ui/Badge';
-import PageTabs from '../../../components/ui/PageTabs';
+import { PageTabs } from '../../../components/ui/PageTabs';
 import { DetailHeader } from '../../../components/layout/DetailHeader';
 
 interface CategoryDetailsPageProps {

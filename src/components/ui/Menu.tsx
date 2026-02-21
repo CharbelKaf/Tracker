@@ -14,7 +14,7 @@ export interface MenuItem {
   dividerBefore?: boolean;
 }
 
-export interface MenuProps {
+interface MenuProps {
   trigger: React.ReactElement;
   items: MenuItem[];
   title?: string;
@@ -275,3 +275,4 @@ const Menu: React.FC<MenuProps> = ({
 };
 
 export default Menu;
+

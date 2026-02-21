@@ -15,6 +15,13 @@ interface LoginPageProps {
 type AuthView = 'login' | 'forgot-password';
 
 const DEMO_LOGIN_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+const LOGIN_FOOTER_CONTACT = {
+    year: 2026,
+    developerName: 'Kafui Charbel EKLU',
+    githubUrl: 'https://github.com/CharbelKaf',
+    linkedinUrl: 'https://www.linkedin.com/in/charbelkaf',
+    gmailAddress: 'charbeleklu@gmail.com',
+};
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState('');
@@ -387,9 +394,38 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         </form>
                     )}
 
-                    <p className="pt-2 text-center text-label-small text-on-surface-variant">
-                        © 2026 {APP_CONFIG.companyName}. Tous droits réservés.
-                    </p>
+                    <div className="pt-2 text-center text-label-small text-on-surface-variant space-y-1">
+                        <p>
+                            © {LOGIN_FOOTER_CONTACT.year} {APP_CONFIG.companyName}. Tous droits réservés.
+                        </p>
+                        <p>
+                            Développé par {LOGIN_FOOTER_CONTACT.developerName} ·{' '}
+                            <a
+                                href={LOGIN_FOOTER_CONTACT.githubUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-primary hover:underline"
+                            >
+                                GitHub
+                            </a>
+                            {' · '}
+                            <a
+                                href={LOGIN_FOOTER_CONTACT.linkedinUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-primary hover:underline"
+                            >
+                                LinkedIn
+                            </a>
+                            {' · '}
+                            <a
+                                href={`mailto:${LOGIN_FOOTER_CONTACT.gmailAddress}`}
+                                className="text-primary hover:underline"
+                            >
+                                Gmail
+                            </a>
+                        </p>
+                    </div>
                 </div>
             </main>
         </div>

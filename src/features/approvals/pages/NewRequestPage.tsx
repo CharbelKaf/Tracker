@@ -9,7 +9,7 @@ import { GLOSSARY } from '../../../constants/glossary';
 import { useAccessControl } from '../../../hooks/useAccessControl';
 import { FullScreenFormLayout } from '../../../components/layout/FullScreenFormLayout';
 
-export const NewRequestPage = () => {
+const NewRequestPage = () => {
     const { navigate } = useAppNavigation();
     const { addApproval, users } = useData();
     const { showToast } = useToast();

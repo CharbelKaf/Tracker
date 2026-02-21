@@ -4,7 +4,7 @@ import { FullScreenLayout } from './FullScreenLayout';
 import { cn } from '../../lib/utils';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
-export interface Step {
+interface Step {
   id: number;
   title: string;
 }
@@ -119,4 +119,3 @@ export const WizardStep: React.FC<{ children: React.ReactNode; className?: strin
   </div>
 );
 
-export default WizardLayout;

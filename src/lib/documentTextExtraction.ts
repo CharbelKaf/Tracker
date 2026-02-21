@@ -3,7 +3,7 @@ type TesseractModule = typeof import('tesseract.js');
 
 export type DocumentExtractionSource = 'native' | 'ocr' | 'hybrid' | 'none';
 
-export interface DocumentTextExtractionResult {
+interface DocumentTextExtractionResult {
     text: string;
     canReadText: boolean;
     source: DocumentExtractionSource;
@@ -242,3 +242,4 @@ export const extractDocumentText = async (
         warnings: [],
     };
 };
+

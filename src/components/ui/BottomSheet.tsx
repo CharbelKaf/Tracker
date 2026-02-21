@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useRef, useState, useId } from 'react';
 import { cn } from '../../lib/utils';
 import CloseButton from './CloseButton';
 
-export interface BottomSheetProps {
+interface BottomSheetProps {
     /** Whether the sheet is open */
     open: boolean;
     /** Close handler */
@@ -219,3 +219,4 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
 };
 
 export default BottomSheet;
+

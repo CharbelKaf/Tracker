@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import LoginPage from './src/features/auth/pages/LoginPage';
 import { ToastProvider } from './src/context/ToastContext';
 import { DataProvider } from './src/context/DataContext';
+import { FinanceDataProvider } from './src/context/FinanceDataContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ConfirmationProvider } from './src/context/ConfirmationContext';
 
@@ -44,9 +45,11 @@ const App: React.FC = () => {
     <ToastProvider>
       <AuthProvider>
         <DataProvider>
-          <ConfirmationProvider>
-            <AppContent />
-          </ConfirmationProvider>
+          <FinanceDataProvider>
+            <ConfirmationProvider>
+              <AppContent />
+            </ConfirmationProvider>
+          </FinanceDataProvider>
         </DataProvider>
       </AuthProvider>
     </ToastProvider>

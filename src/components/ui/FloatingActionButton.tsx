@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import MaterialIcon from './MaterialIcon';
 
-export interface FloatingActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface FloatingActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     /**
      * MD3 FAB variants.
      * - primary: Primary Container color (Default for main action)
@@ -41,7 +41,7 @@ export interface FloatingActionButtonProps extends React.ButtonHTMLAttributes<HT
  * Material Design 3 Floating Action Button (FAB).
  * Used for the primary action on a screen.
  */
-export const FloatingActionButton = React.forwardRef<HTMLButtonElement, FloatingActionButtonProps>(
+const FloatingActionButton = React.forwardRef<HTMLButtonElement, FloatingActionButtonProps>(
     ({ variant = 'primary', size = 'medium', icon, label, lowered = false, className, ...props }, ref) => {
 
         // Extended FAB check
@@ -111,3 +111,4 @@ export const FloatingActionButton = React.forwardRef<HTMLButtonElement, Floating
 
 FloatingActionButton.displayName = 'FloatingActionButton';
 export default FloatingActionButton;
+

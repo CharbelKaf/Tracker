@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import MaterialIcon from '../../../components/ui/MaterialIcon';
 import { useToast } from '../../../context/ToastContext';
 import { useData } from '../../../context/DataContext';
-import { SelectField } from '../../../components/ui/SelectField';
+import SelectField from '../../../components/ui/SelectField';
 import Modal from '../../../components/ui/Modal';
 import Button from '../../../components/ui/Button';
 import InputField from '../../../components/ui/InputField';

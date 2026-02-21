@@ -22,7 +22,7 @@ interface SelectFieldProps {
  * Filled/Outlined styles with MD3 tokens.
  * Full keyboard navigation: ArrowUp/ArrowDown to navigate, Enter/Space to select, Escape to close.
  */
-export const SelectField: React.FC<SelectFieldProps> = ({
+const SelectField: React.FC<SelectFieldProps> = ({
   label,
   name,
   options,

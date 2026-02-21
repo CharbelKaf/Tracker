@@ -6,7 +6,7 @@ interface ExpenseSourceFileRecord {
     createdAt: string;
 }
 
-export interface StoredExpenseSourceFile {
+interface StoredExpenseSourceFile {
     id: string;
     name: string;
     type: string;
@@ -149,3 +149,4 @@ export const deleteExpenseSourceFile = async (id?: string): Promise<void> => {
         transaction.onabort = () => reject(transaction.error || new Error('Transaction IndexedDB annulee'));
     });
 };
+

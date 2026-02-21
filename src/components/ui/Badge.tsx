@@ -1,9 +1,9 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
 
-export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 
-export interface BadgeProps {
+interface BadgeProps {
   children: React.ReactNode;
   variant?: BadgeVariant;
   className?: string;
@@ -39,3 +39,4 @@ const Badge: React.FC<BadgeProps> = ({
 };
 
 export default Badge;
+

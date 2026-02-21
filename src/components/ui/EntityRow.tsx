@@ -184,5 +184,4 @@ export const EntityRow: React.FC<EntityRowProps> = React.memo(({
   );
 });
 
-export default EntityRow;
 

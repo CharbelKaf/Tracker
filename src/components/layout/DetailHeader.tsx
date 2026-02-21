@@ -74,5 +74,4 @@ export const DetailHeader: React.FC<DetailHeaderProps> = ({
   );
 };
 
-export default DetailHeader;
 

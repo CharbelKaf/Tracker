@@ -2,7 +2,7 @@ import React from 'react';
 import MaterialIcon from './MaterialIcon';
 import { cn } from '../../lib/utils';
 
-export interface SearchFilterBarProps {
+interface SearchFilterBarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   onFilterClick?: () => void;
@@ -113,4 +113,3 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
   );
 };
 
-export default SearchFilterBar;

@@ -4,7 +4,7 @@ import Button from '../../../components/ui/Button';
 import { useData } from '../../../context/DataContext';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { SearchFilterBar } from '../../../components/ui/SearchFilterBar';
-import PageTabs from '../../../components/ui/PageTabs';
+import { PageTabs } from '../../../components/ui/PageTabs';
 import { DetailHeader } from '../../../components/layout/DetailHeader';
 
 interface AuditDetailsPageProps {

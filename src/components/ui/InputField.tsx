@@ -2,7 +2,7 @@ import React, { useId, useMemo, useState } from 'react';
 import { cn } from '../../lib/utils';
 import MaterialIcon from './MaterialIcon';
 
-export interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   /** Optional Material Symbols icon name */
   icon?: React.ReactNode;
   /** Optional trailing icon element */
@@ -251,3 +251,4 @@ const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
 InputField.displayName = 'InputField';
 
 export default InputField;
+

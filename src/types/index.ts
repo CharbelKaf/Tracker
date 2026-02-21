@@ -5,15 +5,6 @@ import React from 'react';
 // Added 'settings' to ViewType to resolve navigation and title mapping errors
 export type ViewType = 'dashboard' | 'equipment' | 'equipment_details' | 'add_equipment' | 'edit_equipment' | 'import_equipment' | 'users' | 'user_details' | 'add_user' | 'edit_user' | 'import_users' | 'approvals' | 'new_request' | 'management' | 'add_category' | 'add_model' | 'import_models' | 'category_details' | 'model_details' | 'locations' | 'import_locations' | 'audit' | 'audit_details' | 'reports' | 'assignment_wizard' | 'return_wizard' | 'finance' | 'settings' | 'admin_users';
 
-export interface SidebarItemProps {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-  isCollapsed: boolean;
-  onClick?: () => void;
-  badge?: string | number;
-}
-
 export type UserRole = 'SuperAdmin' | 'Admin' | 'Manager' | 'User';
 
 // --- SYSTEM SETTINGS ---
@@ -404,3 +395,4 @@ export interface HistoryFilter {
   endDate?: string;
   limit?: number;
 }
+

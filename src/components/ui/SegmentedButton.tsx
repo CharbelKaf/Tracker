@@ -2,13 +2,13 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import MaterialIcon from './MaterialIcon';
 
-export interface SegmentedButtonOption {
+interface SegmentedButtonOption {
     value: string;
     label: string;
     icon?: string;
 }
 
-export interface SegmentedButtonProps {
+interface SegmentedButtonProps {
     /** Array of 2-5 options */
     options: SegmentedButtonOption[];
     /** Current selected value(s) — string for single-select, string[] for multi-select */
@@ -115,3 +115,5 @@ const SegmentedButton: React.FC<SegmentedButtonProps> = ({
 };
 
 export default SegmentedButton;
+
+

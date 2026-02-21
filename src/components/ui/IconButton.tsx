@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import MaterialIcon from './MaterialIcon';
 
-export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     /** Material Symbols icon name */
     icon: string;
     /** MD3 Icon Button variant */
@@ -95,3 +95,4 @@ const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
 
 IconButton.displayName = 'IconButton';
 export default IconButton;
+

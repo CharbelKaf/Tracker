@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
 
-export interface MaterialIconProps {
+interface MaterialIconProps {
     /** Material Symbols icon name (e.g. 'dashboard', 'search', 'settings') */
     name: string;
     /** Size in pixels (default: 24) */
@@ -50,3 +50,4 @@ const MaterialIcon: React.FC<MaterialIconProps> = ({
 };
 
 export default MaterialIcon;
+

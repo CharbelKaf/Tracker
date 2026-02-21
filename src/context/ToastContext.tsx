@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import Snackbar, { SnackbarMessage } from '../components/ui/Snackbar';
 
-export type ToastType = 'success' | 'error' | 'info';
+type ToastType = 'success' | 'error' | 'info';
 
 interface Toast {
   id: string;
@@ -57,3 +57,4 @@ export const useToast = () => {
   }
   return context;
 };
+

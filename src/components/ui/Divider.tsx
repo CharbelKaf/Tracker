@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
 
-export interface DividerProps {
+interface DividerProps {
     /** Divider variant */
     variant?: 'full-width' | 'inset' | 'middle';
     /** Vertical divider (for horizontal layouts) */
@@ -51,3 +51,4 @@ const Divider: React.FC<DividerProps> = ({
 };
 
 export default Divider;
+

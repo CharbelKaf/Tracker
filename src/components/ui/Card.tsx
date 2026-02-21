@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
 
-export interface CardProps {
+interface CardProps {
   /** The title of the card */
   title?: string;
   /** Optional decorative icon */
@@ -130,3 +130,4 @@ const Card: React.FC<CardProps> = ({
 };
 
 export default React.memo(Card);
+

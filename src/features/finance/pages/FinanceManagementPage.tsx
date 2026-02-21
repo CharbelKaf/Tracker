@@ -8,6 +8,7 @@ import Button from '../../../components/ui/Button';
 import { formatCurrency, calculateLinearDepreciation } from '../../../lib/financial';
 import { useToast } from '../../../context/ToastContext';
 import { useData } from '../../../context/DataContext';
+import { useFinanceData } from '../../../context/FinanceDataContext';
 import { useConfirmation } from '../../../context/ConfirmationContext';
 import Badge from '../../../components/ui/Badge';
 import { cn } from '../../../lib/utils';
@@ -131,14 +132,13 @@ type ResolvedExpenseSource = {
 };
 
 const FinanceManagementPage = () => {
+    const { equipment, settings } = useData();
     const {
-        equipment,
-        settings,
         financeExpenses,
         financeBudgets,
         updateFinanceExpense,
         deleteFinanceExpense,
-    } = useData();
+    } = useFinanceData();
     const { showToast } = useToast();
     const { requestConfirmation } = useConfirmation();
     const [activeView, setActiveView] = useState<FinanceView>('overview');

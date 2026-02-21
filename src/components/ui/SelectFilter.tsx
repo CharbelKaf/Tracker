@@ -218,5 +218,3 @@ export const SelectFilter: React.FC<SelectFilterProps> = ({
     </div>
   );
 };
-
-export default SelectFilter;

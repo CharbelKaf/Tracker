@@ -142,5 +142,3 @@ export const PageTabs: React.FC<PageTabsProps> = ({
     </div>
   );
 };
-
-export default PageTabs;

@@ -1,2 +1,0 @@
-// Dashboard feature module
-export {};

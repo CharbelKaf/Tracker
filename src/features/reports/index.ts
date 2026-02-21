@@ -1,2 +1,0 @@
-// Reports feature module
-export {};

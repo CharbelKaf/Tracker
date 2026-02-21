@@ -185,6 +185,5 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({
     );
 };
 
-export default NavigationRail;
 
 

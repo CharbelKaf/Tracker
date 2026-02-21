@@ -1,2 +1,0 @@
-// Router configuration
-export {};

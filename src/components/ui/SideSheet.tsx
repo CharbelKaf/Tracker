@@ -3,7 +3,7 @@ import { cn } from '../../lib/utils';
 import CloseButton from './CloseButton';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
-export interface SideSheetProps {
+interface SideSheetProps {
     /** Whether the sheet is open */
     open: boolean;
     /** Close handler */
@@ -244,3 +244,4 @@ const SideSheet: React.FC<SideSheetProps> = ({
 };
 
 export default SideSheet;
+

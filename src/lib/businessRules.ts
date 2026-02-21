@@ -89,7 +89,7 @@ interface ReturnWorkflowContext {
     nowISO: string;
 }
 
-export type ReturnInspectionCondition =
+type ReturnInspectionCondition =
     | 'Excellent'
     | 'Bon'
     | 'Moyen'
@@ -97,7 +97,7 @@ export type ReturnInspectionCondition =
     | 'Dégradé'
     | 'Hors service';
 
-export const APPROVAL_TRANSITIONS: Partial<Record<ApprovalStatus, readonly ApprovalStatus[]>> = {
+const APPROVAL_TRANSITIONS: Partial<Record<ApprovalStatus, readonly ApprovalStatus[]>> = {
     WAITING_MANAGER_APPROVAL: ['WAITING_IT_PROCESSING', 'Rejected', 'Cancelled'],
     WAITING_IT_PROCESSING: ['WAITING_DOTATION_APPROVAL', 'Rejected', 'Cancelled'],
     WAITING_DOTATION_APPROVAL: ['PENDING_DELIVERY', 'WAITING_IT_PROCESSING', 'Rejected', 'Cancelled'],
@@ -110,14 +110,14 @@ export const APPROVAL_TRANSITIONS: Partial<Record<ApprovalStatus, readonly Appro
     WaitingUser: ['Completed', 'Rejected', 'Cancelled'],
 };
 
-export const LEGACY_APPROVAL_ACTIVE_STATUSES: readonly ApprovalStatus[] = [
+const LEGACY_APPROVAL_ACTIVE_STATUSES: readonly ApprovalStatus[] = [
     'Pending',
     'Processing',
     'WaitingManager',
     'WaitingUser',
 ];
 
-export const MODERN_APPROVAL_ACTIVE_STATUSES: readonly ApprovalStatus[] = [
+const MODERN_APPROVAL_ACTIVE_STATUSES: readonly ApprovalStatus[] = [
     'WAITING_MANAGER_APPROVAL',
     'WAITING_IT_PROCESSING',
     'WAITING_DOTATION_APPROVAL',
@@ -129,7 +129,7 @@ export const ACTIVE_APPROVAL_STATUSES: readonly ApprovalStatus[] = [
     ...MODERN_APPROVAL_ACTIVE_STATUSES,
 ];
 
-export const APPROVAL_HISTORY_STATUSES: readonly ApprovalStatus[] = [
+const APPROVAL_HISTORY_STATUSES: readonly ApprovalStatus[] = [
     'Approved',
     'Rejected',
     'Completed',
@@ -250,7 +250,7 @@ const HISTORY_EVENT_ACTIONS: Partial<Record<EventType, string>> = {
     EXPORT: 'exporté des données sur',
     VIEW_SENSITIVE: 'consulté des données sensibles de',
 };
-export const MOVEMENT_HISTORY_EVENT_TYPES: readonly EventType[] = [
+const MOVEMENT_HISTORY_EVENT_TYPES: readonly EventType[] = [
     'CREATE',
     'ASSIGN',
     'ASSIGN_PENDING',
@@ -355,13 +355,13 @@ export const isOperationalEquipmentStatus = (status: Equipment['status']): boole
 export const getHistoryEventIcon = (eventType: EventType): string =>
     HISTORY_EVENT_ICONS[eventType] || 'history';
 
-export const isMovementHistoryEventType = (eventType: EventType): boolean =>
+const isMovementHistoryEventType = (eventType: EventType): boolean =>
     MOVEMENT_HISTORY_EVENT_TYPES.includes(eventType);
 
 const readMetadataString = (value: unknown): string | null =>
     typeof value === 'string' ? value : null;
 
-export const isMovementUpdateEvent = (event: HistoryEvent): boolean => {
+const isMovementUpdateEvent = (event: HistoryEvent): boolean => {
     if (event.type !== 'UPDATE') return false;
 
     const fromStatus = readMetadataString(event.metadata?.fromStatus);
@@ -687,3 +687,4 @@ export const getEquipmentUpdatesForReturnWorkflow = ({
         repairStartDate: isRepairFlow ? nowISO : undefined,
     };
 };
+

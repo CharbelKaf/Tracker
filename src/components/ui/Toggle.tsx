@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import MaterialIcon from './MaterialIcon';
 
-export interface ToggleProps {
+interface ToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label?: string;

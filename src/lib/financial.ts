@@ -11,7 +11,7 @@ const EXCHANGE_RATES: Record<string, number> = {
   'JPY': 160      // 1 EUR = 160 JPY
 };
 
-export interface DepreciationConfig {
+interface DepreciationConfig {
   method: 'linear' | 'degressive';
   years: number;
   salvagePercent: number;
@@ -121,7 +121,7 @@ function getMonthsDifference(startDate: Date, endDate: Date): number {
  * @param fromCurrency Devise source
  * @param toCurrency Devise cible
  */
-export const convertCurrency = (amount: number, fromCurrency = 'EUR', toCurrency = 'EUR') => {
+const convertCurrency = (amount: number, fromCurrency = 'EUR', toCurrency = 'EUR') => {
   const fromRate = EXCHANGE_RATES[fromCurrency] || 1;
   const toRate = EXCHANGE_RATES[toCurrency] || 1;
   if (fromRate === 0) return amount;
@@ -184,3 +184,4 @@ export const formatNumber = (amount: number, compact = false) => {
         maximumFractionDigits: 1
     }).format(amount);
 };
+

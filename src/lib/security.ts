@@ -12,19 +12,6 @@ export function validateAdminPIN(pin: string): boolean {
 }
 
 /**
- * Sauvegarde la signature électronique associée à une action.
- */
-export function saveSignature(
-  signatureDataURL: string,
-  action: string,
-  entityId: string
-): void {
-  // Simulation de sauvegarde (Stockage S3 ou Blob en production)
-  console.info(`[SIGNATURE CAPTURED] Action: ${action} | Entity: ${entityId}`);
-  // Optionnel: on pourrait stocker l'URL dans le DataContext
-}
-
-/**
  * Log une action sécurisée dans le journal d'audit global.
  */
 export function logSecurityAction(

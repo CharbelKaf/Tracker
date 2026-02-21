@@ -2,9 +2,9 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import MaterialIcon from './MaterialIcon';
 
-export type ChipVariant = 'assist' | 'filter' | 'input' | 'suggestion';
+type ChipVariant = 'assist' | 'filter' | 'input' | 'suggestion';
 
-export interface ChipProps {
+interface ChipProps {
     /** Label text displayed inside the chip */
     label: string;
     /** MD3 chip variant: assist, filter, input, or suggestion */
@@ -109,3 +109,5 @@ const Chip: React.FC<ChipProps> = ({
 };
 
 export default Chip;
+
+

@@ -32,7 +32,7 @@ const formatTimelineDate = (value: string) => {
     });
 };
 
-export const MovementTimeline: React.FC<MovementTimelineProps> = ({
+const MovementTimeline: React.FC<MovementTimelineProps> = ({
     title,
     items,
     emptyMessage,

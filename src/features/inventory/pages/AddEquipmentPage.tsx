@@ -4,7 +4,7 @@ import { useToast } from '../../../context/ToastContext';
 import { useData } from '../../../context/DataContext';
 import { mockModels } from '../../../data/mockData';
 import InputField from '../../../components/ui/InputField';
-import { SelectField } from '../../../components/ui/SelectField';
+import SelectField from '../../../components/ui/SelectField';
 import { TextArea } from '../../../components/ui/TextArea';
 import { FullScreenFormLayout } from '../../../components/layout/FullScreenFormLayout';
 import { formatCurrency, resolveDepreciationConfig, calculateLinearDepreciation } from '../../../lib/financial';

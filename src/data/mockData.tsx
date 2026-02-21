@@ -156,44 +156,8 @@ export const mockAllUsersExtended: User[] = [
     }
 ];
 
-export const mockActiveUsers: User[] = mockAllUsersExtended;
 
 // --- Equipment Data with Financials ---
-
-export const mockAvailableEquipment: Equipment[] = [
-    {
-        id: '1', name: 'LPT-FIN-01', assetId: 'ASSET-12345', type: 'Laptop', model: 'Dell Latitude 7420', status: 'Disponible', country: 'France',
-        image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&h=100&fit=crop',
-        financial: { purchasePrice: 1200, purchaseDate: '2024-01-15', depreciationYears: 3, depreciationMethod: 'linear' },
-        assignmentStatus: 'NONE'
-    },
-    {
-        id: '2', name: 'Dell U2721DE', assetId: 'ASSET-12346', type: 'Monitor', model: 'Dell U2721DE', status: 'Disponible', country: 'Sénégal',
-        image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=100&h=100&fit=crop',
-        financial: { purchasePrice: 350, purchaseDate: '2023-06-10', depreciationYears: 5, depreciationMethod: 'linear' },
-        assignmentStatus: 'NONE'
-    },
-    {
-        id: '3', name: 'PRT-HQ-01', assetId: 'ASSET-12347', type: 'Printer', model: 'HP LaserJet Pro M404', status: 'Disponible', country: 'France',
-        image: 'https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=100&h=100&fit=crop',
-        financial: { purchasePrice: 280, purchaseDate: '2024-04-20', depreciationYears: 5, depreciationMethod: 'linear' },
-        assignmentStatus: 'NONE'
-    },
-    {
-        id: '4', name: 'MSE-TOG-02', assetId: 'ASSET-12348', type: 'Mouse', model: 'Logitech M720', status: 'Disponible', country: 'Togo',
-        image: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=100&h=100&fit=crop',
-        financial: { purchasePrice: 55, purchaseDate: '2025-02-11', depreciationYears: 2, depreciationMethod: 'linear' },
-        assignmentStatus: 'NONE'
-    },
-    {
-        id: '5', name: 'SVR-DK-02', assetId: 'ASSET-12349', type: 'Server', model: 'HPE ProLiant DL380 Gen10', status: 'Disponible', country: 'Sénégal',
-        image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=100&h=100&fit=crop',
-        financial: { purchasePrice: 6200, purchaseDate: '2024-01-18', depreciationYears: 5, depreciationMethod: 'degressive' },
-        assignmentStatus: 'NONE'
-    },
-];
-
-export const mockAssignedEquipment: Equipment[] = [];
 
 export const mockAllEquipment: Equipment[] = [
     {
@@ -461,8 +425,6 @@ export const mockReports: Report[] = [
 ];
 
 export const mockLocationCountries = ['France', 'Sénégal', 'Togo'];
-export const mockLocationSites = ['Bureau Paris'];
-export const mockLocationServices = ['Marketing Europe'];
 
 export const mockAuditCountries: AuditCountryStats[] = [
     { name: 'France', sites: 1, completed: 0, total: 3 },

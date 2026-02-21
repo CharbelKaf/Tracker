@@ -3,7 +3,7 @@ import MaterialIcon from './MaterialIcon';
 import Button, { ButtonProps } from './Button';
 import { cn } from '../../lib/utils';
 
-export const CloseButton: React.FC<ButtonProps> = ({ className, onClick, ...props }) => {
+const CloseButton: React.FC<ButtonProps> = ({ className, onClick, ...props }) => {
   return (
     <Button
       variant="text"
