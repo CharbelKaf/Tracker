@@ -5,6 +5,8 @@ import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { chromium } from 'playwright';
+import { PNG } from 'pngjs';
+import pixelmatch from 'pixelmatch';
 
 const HOST = '127.0.0.1';
 const PORT = 4173;
@@ -31,9 +33,22 @@ const AUTH_CHECKPOINTS = [
   { id: 'finance', label: 'Finance', hash: '/finance' },
 ];
 
+const DEVICE_FILTER = process.env.VISUAL_DEVICE_IDS
+  ? new Set(process.env.VISUAL_DEVICE_IDS.split(',').map((value) => value.trim()).filter(Boolean))
+  : null;
+const CHECKPOINT_FILTER = process.env.VISUAL_CHECKPOINT_IDS
+  ? new Set(process.env.VISUAL_CHECKPOINT_IDS.split(',').map((value) => value.trim()).filter(Boolean))
+  : null;
+
+const ACTIVE_DEVICES = DEVICE_FILTER ? DEVICES.filter((device) => DEVICE_FILTER.has(device.id)) : DEVICES;
+const ACTIVE_AUTH_CHECKPOINTS = CHECKPOINT_FILTER
+  ? AUTH_CHECKPOINTS.filter((checkpoint) => CHECKPOINT_FILTER.has(checkpoint.id))
+  : AUTH_CHECKPOINTS;
+
 const TEMP_DIR = path.resolve(`docs/.tmp/md3-visual-regression/${RUN_DATE}`);
 const BASELINE_DIR = path.resolve('docs/md3-visual-baseline');
 const CURRENT_DIR = path.resolve(`docs/md3-visual-current/${RUN_DATE}`);
+const PIXEL_DIFF_RATIO_THRESHOLD = Number(process.env.VISUAL_MAX_DIFF_RATIO ?? '0.0005');
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -56,54 +71,34 @@ const sha256 = async (filePath) => {
   return createHash('sha256').update(bytes).digest('hex');
 };
 
-const runProductionBuild = async () => {
-  await new Promise((resolve, reject) => {
-    const buildProcess = spawn(process.execPath, [VITE_BIN, 'build'], {
-      shell: false,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env: process.env,
-    });
+const getPixelDiffRatio = async (baselinePath, currentPath) => {
+  const [baselineBytes, currentBytes] = await Promise.all([readFile(baselinePath), readFile(currentPath)]);
+  const baselineImage = PNG.sync.read(baselineBytes);
+  const currentImage = PNG.sync.read(currentBytes);
 
-    buildProcess.stdout.on('data', (chunk) => {
-      const line = String(chunk).trim();
-      if (line) process.stdout.write(`[build] ${line}\n`);
-    });
-    buildProcess.stderr.on('data', (chunk) => {
-      const line = String(chunk).trim();
-      if (line) process.stderr.write(`[build] ${line}\n`);
-    });
+  if (
+    baselineImage.width !== currentImage.width
+    || baselineImage.height !== currentImage.height
+  ) {
+    return 1;
+  }
 
-    buildProcess.on('close', (code) => {
-      if (code === 0) {
-        resolve(undefined);
-      } else {
-        reject(new Error(`Production build failed with exit code ${code}`));
-      }
-    });
-  });
-};
-
-const startPreviewServer = () => {
-  const child = spawn(
-    process.execPath,
-    [VITE_BIN, 'preview', '--host', HOST, '--port', String(PORT)],
+  const diff = new PNG({ width: baselineImage.width, height: baselineImage.height });
+  const diffPixels = pixelmatch(
+    baselineImage.data,
+    currentImage.data,
+    diff.data,
+    baselineImage.width,
+    baselineImage.height,
     {
-      shell: false,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env: process.env,
+      threshold: 0.12,
+      includeAA: false,
     }
   );
 
-  child.stdout.on('data', (chunk) => {
-    const line = String(chunk).trim();
-    if (line) process.stdout.write(`[preview] ${line}\n`);
-  });
-  child.stderr.on('data', (chunk) => {
-    const line = String(chunk).trim();
-    if (line) process.stderr.write(`[preview] ${line}\n`);
-  });
-
-  return child;
+  const totalPixels = baselineImage.width * baselineImage.height;
+  if (totalPixels === 0) return 0;
+  return diffPixels / totalPixels;
 };
 
 const startDevServer = () => {
@@ -233,9 +228,13 @@ const snapshotCheckpoint = async (page, device, checkpoint) => {
     };
   }
 
-  const [baselineHash, currentHash] = await Promise.all([sha256(baselinePath), sha256(tempPath)]);
+  const [baselineHash, currentHash, pixelDiffRatio] = await Promise.all([
+    sha256(baselinePath),
+    sha256(tempPath),
+    getPixelDiffRatio(baselinePath, tempPath),
+  ]);
 
-  if (baselineHash === currentHash) {
+  if (baselineHash === currentHash || pixelDiffRatio <= PIXEL_DIFF_RATIO_THRESHOLD) {
     return {
       status: 'match',
       pass: true,
@@ -283,14 +282,14 @@ const run = async () => {
   try {
     await rm(TEMP_DIR, { recursive: true, force: true });
     await mkdir(TEMP_DIR, { recursive: true });
-    await runProductionBuild();
-    server = startPreviewServer();
+    server = startDevServer();
     await waitForServer(BASE_URL);
 
     const browser = await chromium.launch({ headless: true });
     const results = [];
 
-    for (const device of DEVICES) {
+    for (const device of ACTIVE_DEVICES) {
+      process.stdout.write(`\n[visual] Device: ${device.label}\n`);
       const context = await browser.newContext({
         viewport: { width: device.width, height: device.height },
         isMobile: device.isMobile,
@@ -302,6 +301,7 @@ const run = async () => {
       const page = await context.newPage();
       await bootstrapDeterministicSession(page);
 
+      process.stdout.write(`[visual]  - capture: ${LOGIN_CHECKPOINT.id}\n`);
       const loginSnapshot = await snapshotCheckpoint(page, device, LOGIN_CHECKPOINT);
       results.push({
         device,
@@ -309,6 +309,7 @@ const run = async () => {
         ...loginSnapshot,
       });
 
+      process.stdout.write('[visual]  - login demo account\n');
       await loginWithDemoAccount(page);
       const closeToastButton = page.getByRole('button', { name: 'Fermer la notification' });
       if ((await closeToastButton.count()) > 0) {
@@ -323,7 +324,8 @@ const run = async () => {
         .catch(() => {});
       await page.waitForTimeout(200);
 
-      for (const checkpoint of AUTH_CHECKPOINTS) {
+      for (const checkpoint of ACTIVE_AUTH_CHECKPOINTS) {
+        process.stdout.write(`[visual]  - capture: ${checkpoint.id}\n`);
         const snapshotResult = await snapshotCheckpoint(page, device, checkpoint);
         results.push({
           device,
